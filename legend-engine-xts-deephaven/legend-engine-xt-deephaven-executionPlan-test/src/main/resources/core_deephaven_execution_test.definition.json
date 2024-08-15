@@ -1,0 +1,16 @@
+{
+  "name": "core_deephaven_execution_test",
+  "pattern": "(meta::external::store::deephaven::executionTest)(::.*)?",
+  "dependencies": [
+    "platform",
+    "platform_dsl_mapping",
+    "core_functions_json",
+    "core_functions_unclassified",
+    "core_functions_standard",
+    "core",
+    "core_authentication",
+    "core_deephaven_metamodel",
+    "core_external_execution",
+    "core_external_compiler"
+  ]
+}

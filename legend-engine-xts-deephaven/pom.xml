@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.finos.legend.engine</groupId>
+        <artifactId>legend-engine</artifactId>
+        <version>4.53.9-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>legend-engine-xts-deephaven</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>legend-engine-xt-deephaven-executionPlan</module>
+        <module>legend-engine-xt-deephaven-grammar</module>
+        <module>legend-engine-xt-deephaven-pure-metamodel</module>
+        <module>legend-engine-xt-deephaven-protocol-utils</module>
+        <module>legend-engine-xt-deephaven-protocol</module>
+        <module>legend-engine-xt-deephaven-executionPlan-test</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+</project>
