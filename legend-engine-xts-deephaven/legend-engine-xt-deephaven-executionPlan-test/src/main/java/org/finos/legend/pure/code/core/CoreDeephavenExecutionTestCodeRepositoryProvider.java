@@ -24,6 +24,6 @@ public class CoreDeephavenExecutionTestCodeRepositoryProvider implements CodeRep
     @Override
     public CodeRepository repository()
     {
-        return GenericCodeRepository.build("core_deephaven_execution_test.definition.json");
+        return GenericCodeRepository.build("core_deephaven_executionPlan_test.definition.json");
     }
 }
