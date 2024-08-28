@@ -12,17 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import meta::external::store::deephaven::metamodel::*;
+import meta::external::store::deephaven::metamodel::store::*;
 // TODO: ask beyraf - is this following naming convention - meta::external::store::deephaven::type::metamodel? 
 import meta::external::store::deephaven::metamodel::type::*;
 
-// For now we only use a very basic model for PoC
-Class meta::external::store::deephaven::metamodel::Table
+Class meta::external::store::deephaven::metamodel::store::DeephavenStore extends meta::pure::store::Store
 {
-  columns : meta::external::store::deephaven::metamodel::Column[1..*];
+
 }
 
-Class meta::external::store::deephaven::metamodel::Column
+// For now we only use a very basic model for PoC
+Class meta::external::store::deephaven::metamodel::store::Table
+{
+  columns : meta::external::store::deephaven::metamodel::store::Column[1..*];
+}
+
+Class meta::external::store::deephaven::metamodel::store::Column
 {
   name : String[1];
   type : meta::external::store::deephaven::metamodel::type::Type[1];

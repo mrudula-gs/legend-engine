@@ -1,0 +1,39 @@
+import meta::pure::router::preeval::*;
+// Copyright 2024 Goldman Sachs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+function meta::external::store::elasticsearch::v7::pureToDeephaven::supportedRoutingFunctions():Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],State[1]->State[1]}>>[*]
+{
+  let supported = [
+    pair(supportedIfEqual(indexToTDS_Elasticsearch7Store_1__String_1__TabularDataSet_1_),                                  processSelectAllTds_FunctionExpression_1__State_1__State_1_),
+    pair(supportedIfEqual(project_TabularDataSet_1__ColumnSpecification_MANY__TabularDataSet_1_),         processProject_FunctionExpression_1__State_1__State_1_),
+    pair(supportedIfEqual(extend_TabularDataSet_1__BasicColumnSpecification_MANY__TabularDataSet_1_),     processExtend_FunctionExpression_1__State_1__State_1_),
+    pair(supportedIfEqual(restrict_TabularDataSet_1__String_MANY__TabularDataSet_1_),                     processRestrict_FunctionExpression_1__State_1__State_1_),
+    pair(supportedIfEqual(distinct_TabularDataSet_1__TabularDataSet_1_),                                  processDistinct_FunctionExpression_1__State_1__State_1_),
+    pair(supportedIfEqual(renameColumns_TabularDataSet_1__Pair_MANY__TabularDataSet_1_),                  processRenameColumns_FunctionExpression_1__State_1__State_1_),
+
+    pair(supportedIfEqual(filter_TabularDataSet_1__Function_1__TabularDataSet_1_),                        processFilter_FunctionExpression_1__State_1__State_1_),
+
+    pair(supportedIfEqual(sort_TabularDataSet_1__String_MANY__TabularDataSet_1_),                         processDefaultSort_FunctionExpression_1__State_1__State_1_),
+    pair(supportedIfEqual(sort_TabularDataSet_1__SortInformation_MANY__TabularDataSet_1_),                processSortWithInformation_FunctionExpression_1__State_1__State_1_),
+    pair(supportedIfEqual(sort_TabularDataSet_1__String_1__SortDirection_1__TabularDataSet_1_),           processSortWithDirection_FunctionExpression_1__State_1__State_1_),
+
+    pair(supportedIfEqual(groupBy_TabularDataSet_1__String_MANY__AggregateValue_MANY__TabularDataSet_1_), processGroupBy_FunctionExpression_1__State_1__State_1_),
+
+    pair(supportedIfEqual(limit_TabularDataSet_1__Integer_1__TabularDataSet_1_),                          processLimit_FunctionExpression_1__State_1__State_1_),
+    pair(supportedIfEqual(take_TabularDataSet_1__Integer_1__TabularDataSet_1_),                           processLimit_FunctionExpression_1__State_1__State_1_),
+    pair(supportedIfEqual(drop_TabularDataSet_1__Integer_1__TabularDataSet_1_),                           processDrop_FunctionExpression_1__State_1__State_1_),
+    pair(supportedIfEqual(slice_TabularDataSet_1__Integer_1__Integer_1__TabularDataSet_1_),               processSlice_FunctionExpression_1__State_1__State_1_)
+  ];
+}

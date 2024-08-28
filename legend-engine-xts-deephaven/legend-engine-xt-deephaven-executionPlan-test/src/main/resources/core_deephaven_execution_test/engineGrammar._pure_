@@ -1,6 +1,7 @@
 ###Deephaven
 Deephaven test::Store
 {
+    //TODO: tamimi - below should be anonymized because this is not possible to put in open source
     Table nds_desktops
     {
         Columns

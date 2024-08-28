@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO: ask beyraf - shouldn't use this one right? meta::pure::metamodel::type::Type ; could not find its definition
+/*
+* The below represents the Types available users via the user interface; it's a subset of available types used by deephaven itself, inferred from:
+* https://deephaven.io/core/javadoc/io/deephaven/engine/table/ColumnDefinition.html
+*/
+
 import meta::external::store::deephaven::metamodel::type::*;
 
 Class meta::external::store::deephaven::metamodel::type::Type
@@ -23,7 +27,31 @@ Class meta::external::store::deephaven::metamodel::type::BooleanType extends met
 {
 }
 
+Class meta::external::store::deephaven::metamodel::type::ByteType extends meta::external::store::deephaven::metamodel::type::Type
+{
+}
+
+Class meta::external::store::deephaven::metamodel::type::CharType extends meta::external::store::deephaven::metamodel::type::Type
+{
+}
+
+Class meta::external::store::deephaven::metamodel::type::ShortType extends meta::external::store::deephaven::metamodel::type::Type
+{
+}
+
 Class meta::external::store::deephaven::metamodel::type::IntType extends meta::external::store::deephaven::metamodel::type::Type
+{
+}
+
+Class meta::external::store::deephaven::metamodel::type::LongType extends meta::external::store::deephaven::metamodel::type::Type
+{
+}
+
+Class meta::external::store::deephaven::metamodel::type::FloatType extends meta::external::store::deephaven::metamodel::type::Type
+{
+}
+
+Class meta::external::store::deephaven::metamodel::type::DoubleType extends meta::external::store::deephaven::metamodel::type::Type
 {
 }
 
@@ -31,8 +59,13 @@ Class meta::external::store::deephaven::metamodel::type::StringType extends meta
 {
 }
 
-Class meta::external::store::deephaven::metamodel::type::ArrayType extends meta::external::store::deephaven::metamodel::type::Type
+Class meta::external::store::deephaven::metamodel::type::TimeType extends meta::external::store::deephaven::metamodel::type::Type
 {
+}
+
+Class meta::external::store::deephaven::metamodel::type::CustomType extends meta::external::store::deephaven::metamodel::type::Type
+{
+  // TODO: tamimi - double check if this is right; componentType was taken from ArrayType but what is property of Custom type column that tracks the type?
   componentType : meta::external::store::deephaven::metamodel::type::Type[1];
 }
 

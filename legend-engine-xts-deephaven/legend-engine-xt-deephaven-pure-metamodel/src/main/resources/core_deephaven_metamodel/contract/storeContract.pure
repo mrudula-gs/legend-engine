@@ -11,3 +11,57 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import meta::pure::extension::*;
+import meta::core::runtime::*;
+import meta::pure::mapping::*;
+import meta::pure::store::*;
+import meta::pure::executionPlan::*;
+
+import meta::pure::router::routing::*;
+import meta::pure::router::clustering::*;
+
+import meta::external::store::deephaven::metamodel::store::*;
+import meta::external::store::deephaven::extension::*;
+import meta::external::store::deephaven::contract::*;
+
+function meta::external::store::deephaven::extension::deephavenExtension() : meta::pure::extension::Extension[1]
+{
+   ^Extension
+   (
+      type = 'deephaven',
+      availableStores = [
+        deephavenStoreContract()
+      ],
+      // TODO: ask beyraf - why does elastic have a serializer extension but not mongodb? is it because elasticsearch uses json? keeping for now as it may be good to try to track the version in any case
+      serializerExtension = meta::external::store::deephaven::contract::deephavenStoreSerializerExtension_String_1__String_1_
+   )
+}
+
+function meta::external::store::deephaven::contract::deephavenStoreContract(): StoreContract[1]
+{
+  ^StoreContract
+  (
+    // ** SupportContract **
+
+    // Routing
+    supports = supports(),
+    supportsNativeJoinAmongElements = true,
+    // Routing
+    
+    supportsStore = store: Store[1] | $store->instanceOf(DeephavenStore),
+    id = 'deephaven'
+  )
+}
+
+function meta::external::store::deephaven::contract::supports(): Function<{FunctionExpression[1]->Boolean[1]}>[1]
+{
+  let supportedFunctions = meta::external::store::deephaven::pureToDeephaven::supportedRoutingFunctions().first;
+
+  {f:FunctionExpression[1]| $supportedFunctions->exists(x | $x->eval($f.func, []))};
+}
+
+function meta::external::store::deephaven::contract::deephavenStoreSerializerExtension(version:String[1]):String[1]
+{
+   'meta::external::store::deephaven::protocol::%s::deephavenStoreExtension_String_1__SerializerExtension_1_'->format($version);
+}
