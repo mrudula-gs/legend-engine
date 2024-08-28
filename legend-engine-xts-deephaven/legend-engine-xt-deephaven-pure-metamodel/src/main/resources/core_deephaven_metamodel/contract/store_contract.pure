@@ -48,8 +48,13 @@ function meta::external::store::deephaven::contract::deephavenStoreContract(): S
     supports = supports(),
     supportsNativeJoinAmongElements = true,
     // Routing
-    
+
+    // Core
+    supportsSetImplementation = s: SetImplementation[1] | false,
     supportsStore = store: Store[1] | $store->instanceOf(DeephavenStore),
+    resolveStoreFromSetImplementation = [],
+    // Core
+    
     id = 'deephaven'
   )
 }

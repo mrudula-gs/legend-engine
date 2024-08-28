@@ -34,6 +34,10 @@ Class meta::external::store::deephaven::metamodel::store::Column
   // TODO: ask beyraf - shouldn't column also have pointer to dataset as a property? where is that linkage?
 }
 
+Class meta::external::store::deephaven::metamodel::DeephavenOperationElement
+{
+}
+
 // TODO: Think about whether we need subclasses - e.g. Ring/Blink etc
 
 // TODO: think about whether we need lower level classes like RowSet

@@ -1,0 +1,62 @@
+// Copyright 2024 Goldman Sachs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import meta::pure::extension::*;
+import meta::pure::mapping::*;
+
+// TODO: ask beyraf or think more - should I make DeephavenOperationElement part of metamodel::store instead?
+import meta::external::store::deephaven::metamodel::*;
+import meta::external::store::deephaven::metamodel::store::*;
+import meta::external::store::deephaven::extension::*;
+import meta::external::store::deephaven::pureToDeephaven::*;
+
+Class meta::external::store::deephaven::pureToDeephaven::State
+{
+  inScopeVars:Map<String, List<Any>>[1];
+  mapping:Mapping[0..1];
+  propertyMappingFromRouter : PropertyMapping[*];
+
+  // TODO: ask beyraf or double check - pureToSQL has multiplicity of 1 for these functions but for elasticsearch is *; any reason?
+  supportedRoutingFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], DebugContext[1], Extension[*]->DeephavenOperationElement[1]}>>[*];
+  supportedFilterFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],  DebugContext[1], Extension[*]->DeephavenOperationElement[1]}>>[*];
+
+  debug: DebugContext[1];
+  debug(s : Function<{->String[1]}>[1])
+  {
+    if($this.debug.debug, |println($this.debug.space + $s->eval()), |[]);
+  }:Any[0];
+}
+
+function meta::external::store::deephaven::pureToDeephaven::supportedIfEqual(func: Function<Any>[1]):LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>[1]
+{
+  {x: Function<Any>[1], req: State[0..1] | $x == $func}
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processFilter(vs : FunctionExpression[1], initReq: State[1]): State[1]
+{
+  $initReq.debug(|'Processing ->filter');
+  // let debug = $initReq.debug;
+  // let currReq = process($vs.parametersValues->at(0), ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
+  // assertFalse($currReq.aggregationQuery, |'filter not supported in aggregation queries');
+  // let withFilterReq = processFilterLambda($vs.parametersValues->at(1), ^$currReq(inFilter = true));
+  // ^$withFilterReq(inFilter = false, debug = $debug);
+  ^State(inScopeVars = $initReq.inScopeVars, mapping = $initReq.mapping, debug = $initReq.debug);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::supportedRoutingFunctions():Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],State[1]->State[1]}>>[*]
+{
+  let supported = [
+    pair(supportedIfEqual(filter_TabularDataSet_1__Function_1__TabularDataSet_1_),                        processFilter_FunctionExpression_1__State_1__State_1_)
+  ];
+}
