@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import meta::pure::executionPlan::*;
 import meta::pure::router::utils::*;
 import meta::pure::router::metamodel::*;
 import meta::pure::metamodel::serialization::grammar::*;
@@ -68,19 +69,23 @@ Class meta::external::store::deephaven::pureToDeephaven::TDSDEDetail
 }
 
 // TODO: tamimi - think about whether funcitons like this can be centralized 
+// TODO: tamimi - not sure if literal conversion is needed - for ES they needed it for parsing json ES requests; we will need to send code so should already have types
+// I think the below is used during translation TO the json requests - not sure if it's needed at all
 function meta::external::store::deephaven::pureToDeephaven::literalOrExpression(any : Any[*], supportZeroMult: Boolean[1]): Any[*]//TODO: tamimi - fix later LiteralOrExpression<Any>[*]
 {
   $any->match([
-    string: String[1] | $string->literal(),
-    integer: Integer[1] | $integer->literal(),
-    float: Float[1] | $float->literal(),
-    boolean: Boolean[1] | $boolean->literal(),
-    date: Date[1] | $date->toString()->literal(),
-    var: VariableExpression[1] | expression(^PlanVarPlaceHolder(name = $var.name, type = $var.genericType.rawType->toOne(), multiplicity = $var.multiplicity), $supportZeroMult),
-    planVar: PlanVarPlaceHolder[1] | $planVar->expression($supportZeroMult),
-    enum: Enum[1] | $enum->toString()->literal(),
+    string: String[1] | $string,//->literal(),
+    integer: Integer[1] | $integer,//->literal(),
+    float: Float[1] | $float,//->literal(),
+    boolean: Boolean[1] | $boolean,//->literal(),
+    date: Date[1] | $date->toString(),//->literal(),
+    // expression() turns the variableexpression into a FreeMarker expression - see "varFreemarkerExpression" in pure_to_elasticsearch - not needed for deephaven, keeping for ref
+    // probably instead of all this we need to do stuff to generate java code
+    //var: VariableExpression[1] | expression(^PlanVarPlaceHolder(name = $var.name, type = $var.genericType.rawType->toOne(), multiplicity = $var.multiplicity), $supportZeroMult),
+   // planVar: PlanVarPlaceHolder[1] | $planVar->expression($supportZeroMult),
+    enum: Enum[1] | $enum->toString(),//->literal(),
     none: Any[0] | [],
-    a: Any[1] | fail(|'not supported type: ' + $a->type()->elementToPath())->literal(),
+    a: Any[1] | fail(|'not supported type: ' + $a->type()->elementToPath()),//->literal(),
     mult: Any[*] | $mult->map(x | $x->literalOrExpression($supportZeroMult));
   ]);
 }
@@ -198,7 +203,35 @@ function meta::external::store::deephaven::pureToDeephaven::processFilter(vs : F
   //assertFalse($currReq.aggregationQuery, |'filter not supported in aggregation queries');
   //let withFilterReq = processFilterLambda($vs.parametersValues->at(1), ^$currReq(inFilter = true));
   //^$withFilterReq(inFilter = false, debug = $debug);
-  ^State(inScopeVars = $initReq.inScopeVars, mapping = $initReq.mapping, debug = $initReq.debug);
+  ^State(inScopeVars = $initReq.inScopeVars, mapping = $initReq.mapping, debug = $initReq.debug, inFilter = $initReq.inFilter, inProject = $initReq.inProject);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::evaluateAsPureExpressionNode(fe: FunctionExpression[1], req: State[1]): Pair<List<Any>, State>[1]
+{
+  $req.debug(|'Converting to pure expression node: ' + $fe->printValueSpecification(''));
+  // assert($req.inFilter, |'Evaluation as pure expression only supported on filter context');
+  // let type = $fe.func->functionReturnType();
+  // let multiplicity = $fe.func->functionReturnMultiplicity();
+
+  let varName = '@planVariable' + 'abc';//$req.counter->toString();
+
+  // let platformNode = processValueSpecification($fe, ^PlatformPlanGenerationState(inScopeVars = $req.sq.inScopeVars, exeCtx = $req.exeCtx), $req.extensions, $req.debug)
+  //     ->toOne('Expression currently not supported: ' + $fe->printFunctionExpression(''));
+  let platformNode = ^ExecutionNode(resultType=^ResultType(type=String));
+
+  let allocNode = ^AllocationExecutionNode(resultType = $platformNode.resultType, varName = $varName, executionNodes = $platformNode);
+
+  pair(
+      list(^PlanVarPlaceHolder(type =  $platformNode.resultType.type, name = $varName, multiplicity = $fe.func->functionReturnMultiplicity())),
+      ^$req()//(extraNodes = $req.extraNodes->concatenate($allocNode), counter = $req.counter + 1)
+  );
+}
+
+function meta::external::store::deephaven::pureToDeephaven::passthruForPainlessExpression(fe: FunctionExpression[1], req: State[1]): Pair<List<Any>, State>[1]
+{
+  $req.debug(|'Passthru for painless: ' + $fe->printValueSpecification(''));
+  assert($req.inProject, |'Evaluation as runtime mapping expression only supported on project context');
+  pair(list($fe), $req);
 }
 
 function meta::external::store::deephaven::pureToDeephaven::findAndEvalSupportedFunction<P, T | n, m>(funcs: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], P[n]->T[m]}>>[*], fe : FunctionExpression[1], req: P[n], state: State[1]): T[m]
@@ -210,6 +243,8 @@ function meta::external::store::deephaven::pureToDeephaven::supportedRoutingFunc
 {
   let supported = [
     pair(supportedIfEqual(filter_TabularDataSet_1__Function_1__TabularDataSet_1_),                        processFilter_FunctionExpression_1__State_1__State_1_)
+    // use this instead
+    //meta::pure::functions::relation::filter_Relation_1__Function_1__Relation_1_
   ];
 }
 
