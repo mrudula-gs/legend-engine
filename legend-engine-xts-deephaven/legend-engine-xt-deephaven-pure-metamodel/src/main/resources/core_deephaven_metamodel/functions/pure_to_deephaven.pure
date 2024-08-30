@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import meta::pure::router::utils::*;
+import meta::pure::router::metamodel::*;
+import meta::pure::metamodel::serialization::grammar::*;
 import meta::pure::extension::*;
 import meta::pure::mapping::*;
 
@@ -26,16 +29,60 @@ Class meta::external::store::deephaven::pureToDeephaven::State
   inScopeVars:Map<String, List<Any>>[1];
   mapping:Mapping[0..1];
   propertyMappingFromRouter : PropertyMapping[*];
+  inFilter: Boolean[1];
+  inProject: Boolean[1];
 
   // TODO: ask beyraf or double check - pureToSQL has multiplicity of 1 for these functions but for elasticsearch is *; any reason?
-  supportedRoutingFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], DebugContext[1], Extension[*]->DeephavenOperationElement[1]}>>[*];
-  supportedFilterFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],  DebugContext[1], Extension[*]->DeephavenOperationElement[1]}>>[*];
+  // TODO: ask beyraf or revisit - why does Relational and elastic use "xyzOperationElement" should I use DeephavenOperationElement in future? if not, then clean up that class; 
+  // TODO: tamimi - also should do I not need those params since they are in ValueSpec? but how did they get there and if so why did relational not use it
+  //supportedRoutingFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], DebugContext[1], Extension[*]->DeephavenOperationElement[1]}>>[*];
+  //supportedFilterFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],  DebugContext[1], Extension[*]->DeephavenOperationElement[1]}>>[*];
+  supportedRoutingFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->State[1]}>>[*];
+  supportedFilterFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->State[1]}>>[*];
+  supportedSimpleValueFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->Pair<List<Any>, State>[1]}>>[*];
+
 
   debug: DebugContext[1];
   debug(s : Function<{->String[1]}>[1])
   {
     if($this.debug.debug, |println($this.debug.space + $s->eval()), |[]);
   }:Any[0];
+
+  // TODO: tamimi - possibly remove this - not sure if this class is needed for deephaven
+  tdsDEDetails: TDSDEDetail[*];
+}
+
+// TODO: tamimi - evaluate if this class is actually needed - looks like it's used to encapsulate additional details needed for ElasticSearch queries
+// depends if extra info is needed for deephaven, and if so, what
+Class meta::external::store::deephaven::pureToDeephaven::TDSDEDetail
+{
+  <<equality.Key>> name: String[1];
+  type: DataType[1];
+  //resultPath: ResultPath[1];
+  // path(){
+  //   $this.resultPath.path()
+  // }:String[1];
+  runtimeMappingVS: ValueSpecification[0..1];
+  runtimeMappingVSTDSDetails: TDSDEDetail[*];
+  format: String[0..1];
+}
+
+// TODO: tamimi - think about whether funcitons like this can be centralized 
+function meta::external::store::deephaven::pureToDeephaven::literalOrExpression(any : Any[*], supportZeroMult: Boolean[1]): Any[*]//TODO: tamimi - fix later LiteralOrExpression<Any>[*]
+{
+  $any->match([
+    string: String[1] | $string->literal(),
+    integer: Integer[1] | $integer->literal(),
+    float: Float[1] | $float->literal(),
+    boolean: Boolean[1] | $boolean->literal(),
+    date: Date[1] | $date->toString()->literal(),
+    var: VariableExpression[1] | expression(^PlanVarPlaceHolder(name = $var.name, type = $var.genericType.rawType->toOne(), multiplicity = $var.multiplicity), $supportZeroMult),
+    planVar: PlanVarPlaceHolder[1] | $planVar->expression($supportZeroMult),
+    enum: Enum[1] | $enum->toString()->literal(),
+    none: Any[0] | [],
+    a: Any[1] | fail(|'not supported type: ' + $a->type()->elementToPath())->literal(),
+    mult: Any[*] | $mult->map(x | $x->literalOrExpression($supportZeroMult));
+  ]);
 }
 
 function meta::external::store::deephaven::pureToDeephaven::supportedIfEqual(func: Function<Any>[1]):LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>[1]
@@ -43,20 +90,141 @@ function meta::external::store::deephaven::pureToDeephaven::supportedIfEqual(fun
   {x: Function<Any>[1], req: State[0..1] | $x == $func}
 }
 
+function meta::external::store::deephaven::pureToDeephaven::qualifiedPropertyToTDSDEDetail(fe : FunctionExpression[1], req: State[1]): Pair<List<Any>, State>[1]
+{
+  let qp = $fe.func->cast(@QualifiedProperty<Any>);
+  let params = $fe.parametersValues;
+  assert($params->at(0)->byPassRouterInfo().genericType.rawType->toOne() == TDSRow, 'Only TDSRow operations supported');
+  let tdsProperties = ['getNumber', 'getInteger', 'getString', 'getNullableString', 'getFloat', 'getDate', 'getBoolean', 'getEnum', 'getDateTime', 'getStrictDate']
+    ->concatenate(if($req.inProject, |[], |['isNull', 'isNotNull']));
+
+  let funcName = $qp.functionName->toOne();
+  $tdsProperties->contains($funcName)->if(
+    {|
+        let propertyName =  $params->at(1)->match([
+        iv:InstanceValue[1]|$iv.values,
+        any: Any[1] | fail($any->printValueSpecification('\n') + ' not supported');
+      ])->toOne()->toString();
+
+      let tdsDetail = $req.tdsDEDetails->filter(f | $f.name == $propertyName)
+                        ->toOne('Property \'%s\' not found on query project.  Available: [%s]'->format([$propertyName, $req.tdsDEDetails.name->joinStrings('\'', '\', \'', '\'')]));
+
+      pair($tdsDetail->list(), $req);
+    },
+    {|
+      $req.supportedSimpleValueFunctions->findAndEvalSupportedFunction($fe, $req, $req);
+    }
+  );
+}
+
+function meta::external::store::deephaven::pureToDeephaven::extractSimpleValue(vs : Any[1], req: State[1]): Pair<List<Any>, State>[1]
+{
+  $req.debug(|'-- processing simple value ' + $vs->match([vs: ValueSpecification[1] | $vs->printValueSpecification(''), a:Any[1] | $a->toString()]));
+  $vs->match([
+    rfe: FunctionExpression[1] |
+      let fe = $rfe->deepByPassRouterInfo()->cast(@FunctionExpression);
+      if($fe.func->instanceOf(QualifiedProperty),
+        | $fe->qualifiedPropertyToTDSDEDetail($req),
+        | if(toOne_T_MANY__T_1_ == $fe.func,
+            | $fe.parametersValues->at(0)->extractSimpleValue($req),
+            | $req.supportedSimpleValueFunctions->findAndEvalSupportedFunction($fe, $req, $req)
+      ));,
+    iv: InstanceValue[1] | $iv.values->fold({x, currState |
+            let r = $x->extractSimpleValue($currState.second);
+            pair($currState.first.values->concatenate($r.first.values)->list(), $r.second);
+          },
+        pair(list([]), $req)
+      ),
+    any: Any[*] | pair($any->list(), $req)
+  ]);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::process(vs : ValueSpecification[1], req: State[1]): State[1]
+{
+  $req.debug(|'-- processing VS ' + $vs->printValueSpecification('\n'));
+  $vs->match([
+    fe: FunctionExpression[1] | $req.supportedRoutingFunctions->findAndEvalSupportedFunction($fe, $req, $req),
+    // TODO: tamimi - not sure if tds and ervs are needed
+    tds: TDSRoutedValueSpecification[1] | $tds.value->process($req),
+    ervs: ExtendedRoutedValueSpecification[1] | $ervs.value->process($req),
+    any: Any[1] | fail('not supported: ' + $any->type()->toString());$req;
+  ]);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processEqual(vs : FunctionExpression[1], initReq: State[1]): State[1]
+{
+  $initReq.debug(|'-- processing equal ' + $vs->printValueSpecification('\n'));
+
+  assert($initReq.inFilter, 'equal only supporter on filter context');
+
+  let leftSidePair = $vs.parametersValues->at(0)->extractSimpleValue($initReq);
+  let leftSide = $leftSidePair.first.values;
+
+  let rightSidePair = $vs.parametersValues->at(1)->extractSimpleValue($leftSidePair.second);
+  let rightSide = $rightSidePair.first.values;
+
+  let req = $rightSidePair.second;
+
+  processEqual($leftSide, $rightSide, $req);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processEqual(leftSide: Any[*], rightSide: Any[*], req: State[1]): State[1]
+{
+  // TODO: tamimi - fill this out later
+  $req;
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processFilterLambda(vs : ValueSpecification[1], req: State[1]): State[1]
+{
+  $req.debug(|'-- processing filter lambda ' + $vs->type()->toString() + ': ' + $vs->printValueSpecification('\n'));
+  $vs->match([
+    fr: FunctionRoutedValueSpecification[1] | $fr.value->processFilterLambda($req),
+    iv: InstanceValue[1] |
+        $iv.values->match([
+          f: FunctionDefinition<Any>[1] | $f.expressionSequence->at(0)->processFilterLambda($req),
+          any: Any[1] |   fail('not supported: ' + $iv.values->type()->toString())->cast(@State)
+        ]),
+    fe: FunctionExpression[1] |  $req.supportedFilterFunctions->findAndEvalSupportedFunction($fe, $req, $req),
+    any: Any[1] | fail('not supported: ' + $any->printValueSpecification(''))->cast(@State)
+  ]);
+}
+
 function meta::external::store::deephaven::pureToDeephaven::processFilter(vs : FunctionExpression[1], initReq: State[1]): State[1]
 {
   $initReq.debug(|'Processing ->filter');
-  // let debug = $initReq.debug;
-  // let currReq = process($vs.parametersValues->at(0), ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
-  // assertFalse($currReq.aggregationQuery, |'filter not supported in aggregation queries');
-  // let withFilterReq = processFilterLambda($vs.parametersValues->at(1), ^$currReq(inFilter = true));
-  // ^$withFilterReq(inFilter = false, debug = $debug);
+  let debug = $initReq.debug;
+  let currReq = process($vs.parametersValues->at(0), ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
+  // TODO: tamimi - revisit whether deephaven allows filter in aggregation queries - however for PoC this is not covered
+  //assertFalse($currReq.aggregationQuery, |'filter not supported in aggregation queries');
+  //let withFilterReq = processFilterLambda($vs.parametersValues->at(1), ^$currReq(inFilter = true));
+  //^$withFilterReq(inFilter = false, debug = $debug);
   ^State(inScopeVars = $initReq.inScopeVars, mapping = $initReq.mapping, debug = $initReq.debug);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::findAndEvalSupportedFunction<P, T | n, m>(funcs: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], P[n]->T[m]}>>[*], fe : FunctionExpression[1], req: P[n], state: State[1]): T[m]
+{
+  eval($funcs->filter(x|$x.first->eval($fe.func, $state))->first()->toOne('function not supported yet: ' + $fe.func->elementToPath()).second, $fe, $req);
 }
 
 function meta::external::store::deephaven::pureToDeephaven::supportedRoutingFunctions():Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],State[1]->State[1]}>>[*]
 {
   let supported = [
     pair(supportedIfEqual(filter_TabularDataSet_1__Function_1__TabularDataSet_1_),                        processFilter_FunctionExpression_1__State_1__State_1_)
+  ];
+}
+
+function meta::external::store::deephaven::pureToDeephaven::supportedFilterFunctions():Pair<LambdaFunction<{Function<Any>[1],State[1]->Boolean[1]}>, Function<{FunctionExpression[1],State[1]->State[1]}>>[*]
+{
+  let supported = [
+     pair(supportedIfEqual(meta::pure::functions::boolean::equal_Any_MANY__Any_MANY__Boolean_1_), processEqual_FunctionExpression_1__State_1__State_1_)
+  ]
+}
+
+//TODO: ask beyraf - not exactly sure what this is for yet - why are the 2 in here called "catchall"
+function meta::external::store::deephaven::pureToDeephaven::supportedSimpleValueFunctions(): Pair<LambdaFunction<{Function<Any>[1],  State[1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->Pair<List<Any>, State>[1]}>>[*]
+{
+  let supported = [
+    pair({x: Function<Any>[1], req: State[1] | $req.inFilter}, evaluateAsPureExpressionNode_FunctionExpression_1__State_1__Pair_1_),
+    pair({x: Function<Any>[1], req: State[1] | $req.inProject}, passthruForPainlessExpression_FunctionExpression_1__State_1__Pair_1_)
   ];
 }
