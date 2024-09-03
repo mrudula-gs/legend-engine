@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.finos.legend.engine</groupId>
         <artifactId>legend-engine-xts-deephaven</artifactId>
-        <version>4.53.9-SNAPSHOT</version>
+        <version>4.55.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>legend-engine-xt-deephaven-executionPlan-test</artifactId>

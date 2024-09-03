@@ -13,6 +13,11 @@
 // limitations under the License.
 //
 
+
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.ImportAwareCodeSection;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.Section;
+
 package org.finos.legend.engine.language.stores.deephaven;
 
 public class DeephavenStoreParseTreeWalker
@@ -65,19 +70,19 @@ public class DeephavenStoreParseTreeWalker
         store.tables = PureGrammarParserUtility.validateAndExtractRequiredField(ctx.tables(), )
 
     }
-
-    private Table visitTable(DeephavenParserGrammar.TableContext ctx)
-    {
-        Table table = new Table();
-        table.sourceInformation = this.walkerSourceInformation.getSourceInformation(ctx);
-        table.name = ctx.relationalIdentifier().QUOTED_STRING() == null ? ctx.relationalIdentifier().unquotedIdentifier().getText() : ctx.relationalIdentifier().QUOTED_STRING().getText();
-        List<String> primaryKeys = new ArrayList<>();
-        table.columns = ListIterate.collect(ctx.columnDefinition(), columnDefinitionContext -> this.visitColumnDefinition(columnDefinitionContext, primaryKeys));
-        table.primaryKey = primaryKeys;
-        if (ctx.milestoneSpec() != null)
-        {
-            table.milestoning = ListIterate.collect(ctx.milestoneSpec().milestoning(), this::visitMilestoning);
-        }
-        return table;
-    }
+//
+//    private DeephavenTable visitTable(DeephavenParserGrammar.TableContext ctx)
+//    {
+//        Table table = new Table();
+//        table.sourceInformation = this.walkerSourceInformation.getSourceInformation(ctx);
+//        table.name = ctx.relationalIdentifier().QUOTED_STRING() == null ? ctx.relationalIdentifier().unquotedIdentifier().getText() : ctx.relationalIdentifier().QUOTED_STRING().getText();
+//        List<String> primaryKeys = new ArrayList<>();
+//        table.columns = ListIterate.collect(ctx.columnDefinition(), columnDefinitionContext -> this.visitColumnDefinition(columnDefinitionContext, primaryKeys));
+//        table.primaryKey = primaryKeys;
+//        if (ctx.milestoneSpec() != null)
+//        {
+//            table.milestoning = ListIterate.collect(ctx.milestoneSpec().milestoning(), this::visitMilestoning);
+//        }
+//        return table;
+//    }
 }
