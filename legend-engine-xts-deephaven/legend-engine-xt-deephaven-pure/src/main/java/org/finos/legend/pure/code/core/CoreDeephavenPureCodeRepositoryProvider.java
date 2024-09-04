@@ -19,11 +19,11 @@ import org.finos.legend.pure.m3.serialization.filesystem.repository.CodeReposito
 import org.finos.legend.pure.m3.serialization.filesystem.repository.CodeRepositoryProvider;
 import org.finos.legend.pure.m3.serialization.filesystem.repository.GenericCodeRepository;
 
-public class CoreDeephavenMetamodelCodeRepositoryProvider implements CodeRepositoryProvider
+public class CoreDeephavenPureCodeRepositoryProvider implements CodeRepositoryProvider
 {
     @Override
     public CodeRepository repository()
     {
-        return GenericCodeRepository.build("core_deephaven_metamodel.definition.json");
+        return GenericCodeRepository.build("core_deephaven_pure.definition.json");
     }
 }

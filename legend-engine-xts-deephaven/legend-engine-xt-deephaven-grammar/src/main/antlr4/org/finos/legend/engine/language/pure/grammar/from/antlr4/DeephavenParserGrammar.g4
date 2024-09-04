@@ -11,6 +11,7 @@ options
 
 unquotedIdentifier:                         VALID_STRING
                                             | DEEPHAVEN
+                                            | IMPORT
                                             | TABLE | COLUMNS
 ;
 
@@ -23,12 +24,18 @@ columnTypes:                                DATETIME |
                                             BOOLEAN
 ;
 
+imports:                                    (importStatement)*
+;
+
+importStatement:                            IMPORT packagePath PATH_SEPARATOR STAR SEMI_COLON
+;
+
 definition:                                 imports
                                                 (deephavenDefinition)*
                                             EOF
 ;
 
-deephavenDefinition:                        Deephaven qualifiedName
+deephavenDefinition:                        DEEPHAVEN qualifiedName
                                                 BRACE_OPEN
                                                     (
                                                         tableDefinition (COMMA tableDefinition)*
@@ -36,15 +43,18 @@ deephavenDefinition:                        Deephaven qualifiedName
                                                 BRACE_CLOSE
 ;
 
-tableDefinition                             columns
-                                                BRACE_OPEN
+columns:                                        BRACE_OPEN
                                                     (
-                                                        columnName : columnType COMMA
+                                                        columnName COLON columnType COMMA
                                                     )*
                                                 BRACE_CLOSE
 ;
 
-columnName                                  VALID_STRING | STRING
+tableDefinition:                            columns
 ;
 
-columnType                                  DATETIME | STRING | INT | BOOLEAN
+columnName:                                 VALID_STRING | STRING
+;
+
+columnType:                                 DATETIME | STRING | INT | BOOLEAN
+;

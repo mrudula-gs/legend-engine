@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//import meta::pure::store::*;
+
 import meta::external::store::deephaven::metamodel::store::*;
 // TODO: ask beyraf - is this following naming convention - meta::external::store::deephaven::type::metamodel? 
 import meta::external::store::deephaven::metamodel::type::*;

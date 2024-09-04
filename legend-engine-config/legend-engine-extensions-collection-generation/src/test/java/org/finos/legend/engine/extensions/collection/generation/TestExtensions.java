@@ -602,6 +602,7 @@ public class TestExtensions
                 .with("core_external_store_relational_sql_dialect_translation")
                 .with("core_external_store_relational_sql_dialect_translation_duckdb")
                 .with("core_external_store_relational_postgres_sql_parser")
+                .with("core_deephaven_pure")
                 ;
     }
 }

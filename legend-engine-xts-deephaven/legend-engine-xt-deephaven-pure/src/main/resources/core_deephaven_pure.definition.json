@@ -1,14 +1,12 @@
 {
-  "name" : "core_deephaven_metamodel",
+  "name" : "core_deephaven_pure",
   "pattern" : "(meta::external::store::deephaven)(::.*)?",
   "dependencies" : [
     "platform",
     "platform_dsl_mapping",
     "platform_dsl_store",
-    "platform_dsl_graph",
-    "platform_dsl_path",
-    "core_functions_json",
     "core_functions_unclassified",
+    "core_functions_standard",
     "core",
     "core_authentication"
   ]
