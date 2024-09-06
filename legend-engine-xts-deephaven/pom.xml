@@ -18,7 +18,7 @@
         <module>legend-engine-xt-deephaven-grammar</module>
         <module>legend-engine-xt-deephaven-pure</module>
 <!--        <module>legend-engine-xt-deephaven-protocol-utils</module>-->
-<!--        <module>legend-engine-xt-deephaven-protocol</module>-->
+        <module>legend-engine-xt-deephaven-protocol</module>
 <!--        <module>legend-engine-xt-deephaven-executionPlan-test</module>-->
     </modules>
 </project>

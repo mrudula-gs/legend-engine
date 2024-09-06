@@ -10,7 +10,7 @@ options
 identifier:                             VALID_STRING | STRING | SERVER_URL | AUTHENTICATION
 ;
 
-DeephavenConnectionDefinition:                 (
+deephavenConnectionDefinition:         (
                                             connectionStore
                                             | serverUrl
                                             | authentication

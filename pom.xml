@@ -46,6 +46,7 @@
         <module>legend-engine-xts-relationalStore</module>
         <module>legend-engine-xts-mongodb</module>
         <module>legend-engine-xts-elasticsearch</module>
+        <module>legend-engine-xts-deephaven</module>
 
         <!-- RelationalAI -->
         <module>legend-engine-xts-relationalai</module>

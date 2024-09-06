@@ -6,5 +6,5 @@ import CoreLexerGrammar;
 // -------------------------------------- KEYWORD --------------------------------------
 
 STORE:                              'store';
-SERVER_URL:                         'serverURL';
+SERVER_URL:                         'serverUrl';
 AUTHENTICATION:                     'authentication';

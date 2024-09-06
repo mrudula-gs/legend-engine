@@ -43,14 +43,12 @@ deephavenDefinition:                        DEEPHAVEN qualifiedName
                                                 BRACE_CLOSE
 ;
 
-columns:                                        BRACE_OPEN
+tableDefinition:                            COLUMNS
+                                                BRACE_OPEN
                                                     (
                                                         columnName COLON columnType COMMA
                                                     )*
                                                 BRACE_CLOSE
-;
-
-tableDefinition:                            columns
 ;
 
 columnName:                                 VALID_STRING | STRING

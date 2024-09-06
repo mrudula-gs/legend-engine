@@ -4,6 +4,7 @@ import CoreLexerGrammar;
 
 // -------------------------------------- KEYWORD --------------------------------------
 
+IMPORT:                                     'import';
 DEEPHAVEN:                                  'Deephaven';
 TABLE:                                      'Table';
 COLUMNS:                                    'Columns';
