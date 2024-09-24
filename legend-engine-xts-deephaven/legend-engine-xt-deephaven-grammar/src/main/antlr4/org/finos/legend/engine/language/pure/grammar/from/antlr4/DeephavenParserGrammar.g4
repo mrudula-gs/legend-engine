@@ -7,21 +7,16 @@ options
     tokenVocab = DeephavenLexerGrammar;
 }
 
-// -------------------------------------- IDENTIFIER --------------------------------------
+columnType:                                 DATE_TIME | STRING | INT | BOOLEAN
+;
 
 unquotedIdentifier:                         VALID_STRING
                                             | DEEPHAVEN
                                             | IMPORT
-                                            | TABLE | COLUMNS
+                                            | TABLE | COLUMNS | columnType
 ;
 
 identifier:                                 unquotedIdentifier | STRING
-;
-
-columnTypes:                                DATETIME |
-                                            STRING |
-                                            INT |
-                                            BOOLEAN
 ;
 
 imports:                                    (importStatement)*
@@ -43,16 +38,22 @@ deephavenDefinition:                        DEEPHAVEN qualifiedName
                                                 BRACE_CLOSE
 ;
 
-tableDefinition:                            COLUMNS
-                                                BRACE_OPEN
-                                                    (
-                                                        columnName COLON columnType COMMA
-                                                    )*
-                                                BRACE_CLOSE
+tableDefinition:                            TABLE tableName
+                                            BRACE_OPEN
+                                                (
+                                                    COLUMNS
+                                                    BRACE_OPEN
+                                                        (
+                                                            columnName COLON columnType COMMA
+                                                        )*
+                                                    BRACE_CLOSE
+                                                )*
+                                            BRACE_CLOSE
 ;
 
-columnName:                                 VALID_STRING | STRING
+columnName:                           VALID_STRING | STRING | QUOTED_STRING
 ;
 
-columnType:                                 DATETIME | STRING | INT | BOOLEAN
+tableName:                            VALID_STRING | STRING | QUOTED_STRING
 ;
+
