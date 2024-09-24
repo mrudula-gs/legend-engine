@@ -256,6 +256,7 @@ function meta::external::store::deephaven::pureToDeephaven::supportedFilterFunct
 }
 
 //TODO: ask beyraf - not exactly sure what this is for yet - why are the 2 in here called "catchall"
+// implementation detail - for elastic - to catch only if in filter or in project some match boolean? probably not important
 function meta::external::store::deephaven::pureToDeephaven::supportedSimpleValueFunctions(): Pair<LambdaFunction<{Function<Any>[1],  State[1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->Pair<List<Any>, State>[1]}>>[*]
 {
   let supported = [

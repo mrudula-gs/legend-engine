@@ -34,6 +34,9 @@ public class TestDeephavenGrammarParser extends TestGrammarParser.TestGrammarPar
     @Override
     public String getParserGrammarIdentifierInclusionTestCode(List<String> keywords)
     {
+        // TODO move to notes
+        // in relational, a database can include other databases - enabling imports allows people to specify some other elements/stores - imports can be used to resolve elements within the definition of the store
+        // goal is to simplify the user experience - e.g. fully specify classnames or just enable use imports to resolve the stuff
         return "###Deephaven\n" +
                 "import abc::abc::*;\n" +
                 "Deephaven test::Store" + ListAdapter.adapt(keywords).makeString("::") + "\n" +
@@ -43,7 +46,7 @@ public class TestDeephavenGrammarParser extends TestGrammarParser.TestGrammarPar
                 "        Columns\n" +
                 "        {\n" +
                 "            \"prop1\": string,\n" +
-                "            \"prop2\": int,\n" +
+                "            \"prop2\": int\n" +
                 "        }\n" +
                 "    }\n" +
                 "}";

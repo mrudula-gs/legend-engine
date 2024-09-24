@@ -35,7 +35,6 @@ import java.util.function.Consumer;
 public class DeephavenParseTreeWalker
 {
     private final SourceCodeParserInfo parserInfo;
-    //private final PropertyDefinitionParseTreeWalker propertyDefinitionParseTreeWalker = new PropertyDefinitionParseTreeWalker();
     private final PureGrammarParserExtensions extension;
 
     public DeephavenParseTreeWalker(PureGrammarParserExtensions extension, SourceCodeParserInfo parserInfo)
@@ -44,8 +43,6 @@ public class DeephavenParseTreeWalker
         this.extension = extension;
     }
 
-    // TODO: ask beyraf - why does DefinitionContext have imports? This is Generated from Antlr
-    // e.g. what generates this code? "public static class ComplexPropertyTypesContext extends ParserRuleContext "?
     public Section visit(String sectionType, Consumer<PackageableElement> elementConsumer, DeephavenParserGrammar.DefinitionContext definitionContext)
     {
         ImportAwareCodeSection section = new ImportAwareCodeSection();
@@ -73,10 +70,12 @@ public class DeephavenParseTreeWalker
     // TODO: tamimi FIXME Hack to compile grammar module
     private String visitDeephavenStore(DeephavenParserGrammar.DeephavenDefinitionContext ctx)
     {
+        // TODO: ask beyraf - is this class compiled from protocol?
 //        DeephavenStore store = new DeephavenStore();
 //        // required fields for all stores
 //        store.name = PureGrammarParserUtility.fromIdentifier(ctx.qualifiedName().identifier());
 //        // TODO: ask beyraf why does he use map(PackagePathContext::identifier) instead of just using packagePath().identifier()?
+        // answer - some of the identifiers are OPTIONAL on the grammar - so use jdk optional to say this value is optional - if present then map to identifier else null; Optional/map may read better - more in functional style of writing stuff
 //        store._package = ctx.qualifiedName().packagePath() == null ? Collections.emptyList() : PureGrammarParserUtility.fromPath(ctx.qualifiedName().packagePath().map(DeephavenParserGrammar.PackagePathContext::identifier));
 //        store.sourceInformation = this.parserInfo.walkerSourceInformation.getSourceInformation(ctx);
 

@@ -43,9 +43,7 @@ tableDefinition:                            TABLE tableName
                                                 (
                                                     COLUMNS
                                                     BRACE_OPEN
-                                                        (
-                                                            columnName COLON columnType COMMA
-                                                        )*
+                                                        columnName COLON columnType (COMMA columnName COLON columnType)*
                                                     BRACE_CLOSE
                                                 )*
                                             BRACE_CLOSE
