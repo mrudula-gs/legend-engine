@@ -13,7 +13,8 @@ columnType:                                 DATE_TIME | STRING | INT | BOOLEAN
 unquotedIdentifier:                         VALID_STRING
                                             | DEEPHAVEN
                                             | IMPORT
-                                            | TABLE | COLUMNS | columnType
+                                            | TABLE
+                                            | TABLES | COLUMNS | COLUMNDEFINITION | columnType
 ;
 
 identifier:                                 unquotedIdentifier | STRING
@@ -33,25 +34,33 @@ definition:                                 imports
 deephavenDefinition:                        DEEPHAVEN qualifiedName
                                                 BRACE_OPEN
                                                     (
-                                                        tableDefinition (COMMA tableDefinition)*
+                                                        tables
                                                     )*
                                                 BRACE_CLOSE
+;
+
+tables:                                     tableDefinition (COMMA tableDefinition)*
 ;
 
 tableDefinition:                            TABLE tableName
                                             BRACE_OPEN
                                                 (
-                                                    COLUMNS
-                                                    BRACE_OPEN
-                                                        columnName COLON columnType (COMMA columnName COLON columnType)*
-                                                    BRACE_CLOSE
+                                                    columns
                                                 )*
                                             BRACE_CLOSE
 ;
 
-columnName:                           VALID_STRING | STRING | QUOTED_STRING
+columns:                                    columnDefinition (COMMA columnDefinition)*
 ;
 
-tableName:                            VALID_STRING | STRING | QUOTED_STRING
+columnDefinition:                           columnName COLON columnType
+;
+
+// TODO: tamimi - fix this - for some reason it doesn't allow single quotes - causes Unexpected Token exception
+// we should allow this for columnnames that have spaces or identifiers that are doubling as names
+columnName:                           VALID_STRING | STRING
+;
+
+tableName:                            VALID_STRING | STRING
 ;
 

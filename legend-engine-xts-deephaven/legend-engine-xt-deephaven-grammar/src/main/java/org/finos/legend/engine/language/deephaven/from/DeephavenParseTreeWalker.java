@@ -15,6 +15,7 @@
 
 package org.finos.legend.engine.language.deephaven.from;
 
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.engine.language.pure.grammar.from.PureGrammarParserUtility;
 import org.finos.legend.engine.language.pure.grammar.from.SourceCodeParserInfo;
@@ -25,10 +26,21 @@ import org.finos.legend.engine.language.pure.grammar.from.antlr4.connection.Deep
 import org.finos.legend.engine.language.pure.grammar.from.antlr4.connection.DeephavenConnectionParserGrammar;
 import org.finos.legend.engine.language.pure.grammar.from.extension.PureGrammarParserExtensions;
 
+import org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore;
+import org.finos.legend.engine.protocol.deephaven.metamodel.store.Table;
+import org.finos.legend.engine.protocol.deephaven.metamodel.store.Column;
+
+import org.finos.legend.engine.protocol.deephaven.metamodel.type.BooleanType;
+import org.finos.legend.engine.protocol.deephaven.metamodel.type.IntType;
+import org.finos.legend.engine.protocol.deephaven.metamodel.type.StringType;
+import org.finos.legend.engine.protocol.deephaven.metamodel.type.TimeType;
+import org.finos.legend.engine.protocol.deephaven.metamodel.type.Type;
+import org.finos.legend.engine.protocol.deephaven.metamodel.type.TypeVisitor;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.ImportAwareCodeSection;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.Section;
 
+import java.util.stream.Collectors;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -63,103 +75,77 @@ public class DeephavenParseTreeWalker
 
     private void visit(List<DeephavenParserGrammar.DeephavenDefinitionContext> deephavenStoreDefinition, Consumer<PackageableElement> elementConsumer)
     {
-        // TODO: ask beyraf - is the elementConsumer of the same type as deephavenStoreDefinitionContext? It is not clear from looking at the code
-        //deephavenStoreDefinition.stream().map(this::visitDeephavenStore).forEach(elementConsumer);
+        deephavenStoreDefinition.stream().map(this::visitDeephavenStore).forEach(elementConsumer);
     }
 
-    // TODO: tamimi FIXME Hack to compile grammar module
-    private String visitDeephavenStore(DeephavenParserGrammar.DeephavenDefinitionContext ctx)
+    private DeephavenStore visitDeephavenStore(DeephavenParserGrammar.DeephavenDefinitionContext ctx)
     {
-        // TODO: ask beyraf - is this class compiled from protocol?
-//        DeephavenStore store = new DeephavenStore();
-//        // required fields for all stores
-//        store.name = PureGrammarParserUtility.fromIdentifier(ctx.qualifiedName().identifier());
-//        // TODO: ask beyraf why does he use map(PackagePathContext::identifier) instead of just using packagePath().identifier()?
-        // answer - some of the identifiers are OPTIONAL on the grammar - so use jdk optional to say this value is optional - if present then map to identifier else null; Optional/map may read better - more in functional style of writing stuff
-//        store._package = ctx.qualifiedName().packagePath() == null ? Collections.emptyList() : PureGrammarParserUtility.fromPath(ctx.qualifiedName().packagePath().map(DeephavenParserGrammar.PackagePathContext::identifier));
-//        store.sourceInformation = this.parserInfo.walkerSourceInformation.getSourceInformation(ctx);
+        DeephavenStore store = new DeephavenStore();
+        // required fields for all stores
+        store.name = PureGrammarParserUtility.fromIdentifier(ctx.qualifiedName().identifier());
+        store._package = ctx.qualifiedName().packagePath() == null ? "" : PureGrammarParserUtility.fromPath(ctx.qualifiedName().packagePath().identifier());
+        store.sourceInformation = this.parserInfo.walkerSourceInformation.getSourceInformation(ctx);
 
         // fields defined for deephaven
-        //store.tables = PureGrammarParserUtility.validateAndExtractRequiredField(ctx.tables(), )
-
-        return "";
-
+        // TODO: ask beyraf/check undertanding - validateAndExtractRequiredField only does "return contexts.get(0);" so what about the rest of the items? or because tables is the entire set of tableDefinitions (by the way it's defined in parser grammar so there is only 1)?
+        store.tables = PureGrammarParserUtility.validateAndExtractRequiredField(ctx.tables(), DeephavenLexerGrammar.VOCABULARY.getLiteralName(DeephavenLexerGrammar.TABLES), store.sourceInformation)
+                .tableDefinition()
+                .stream()
+                .map(this::visitTableDefinition)
+                .collect(Collectors.toList());
+        return store;
     }
 
-//    private class PropertyDefinitionParseTreeWalker extends DeephavenParserGrammarBaseVisitor<Property>
-//    {
-//        @Override
-//        public Property visitScalarPropertyDefinition(DeephavenParserGrammar.ScalarPropertyDefinitionContext ctx)
-//        {
-//            DeephavenParserGrammar.ScalarPropertyTypesContext scalarPropertyTypesContext = ctx.scalarPropertyTypes();
-//            TerminalNode type = scalarPropertyTypesContext.getChild(TerminalNode.class, 0);
-//
-//            Property property = new Property();
-//
-//            switch (type.getSymbol().getType())
-//            {
-//                case DeephavenParserGrammar.KEYWORD:
-//                    property.keyword = new KeywordProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property.keyword);
-//                    break;
-//                case DeephavenParserGrammar.TEXT:
-//                    property.text = new TextProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property.text);
-//                    break;
-//                case DeephavenParserGrammar.DATE:
-//                    property.date = new DateProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property.date);
-//                    break;
-//                case DeephavenParserGrammar.SHORT:
-//                    property._short = new ShortNumberProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property._short);
-//                    break;
-//                case DeephavenParserGrammar.BYTE:
-//                    property._byte = new ByteNumberProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property._byte);
-//                    break;
-//                case DeephavenParserGrammar.INTEGER:
-//                    property.integer = new IntegerNumberProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property.integer);
-//                    break;
-//                case DeephavenParserGrammar.LONG:
-//                    property._long = new LongNumberProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property._long);
-//                    break;
-//                case DeephavenParserGrammar.FLOAT:
-//                    property._float = new FloatNumberProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property._float);
-//                    break;
-//                case DeephavenParserGrammar.HALF_FLOAT:
-//                    property.half_float = new HalfFloatNumberProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property.half_float);
-//                    break;
-//                case DeephavenParserGrammar.DOUBLE:
-//                    property._double = new DoubleNumberProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property._double);
-//                    break;
-//                case DeephavenParserGrammar.BOOLEAN:
-//                    property._boolean = new BooleanProperty();
-//                    DeephavenParseTreeWalker.this.processScalarPropertyContent(ctx.scalarPropertyContent(), property._boolean);
-//                    break;
-//            }
-//
-//            return property;
-//        }
-//    }
-//
-//    private DeephavenTable visitTable(DeephavenParserGrammar.TableContext ctx)
-//    {
-//        Table table = new Table();
-//        table.sourceInformation = this.walkerSourceInformation.getSourceInformation(ctx);
-//        table.name = ctx.relationalIdentifier().QUOTED_STRING() == null ? ctx.relationalIdentifier().unquotedIdentifier().getText() : ctx.relationalIdentifier().QUOTED_STRING().getText();
-//        List<String> primaryKeys = new ArrayList<>();
-//        table.columns = ListIterate.collect(ctx.columnDefinition(), columnDefinitionContext -> this.visitColumnDefinition(columnDefinitionContext, primaryKeys));
-//        table.primaryKey = primaryKeys;
-//        if (ctx.milestoneSpec() != null)
-//        {
-//            table.milestoning = ListIterate.collect(ctx.milestoneSpec().milestoning(), this::visitMilestoning);
-//        }
-//        return table;
-//    }
+    private Table visitTableDefinition(DeephavenParserGrammar.TableDefinitionContext tableDefinitionContext)
+    {
+        Table table = new Table();
+        table.columns = PureGrammarParserUtility.validateAndExtractRequiredField(
+                    tableDefinitionContext.columns(),
+                    DeephavenLexerGrammar.VOCABULARY.getLiteralName(DeephavenLexerGrammar.COLUMNS),
+                    this.parserInfo.walkerSourceInformation.getSourceInformation(tableDefinitionContext)
+                )
+                .columnDefinition()
+                .stream()
+                .map(this::visitColumn)
+                .collect(Collectors.toList());
+        return table;
+    }
+
+    private Column visitColumn(DeephavenParserGrammar.ColumnDefinitionContext columnDefinitionContext)
+    {
+        Column column = new Column();
+        column.name = PureGrammarParserUtility.fromIdentifier(columnDefinitionContext.columnName());
+        column.type = new ColumnDefinitionParseTreeWalker().visitColumnType(columnDefinitionContext.columnType());
+        return column;
+    }
+
+    private class ColumnDefinitionParseTreeWalker extends DeephavenParserGrammarBaseVisitor<Type>
+    {
+        @Override
+        public Type visitColumnType(DeephavenParserGrammar.ColumnTypeContext columnTypeContext)
+        {
+            TerminalNode type = columnTypeContext.getChild(TerminalNode.class, 0);
+
+            Type columnType = null;
+
+            // TODO: tamimi - consider... should we raise exception for unknown type (null type)
+            switch (type.getSymbol().getType())
+            {
+                case DeephavenParserGrammar.DATE_TIME:
+                    columnType = new TimeType();
+                    break;
+                case DeephavenParserGrammar.STRING:
+                    columnType = new StringType();
+                    break;
+                case DeephavenParserGrammar.INT:
+                    columnType = new IntType();
+                    break;
+                case DeephavenParserGrammar.BOOLEAN:
+                    columnType = new BooleanType();
+                    break;
+            }
+
+            return columnType;
+        }
+    }
 }

@@ -12,33 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//import meta::pure::store::*;
 
 import meta::external::store::deephaven::metamodel::store::*;
-// TODO: ask beyraf - is this following naming convention - meta::external::store::deephaven::type::metamodel? 
 import meta::external::store::deephaven::metamodel::type::*;
 
 Class meta::external::store::deephaven::metamodel::store::DeephavenStore extends meta::pure::store::Store
 {
-
+  tables : Table[1..*];
 }
 
 // For now we only use a very basic model for PoC
 Class meta::external::store::deephaven::metamodel::store::Table
 {
-  columns : meta::external::store::deephaven::metamodel::store::Column[1..*];
+  columns : Column[1..*];
 }
 
 Class meta::external::store::deephaven::metamodel::store::Column
 {
   name : String[1];
   type : meta::external::store::deephaven::metamodel::type::Type[1];
-  // TODO: ask beyraf - shouldn't column also have pointer to dataset as a property? where is that linkage?
 }
 
-Class meta::external::store::deephaven::metamodel::DeephavenOperationElement
-{
-}
+// TODO: tamimi - add the sourceInformation fields to all classes for Deephaven such that the parser can add metadata back into the pojos/pmcd
+
+// Class meta::external::store::deephaven::metamodel::DeephavenOperationElement
+// {
+// }
 
 // TODO: Think about whether we need subclasses - e.g. Ring/Blink etc
 

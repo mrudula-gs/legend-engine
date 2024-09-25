@@ -15,4 +15,4 @@
 #
 #
 
-org.finos.legend.engine.protocol.deephaven.DeephavenProtocolExtension
+org.finos.legend.engine.protocol.deephaven.metamodel.DeephavenProtocolExtension
