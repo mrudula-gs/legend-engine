@@ -66,14 +66,14 @@
 <!--            <groupId>org.finos.legend.pure</groupId>-->
 <!--            <artifactId>legend-pure-m2-dsl-store-pure</artifactId>-->
 <!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId> org.finos.legend.pure</groupId>-->
-<!--            <artifactId>legend-pure-m3-core</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId> org.finos.legend.pure</groupId>-->
-<!--            <artifactId>legend-pure-m4</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId> org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-m3-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId> org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-m4</artifactId>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId> org.finos.legend.pure</groupId>-->
 <!--            <artifactId>legend-pure-runtime-java-engine-compiled</artifactId>-->
@@ -99,20 +99,20 @@
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-protocol-pure</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.finos.legend.engine</groupId>-->
-<!--            <artifactId>legend-engine-language-pure-compiler</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.finos.legend.engine</groupId>
+            <artifactId>legend-engine-language-pure-compiler</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-language-pure-grammar</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.finos.legend.engine</groupId>-->
-<!--            <artifactId>legend-engine-xt-deephaven-pure</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.finos.legend.engine</groupId>
+            <artifactId>legend-engine-xt-deephaven-pure</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>org.finos.legend.engine</groupId>-->
 <!--            <artifactId>legend-engine-xt-deephaven-protocol-utils</artifactId>-->

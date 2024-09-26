@@ -24,6 +24,7 @@ Class meta::external::store::deephaven::metamodel::store::DeephavenStore extends
 // For now we only use a very basic model for PoC
 Class meta::external::store::deephaven::metamodel::store::Table
 {
+  name : String[1];
   columns : Column[1..*];
 }
 

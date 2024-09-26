@@ -35,7 +35,6 @@ import org.finos.legend.engine.protocol.deephaven.metamodel.type.IntType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.StringType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.TimeType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.Type;
-import org.finos.legend.engine.protocol.deephaven.metamodel.type.TypeVisitor;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.ImportAwareCodeSection;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.Section;
@@ -99,6 +98,7 @@ public class DeephavenParseTreeWalker
     private Table visitTableDefinition(DeephavenParserGrammar.TableDefinitionContext tableDefinitionContext)
     {
         Table table = new Table();
+        table.name = PureGrammarParserUtility.fromIdentifier(tableDefinitionContext.tableName());
         table.columns = PureGrammarParserUtility.validateAndExtractRequiredField(
                     tableDefinitionContext.columns(),
                     DeephavenLexerGrammar.VOCABULARY.getLiteralName(DeephavenLexerGrammar.COLUMNS),

@@ -34,6 +34,8 @@ public class TestDeephavenGrammarParser extends TestGrammarParser.TestGrammarPar
     @Override
     public String getParserGrammarIdentifierInclusionTestCode(List<String> keywords)
     {
+        // TODO: tamimi - current parser grammar will pick up a "\'" as unknown token - need to enable single quote for
+        //  col names that may contain space or as a method of identifier escape
         return "###Deephaven\n" +
                 "import abc::abc::*;\n" +
                 "Deephaven test::Store" + ListAdapter.adapt(keywords).makeString("::") + "\n" +
