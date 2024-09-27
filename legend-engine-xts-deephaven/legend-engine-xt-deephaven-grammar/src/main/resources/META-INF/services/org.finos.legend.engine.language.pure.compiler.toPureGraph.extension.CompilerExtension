@@ -15,4 +15,4 @@
 #
 #
 
-org.finos.legend.engine.language.deephaven.from.DeephavenGrammarParserExtension
+org.finos.legend.engine.language.deephaven.compiler.DeephavenCompilerExtension

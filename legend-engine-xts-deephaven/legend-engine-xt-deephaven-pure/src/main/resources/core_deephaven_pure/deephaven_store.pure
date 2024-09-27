@@ -18,7 +18,7 @@ import meta::external::store::deephaven::metamodel::type::*;
 
 Class meta::external::store::deephaven::metamodel::store::DeephavenStore extends meta::pure::store::Store
 {
-  tables : Table[1..*];
+  tables : Table[1..*]; 
 }
 
 // For now we only use a very basic model for PoC
