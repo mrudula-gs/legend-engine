@@ -15,23 +15,17 @@
 package org.finos.legend.engine.language.deephaven.compiler;
 
 import org.eclipse.collections.api.RichIterable;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.tuple.Pair;
 import org.finos.legend.engine.language.pure.compiler.test.TestCompilationFromGrammar;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
-import org.finos.legend.engine.protocol.deephaven.metamodel.store.Table;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_store_Column;
 import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_store_DeephavenStore;
 import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_store_Table;
 import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_BooleanType;
-import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_BooleanType_Impl;
 import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_IntType;
-import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_IntType_Impl;
 import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_StringType;
-import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_StringType_Impl;
 import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_TimeType;
-import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_TimeType_Impl;
 import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_Type;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.store.Store;
 import org.junit.Assert;
@@ -95,9 +89,6 @@ public class TestDeephavenCompiler extends TestCompilationFromGrammar.TestCompil
         Assert.assertEquals(tables.size(), 1);
         RichIterable<? extends Root_meta_external_store_deephaven_metamodel_store_Column> columns = tables.getAny()._columns();
         Assert.assertEquals(columns.size(), 4);
-
-        Map<String, Class<? extends Root_meta_external_store_deephaven_metamodel_type_Type>> expectedCols = new HashMap<String, Class<? extends Root_meta_external_store_deephaven_metamodel_type_Type>>();
-        expectedCols.put("prop1", Root_meta_external_store_deephaven_metamodel_type_StringType.class);
 
         Map<String, Class<? extends Root_meta_external_store_deephaven_metamodel_type_Type>> actualCols = new HashMap<String, Class<? extends Root_meta_external_store_deephaven_metamodel_type_Type>>();
         columns.forEach(x -> actualCols.put(x._name(), x._type().getClass()));
