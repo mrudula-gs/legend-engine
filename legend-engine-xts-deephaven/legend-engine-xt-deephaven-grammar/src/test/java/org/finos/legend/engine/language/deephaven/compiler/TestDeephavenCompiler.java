@@ -93,8 +93,6 @@ public class TestDeephavenCompiler extends TestCompilationFromGrammar.TestCompil
         Map<String, Class<? extends Root_meta_external_store_deephaven_metamodel_type_Type>> actualCols = new HashMap<String, Class<? extends Root_meta_external_store_deephaven_metamodel_type_Type>>();
         columns.forEach(x -> actualCols.put(x._name(), x._type().getClass()));
 
-        Class<Root_meta_external_store_deephaven_metamodel_type_StringType> strCls = Root_meta_external_store_deephaven_metamodel_type_StringType.class;
-
         Assert.assertTrue(Root_meta_external_store_deephaven_metamodel_type_StringType.class.isAssignableFrom(actualCols.get("prop1")));
         Assert.assertTrue(Root_meta_external_store_deephaven_metamodel_type_IntType.class.isAssignableFrom(actualCols.get("prop2")));
         Assert.assertTrue(Root_meta_external_store_deephaven_metamodel_type_BooleanType.class.isAssignableFrom(actualCols.get("prop3")));
