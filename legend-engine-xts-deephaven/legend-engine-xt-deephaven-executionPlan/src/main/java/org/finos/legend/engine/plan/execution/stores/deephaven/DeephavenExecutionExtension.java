@@ -21,7 +21,7 @@ import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.plan.execution.extension.ExecutionExtension;
 import org.finos.legend.engine.plan.execution.stores.StoreType;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
-import org.finos.legend.engine.protocol.store.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
+//import org.finos.legend.engine.protocol.store.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
 import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
 import org.finos.legend.engine.plan.execution.result.Result;
 import org.finos.legend.engine.shared.core.identity.Identity;
@@ -29,7 +29,7 @@ import org.finos.legend.engine.shared.core.identity.Identity;
 import java.util.Collections;
 import java.util.List;
 
-public class DeephavenExecutionExtension extends ExecutionExtension
+public class DeephavenExecutionExtension implements ExecutionExtension
 {
     @Override
     public MutableList<String> group()

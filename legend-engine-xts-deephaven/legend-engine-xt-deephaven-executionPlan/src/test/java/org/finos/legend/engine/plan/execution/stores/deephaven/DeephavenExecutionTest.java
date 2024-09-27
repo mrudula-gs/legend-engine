@@ -2,6 +2,8 @@ package org.finos.legend.engine.plan.execution.stores.deephaven;
 
 import org.eclipse.microprofile.openapi.models.Paths;
 
+import org.finos.legend.engine.language.pure.grammar.from.PureGrammarParser;
+import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.junit.Test;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -33,6 +35,7 @@ public class DeephavenExecutionTest
     public void deephavenSelectWhere() throws IOException
     {
         String testGrammar = Files.lines(this.testGrammarPath).collect(Collectors.joining("\n"));
-        //PureModelContextData pmcd = PureGrammarParser.newInstance().parseModel()
+        PureModelContextData pmcd = PureGrammarParser.newInstance().parseModel(testGrammar);
+        System.out.println("TODO DELETE ME");
     }
 }
