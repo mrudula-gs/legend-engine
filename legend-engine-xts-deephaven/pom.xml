@@ -14,7 +14,7 @@
     <name>Legend Engine - XTS - Deephaven</name>
 
     <modules>
-<!--        <module>legend-engine-xt-deephaven-executionPlan</module>-->
+        <module>legend-engine-xt-deephaven-executionPlan</module>
         <module>legend-engine-xt-deephaven-grammar</module>
         <module>legend-engine-xt-deephaven-pure</module>
 <!--        <module>legend-engine-xt-deephaven-protocol-utils</module>-->

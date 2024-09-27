@@ -1,0 +1,81 @@
+###Deephaven
+Deephaven test::Store
+{
+    //TODO: tamimi - below should be anonymized because this is not possible to put in open source
+    Table nds_desktops
+    {
+        BuildDate: datetime,
+        CaliberName: string,
+        CityName: string,
+        DatacenterName: string,
+        DeploymentPhase: string,
+        DiskFreeGb: int,
+        DiskFreeMb: int,
+        DiskTotalGb: int,
+        DiskTotalMb: int,
+        DistinguishedName: string,
+        DnsDomain: string,
+        DomainName: string,
+        HardwareAssetTag: int,
+        HardwareModel: string,
+        HardwareSerialNumber: string,
+        HypervisorManager: string,
+        HypervisorName: string,
+        HypervisorType: string,
+        HypervisorVersion: string,
+        IpAddress: string,
+        IsAvailable: boolean,
+        IsFailed: boolean,
+        LastAgentCheckin: datetime,
+        LocationBuilding: string,
+        LocationCabinet: string,
+        LocationCity: string,
+        LocationFloor: string,
+        LocationRoom: string,
+        MappedUsers: int,
+        MemoryGb: int,
+        MemoryMb: int,
+        NetworkTag: string,
+        OperatingSystem: string,
+        OperatingSystemBitSize: int,
+        OrganizationalUnit: string,
+        PoolName: string,
+        Processors: int,
+        ProtocolName: string,
+        RegionName: string,
+        SubnetMask: int,
+        SubnetNetwork: string,
+        TimezoneDisplayName: string,
+        TimezoneId: string,
+        TimezoneUtcOffset: int,
+        DesktopName: string
+    }
+}
+
+###Connection
+DeephavenConnection test::Connection
+{
+    store: test::Store;
+    serverUrl: # URL { %_url_% }#;
+    authentication: # PSK {
+        psk: LegendDeephavenSecret
+        {
+            systemPropertyName: 'org.finos.legend.engine.plan.execution.stores.deephaven.test.psk';
+        };
+    }#;
+}
+
+###Runtime
+Runtime test::Runtime
+{
+  mappings:
+  [
+  ];
+  connections:
+  [
+    test::Store:
+    [
+      connection: test::Connection
+    ]
+  ];
+}
