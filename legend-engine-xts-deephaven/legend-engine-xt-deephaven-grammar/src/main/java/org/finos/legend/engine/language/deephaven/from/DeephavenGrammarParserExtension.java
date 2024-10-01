@@ -48,7 +48,7 @@ public class DeephavenGrammarParserExtension implements PureGrammarParserExtensi
     public static final String DEEPHAVEN_MAPPING_ELEMENT_TYPE = "Deephaven";
     public static final String DEEPHAVEN_CONNECTION_TYPE = "DeephavenConnection";
     private final Iterable<SectionParser> sectionParser;
-    //private final Iterable<ConnectionValueParser> connectionValueParser;
+    private final Iterable<ConnectionValueParser> connectionValueParser;
 
     public DeephavenGrammarParserExtension()
     {
@@ -99,7 +99,7 @@ public class DeephavenGrammarParserExtension implements PureGrammarParserExtensi
 
     private DeephavenConnection parseConnection(ConnectionValueSourceCode connectionValueSourceCode, PureGrammarParserExtensions extension)
     {
-        SourceCodeParserInfo parserInfo = this.getConnectionSectionParserInfo(connectionValueSourceCode.code, connectionValueSourceCode.walkerSourceInformation, connectionValueSourceCode.sourceInformation, DeephavenConnection::ConnectionDefinition);
+        SourceCodeParserInfo parserInfo = this.getConnectionSectionParserInfo(connectionValueSourceCode.code, connectionValueSourceCode.walkerSourceInformation, connectionValueSourceCode.sourceInformation, DeephavenConnectionParserGrammar::deephavenConnectionDefinition);
         DeephavenParseTreeWalker walker = new DeephavenParseTreeWalker(extension, parserInfo);
         return walker.visit((DeephavenConnectionParserGrammar.DeephavenConnectionDefinitionContext) parserInfo.rootContext);
     }

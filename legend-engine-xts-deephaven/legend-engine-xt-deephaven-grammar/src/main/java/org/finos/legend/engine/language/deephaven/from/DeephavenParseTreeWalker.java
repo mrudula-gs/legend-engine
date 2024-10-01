@@ -17,6 +17,8 @@ package org.finos.legend.engine.language.deephaven.from;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.collections.impl.utility.ListIterate;
+
+import org.finos.legend.engine.language.pure.dsl.authentication.grammar.from.IAuthenticationGrammarParserExtension;
 import org.finos.legend.engine.language.pure.grammar.from.PureGrammarParserUtility;
 import org.finos.legend.engine.language.pure.grammar.from.SourceCodeParserInfo;
 import org.finos.legend.engine.language.pure.grammar.from.antlr4.DeephavenLexerGrammar;
@@ -26,20 +28,30 @@ import org.finos.legend.engine.language.pure.grammar.from.antlr4.connection.Deep
 import org.finos.legend.engine.language.pure.grammar.from.antlr4.connection.DeephavenConnectionParserGrammar;
 import org.finos.legend.engine.language.pure.grammar.from.extension.PureGrammarParserExtensions;
 
+import org.finos.legend.engine.protocol.pure.v1.model.SourceInformation;
+import org.finos.legend.engine.protocol.pure.v1.model.context.EngineErrorType;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.ImportAwareCodeSection;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.Section;
+
 import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenSourceSpecification;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.Table;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.Column;
-
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.BooleanType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.IntType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.StringType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.TimeType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.Type;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.ImportAwareCodeSection;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.Section;
 
+import org.finos.legend.engine.shared.core.operational.Assert;
+import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.function.Consumer;
@@ -150,7 +162,46 @@ public class DeephavenParseTreeWalker
         }
     }
 
-    public DeephavenConnection visit(DeephavenConnectionParserGrammar.DeephavenConnectionDefinitionContext rootContext)
+    public DeephavenConnection visit(DeephavenConnectionParserGrammar.DeephavenConnectionDefinitionContext deephavenConnectionCtx)
     {
+        SourceInformation sourceInformation = this.parserInfo.walkerSourceInformation.getSourceInformation(deephavenConnectionCtx);
+
+        DeephavenConnection storeConnection = new DeephavenConnection();
+        storeConnection.sourceInformation = sourceInformation;
+
+        DeephavenConnectionParserGrammar.ConnectionStoreContext storeContext = PureGrammarParserUtility.validateAndExtractRequiredField(
+                deephavenConnectionCtx.connectionStore(),
+                DeephavenConnectionLexerGrammar.VOCABULARY.getLiteralName(DeephavenConnectionLexerGrammar.STORE),
+                sourceInformation
+        );
+
+        storeConnection.element = PureGrammarParserUtility.fromQualifiedName(Optional.ofNullable(storeContext.qualifiedName().packagePath()).map(DeephavenConnectionParserGrammar.PackagePathContext::identifier).orElse(Collections.emptyList()), storeContext.qualifiedName().identifier());
+        storeConnection.elementSourceInformation = this.parserInfo.walkerSourceInformation.getSourceInformation(storeContext.qualifiedName());
+
+        DeephavenConnectionParserGrammar.ServerUrlDefinitionContext serverUrlContext = PureGrammarParserUtility.validateAndExtractRequiredField(
+                deephavenConnectionCtx.serverUrlDefinition(),
+                DeephavenConnectionLexerGrammar.VOCABULARY.getLiteralName(DeephavenConnectionLexerGrammar.SERVER_URL_DEFINITION),
+                sourceInformation
+        );
+
+        DeephavenSourceSpecification sourceSpecification = new DeephavenSourceSpecification();
+        String maybeUri = serverUrlContext.serverUrl().getText();
+        try
+        {
+            sourceSpecification.url = new URI(maybeUri.trim().replaceAll("(^')|('$)",""));
+        }
+        catch (URISyntaxException e)
+        {
+            throw new EngineException("URL format is not valid", this.parserInfo.walkerSourceInformation.getSourceInformation(serverUrlContext), EngineErrorType.PARSER, e);
+        }
+
+        DeephavenConnectionParserGrammar.AuthenticationContext authenticationContext = PureGrammarParserUtility.validateAndExtractRequiredField(
+                deephavenConnectionCtx.authentication(),
+                DeephavenConnectionLexerGrammar.VOCABULARY.getLiteralName(DeephavenConnectionLexerGrammar.AUTHENTICATION),
+                sourceInformation
+        );
+        storeConnection.authSpec = IAuthenticationGrammarParserExtension.parseAuthentication(authenticationContext.islandDefinition(), this.parserInfo.walkerSourceInformation, this.extension);
+
+        return storeConnection;
     }
 }

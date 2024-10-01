@@ -12,7 +12,7 @@ identifier:                             VALID_STRING | STRING | SERVER_URL | AUT
 
 deephavenConnectionDefinition:         (
                                             connectionStore
-                                            | serverUrl
+                                            | serverUrlDefinition
                                             | authentication
                                         )*
                                         EOF
@@ -22,7 +22,10 @@ deephavenConnectionDefinition:         (
 connectionStore:                        STORE COLON qualifiedName SEMI_COLON
 ;
 
-serverUrl:                              SERVER_URL COLON islandDefinition SEMI_COLON
+serverUrlDefinition:                    SERVER_URL COLON serverUrl
+;
+
+serverUrl:                              STRING
 ;
 
 authentication:                         AUTHENTICATION COLON islandDefinition SEMI_COLON

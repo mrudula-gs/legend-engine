@@ -90,6 +90,7 @@ import org.finos.legend.engine.language.snowflakeApp.grammar.to.SnowflakeAppGram
 import org.finos.legend.engine.language.sql.grammar.integration.SQLGrammarParserExtension;
 import org.finos.legend.engine.language.sql.grammar.integration.SQLPureGrammarComposerExtension;
 import org.finos.legend.engine.language.stores.elasticsearch.v7.from.ElasticsearchGrammarParserExtension;
+import org.finos.legend.engine.language.deephaven.from.DeephavenGrammarParserExtension;
 import org.finos.legend.engine.protocol.bigqueryFunction.metamodel.BigQueryFunctionProtocolExtension;
 import org.finos.legend.engine.protocol.hostedService.metamodel.HostedServiceProtocolExtension;
 import org.finos.legend.engine.protocol.memsqlFunction.metamodel.MemSqlFunctionProtocolExtension;
@@ -368,6 +369,7 @@ public class TestExtensions
                 .with(TextParserExtension.class)
                 .with(ElasticsearchGrammarParserExtension.class)
                 .with(org.finos.legend.engine.language.pure.grammar.integration.MongoDBGrammarParserExtension.class)
+                .with(DeephavenGrammarParserExtension.class)
                 ;
     }
 

@@ -657,6 +657,12 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.finos.legend.engine</groupId>
+            <artifactId>legend-engine-xt-deephaven-grammar</artifactId>
+            <version>4.55.4-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
         <!-- DO NOT ADD FURTHER TEST DEPENDENCIES -->
         <!-- TEST -->
     </dependencies>

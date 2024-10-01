@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 
 public class DeephavenExecutionTest
 {
-    private final String testGrammarPath = ("/engineGrammar._pure_");
+    private final String testGrammarPath = ("/engineGrammar_simple._pure_");
     //private final String testDataPath;
 
     @BeforeClass
