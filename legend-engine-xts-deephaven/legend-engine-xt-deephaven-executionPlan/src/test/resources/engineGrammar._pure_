@@ -1,5 +1,5 @@
 ###Deephaven
-Deephaven test::Store
+Deephaven test::DeephavenStore
 {
     //TODO: tamimi - below should be anonymized because this is not possible to put in open source
     Table nds_desktops
@@ -53,7 +53,7 @@ Deephaven test::Store
 }
 
 ###Connection
-DeephavenConnection test::Connection
+DeephavenConnection test::DeephavenConnection
 {
     store: test::Store;
     serverUrl: # URL { %_url_% }#;
@@ -66,7 +66,7 @@ DeephavenConnection test::Connection
 }
 
 ###Runtime
-Runtime test::Runtime
+Runtime test::DeephavenRuntime
 {
   mappings:
   [

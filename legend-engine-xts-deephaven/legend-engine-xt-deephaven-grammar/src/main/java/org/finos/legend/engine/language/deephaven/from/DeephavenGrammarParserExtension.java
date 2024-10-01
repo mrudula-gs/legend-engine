@@ -17,22 +17,30 @@ package org.finos.legend.engine.language.deephaven.from;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.factory.Lists;
+import org.finos.legend.engine.language.pure.grammar.from.ParseTreeWalkerSourceInformation;
 import org.finos.legend.engine.language.pure.grammar.from.ParserErrorListener;
 import org.finos.legend.engine.language.pure.grammar.from.PureGrammarParserContext;
 import org.finos.legend.engine.language.pure.grammar.from.SectionSourceCode;
 import org.finos.legend.engine.language.pure.grammar.from.SourceCodeParserInfo;
 import org.finos.legend.engine.language.pure.grammar.from.antlr4.DeephavenLexerGrammar;
 import org.finos.legend.engine.language.pure.grammar.from.antlr4.DeephavenParserGrammar;
+import org.finos.legend.engine.language.pure.grammar.from.antlr4.connection.DeephavenConnectionLexerGrammar;
+import org.finos.legend.engine.language.pure.grammar.from.antlr4.connection.DeephavenConnectionParserGrammar;
+import org.finos.legend.engine.language.pure.grammar.from.connection.ConnectionValueSourceCode;
 import org.finos.legend.engine.language.pure.grammar.from.extension.ConnectionValueParser;
 import org.finos.legend.engine.language.pure.grammar.from.extension.PureGrammarParserExtension;
+import org.finos.legend.engine.language.pure.grammar.from.extension.PureGrammarParserExtensions;
 import org.finos.legend.engine.language.pure.grammar.from.extension.SectionParser;
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
+import org.finos.legend.engine.protocol.pure.v1.model.SourceInformation;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.DefaultCodeSection;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.Section;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class DeephavenGrammarParserExtension implements PureGrammarParserExtension
 {
@@ -45,7 +53,7 @@ public class DeephavenGrammarParserExtension implements PureGrammarParserExtensi
     public DeephavenGrammarParserExtension()
     {
         this.sectionParser = Lists.immutable.with(SectionParser.newParser(NAME, this::parseSection));
-        //this.connectionValueParser = Lists.immutable.with(ConnectionValueParser.newParser(DEEPHAVEN_CONNECTION_TYPE, this::parseConnection));
+        this.connectionValueParser = Lists.immutable.with(ConnectionValueParser.newParser(DEEPHAVEN_CONNECTION_TYPE, this::parseConnection));
     }
 
     @Override
@@ -58,6 +66,12 @@ public class DeephavenGrammarParserExtension implements PureGrammarParserExtensi
     public Iterable<? extends SectionParser> getExtraSectionParsers()
     {
         return this.sectionParser;
+    }
+
+    @Override
+    public Iterable<? extends ConnectionValueParser> getExtraConnectionParsers()
+    {
+        return this.connectionValueParser;
     }
 
     private Section parseSection(SectionSourceCode sectionSourceCode, Consumer<PackageableElement> elementConsumer, PureGrammarParserContext context)
@@ -81,5 +95,26 @@ public class DeephavenGrammarParserExtension implements PureGrammarParserExtensi
         parser.addErrorListener(errorListener);
 
         return new SourceCodeParserInfo(sectionSourceCode.code, input, sectionSourceCode.sourceInformation, sectionSourceCode.walkerSourceInformation, lexer, parser, parser.definition());
+    }
+
+    private DeephavenConnection parseConnection(ConnectionValueSourceCode connectionValueSourceCode, PureGrammarParserExtensions extension)
+    {
+        SourceCodeParserInfo parserInfo = this.getConnectionSectionParserInfo(connectionValueSourceCode.code, connectionValueSourceCode.walkerSourceInformation, connectionValueSourceCode.sourceInformation, DeephavenConnection::ConnectionDefinition);
+        DeephavenParseTreeWalker walker = new DeephavenParseTreeWalker(extension, parserInfo);
+        return walker.visit((DeephavenConnectionParserGrammar.DeephavenConnectionDefinitionContext) parserInfo.rootContext);
+    }
+
+    private SourceCodeParserInfo getConnectionSectionParserInfo(String code, ParseTreeWalkerSourceInformation walkerSourceInformation, SourceInformation sourceInformation, Function<DeephavenConnectionParserGrammar, ParserRuleContext> rootContext)
+    {
+        CharStream input = CharStreams.fromString(code);
+
+        DeephavenConnectionLexerGrammar lexer = new DeephavenConnectionLexerGrammar(input);
+        DeephavenConnectionParserGrammar parser = new DeephavenConnectionParserGrammar(new CommonTokenStream(lexer));
+
+        ParserErrorListener errorListener = new ParserErrorListener(walkerSourceInformation, DeephavenConnectionLexerGrammar.VOCABULARY);
+        lexer.addErrorListener(errorListener);
+        parser.addErrorListener(errorListener);
+
+        return new SourceCodeParserInfo(code, input, sourceInformation, walkerSourceInformation, lexer, parser, rootContext.apply(parser));
     }
 }

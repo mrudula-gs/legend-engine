@@ -26,6 +26,7 @@ import org.finos.legend.engine.language.pure.grammar.from.antlr4.connection.Deep
 import org.finos.legend.engine.language.pure.grammar.from.antlr4.connection.DeephavenConnectionParserGrammar;
 import org.finos.legend.engine.language.pure.grammar.from.extension.PureGrammarParserExtensions;
 
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.Table;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.Column;
@@ -147,5 +148,9 @@ public class DeephavenParseTreeWalker
 
             return columnType;
         }
+    }
+
+    public DeephavenConnection visit(DeephavenConnectionParserGrammar.DeephavenConnectionDefinitionContext rootContext)
+    {
     }
 }
