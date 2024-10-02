@@ -15,12 +15,23 @@
 
 package org.finos.legend.engine.language.deephaven.compiler;
 
+import java.util.List;
+
+import org.eclipse.collections.api.block.function.Function2;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
+
+import org.finos.legend.engine.language.pure.compiler.toPureGraph.CompileContext;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.extension.CompilerExtension;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.extension.Processor;
 
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.connection.Connection;
+
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore;
+
+import org.finos.legend.pure.generated.Root_meta_core_runtime_Connection;
+import org.finos.legend.pure.generated.Root_meta_pure_runtime_ExecutionContext;
 
 public class DeephavenCompilerExtension implements CompilerExtension
 {
@@ -41,5 +52,20 @@ public class DeephavenCompilerExtension implements CompilerExtension
     public Iterable<? extends Processor<?>> getExtraProcessors()
     {
         return Lists.immutable.with(Processor.newProcessor(DeephavenStore.class, HelperDeephavenStoreBuilder::buildStoreFirstPass));
+    }
+
+    @Override
+    public List<Function2<Connection, CompileContext, Root_meta_core_runtime_Connection>> getExtraConnectionValueProcessors()
+    {
+        return Lists.fixedSize.with(
+                (connectionValue, context) ->
+                {
+                    if (connectionValue instanceof DeephavenConnection)
+                    {
+                        return HelperDeephavenStoreBuilder.buildConnection((DeephavenConnection) connectionValue, context);
+                    }
+                    return null;
+                }
+        );
     }
 }

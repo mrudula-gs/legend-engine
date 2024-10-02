@@ -16,12 +16,17 @@
 package org.finos.legend.engine.language.deephaven.compiler;
 
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.CompileContext;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.SourceInformationHelper;
 
+import org.finos.legend.engine.language.pure.dsl.authentication.compiler.toPureGraph.HelperAuthenticationBuilder;
+
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenSourceSpecification;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.Table;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.Column;
@@ -37,8 +42,15 @@ import org.finos.legend.engine.protocol.deephaven.metamodel.type.ShortType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.StringType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.TimeType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.TypeVisitor;
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
+
+import org.finos.legend.engine.protocol.pure.v1.model.SourceInformation;
+import org.finos.legend.engine.protocol.pure.v1.model.context.EngineErrorType;
 import org.finos.legend.pure.generated.*;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
+
+import org.finos.legend.engine.shared.core.operational.Assert;
 
 public class HelperDeephavenStoreBuilder
 {
@@ -146,5 +158,35 @@ public class HelperDeephavenStoreBuilder
         {
             return new Root_meta_external_store_deephaven_metamodel_type_TimeType_Impl(val.getClass().getName(), null, this.context.pureModel.getClass("meta::external::store::deephaven::metamodel::type::TimeType"));
         }
+    }
+
+    public static Root_meta_external_store_deephaven_metamodel_runtime_DeephavenConnection buildConnection(DeephavenConnection srcConn, CompileContext context)
+    {
+        org.finos.legend.pure.m4.coreinstance.SourceInformation sourceInformation = SourceInformationHelper.toM3SourceInformation(srcConn.sourceInformation);
+
+        Root_meta_pure_runtime_connection_authentication_AuthenticationSpecification authSpec = HelperAuthenticationBuilder.buildAuthenticationSpecification(srcConn.authSpec, context);
+        Root_meta_external_store_deephaven_metamodel_runtime_DeephavenSourceSpecification sourceSpec = buildSourceSpecification(srcConn.sourceSpec, context, srcConn.sourceInformation);
+
+        Root_meta_external_store_deephaven_metamodel_runtime_DeephavenConnection conn = new Root_meta_external_store_deephaven_metamodel_runtime_DeephavenConnection_Impl("", sourceInformation, context.pureModel.getClass("meta::external::store::deephaven::metamodel::runtime::DeephavenConnection"))
+                ._authSpec(authSpec)
+                ._sourceSpec(sourceSpec);
+
+        return conn._validate(true, sourceInformation, context.getExecutionSupport());
+    }
+
+    private static Root_meta_external_store_deephaven_metamodel_runtime_DeephavenSourceSpecification buildSourceSpecification(DeephavenSourceSpecification srcSourceSpec, CompileContext context, SourceInformation sourceInformation)
+    {
+        Assert.assertTrue(srcSourceSpec.url.getPort() > 0, () -> "Deephaven URL is missing port: " + srcSourceSpec.url, sourceInformation, EngineErrorType.COMPILATION);
+
+        Enum scheme = context.pureModel.getEnumValue("meta::pure::functions::io::http::URLScheme", srcSourceSpec.url.getScheme(), SourceInformation.getUnknownSourceInformation(), sourceInformation);
+
+        Root_meta_pure_functions_io_http_URL url = new Root_meta_pure_functions_io_http_URL_Impl(srcSourceSpec.url.toString(), null, context.pureModel.getClass("meta::pure::functions::io::http::URL"))
+                ._scheme(scheme)
+                ._host(srcSourceSpec.url.getHost())
+                ._port(srcSourceSpec.url.getPort())
+                ._path(StringUtils.isEmpty(srcSourceSpec.url.getPath()) ? "/" : srcSourceSpec.url.getPath());
+
+        return new Root_meta_external_store_deephaven_metamodel_runtime_DeephavenSourceSpecification_Impl(srcSourceSpec.url.toString() + "_spec", null, context.pureModel.getClass("meta::external::store::elasticsearch::v7::metamodel::runtime::Elasticsearch7StoreURLSourceSpecification"))
+                ._url(url);
     }
 }
