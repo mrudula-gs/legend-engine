@@ -37,51 +37,48 @@ import java.util.Map;
 
 public class TestDeephavenCompiler extends TestCompilationFromGrammar.TestCompilationFromGrammarTestSuite
 {
+    private static final String BASIC_STORE = "###Deephaven\n" +
+            "import abc::abc::*;\n" +
+            "Deephaven test::Store::foo\n" +
+            "{\n" +
+            "    Table xyz\n" +
+            "    {\n" +
+            "        prop1: string,\n" +
+            "        prop2: int,\n" +
+            "        prop3: boolean,\n" +
+            "        prop4: datetime\n" +
+            "    }\n" +
+            "}\n\n";
+
+    private static final String BASIC_CONN = "###Connection\n" +
+            "DeephavenConnection test::DeephavenConnection\n" +
+            "{\n" +
+            "    store: test::DeephavenStore;\n" +
+            "    serverUrl: 'http://dummyurl.com:12345'\n" +
+            "    authentication: # PSK {\n" +
+            "        psk: LegendDeephavenSecret\n" +
+            "        {\n" +
+            "            systemPropertyName: 'sys.property.deephaven.test.psk';\n" +
+            "        };\n" +
+            "    }#;\n" +
+            "}";
 
     @Override
     protected String getDuplicatedElementTestCode()
     {
-        return "###Deephaven\n" +
-                "import abc::abc::*;\n" +
-                "Deephaven test::Store::foo\n" +
-                "{\n" +
-                "    Table xyz\n" +
-                "    {\n" +
-                "        prop1: string,\n" +
-                "        prop2: int\n" +
-                "    }\n" +
-                "}\n" +
-                "Deephaven test::Store::foo\n" +
-                "{\n" +
-                "    Table ijk\n" +
-                "    {\n" +
-                "        prop2: int,\n" +
-                "        prop3: boolean\n" +
-                "    }\n" +
-                "}";
+        return BASIC_STORE + BASIC_STORE;
     }
 
     @Override
     protected String getDuplicatedElementTestExpectedErrorMessage()
     {
-        return "COMPILATION error at [11:1-18:1]: Duplicated element 'test::Store::foo'";
+        return "COMPILATION error at [16:1-25:1]: Duplicated element 'test::Store::foo'";
     }
 
     @Test
     public void testCompileStore() throws Exception
     {
-        Pair<PureModelContextData, PureModel> result = test("###Deephaven\n" +
-                "Deephaven test::Store::foo\n" +
-                "{\n" +
-                "    Table xyz\n" +
-                "    {\n" +
-                "        prop1: string,\n" +
-                "        prop2: int,\n" +
-                "        prop3: boolean,\n" +
-                "        prop4: datetime\n" +
-                "    }\n" +
-                "}\n"
-        );
+        Pair<PureModelContextData, PureModel> result = test(BASIC_STORE);
 
         Store store = result.getTwo().getStore("test::Store::foo");
         Assert.assertTrue(store instanceof Root_meta_external_store_deephaven_metamodel_store_DeephavenStore);
@@ -97,5 +94,11 @@ public class TestDeephavenCompiler extends TestCompilationFromGrammar.TestCompil
         Assert.assertTrue(Root_meta_external_store_deephaven_metamodel_type_IntType.class.isAssignableFrom(actualCols.get("prop2")));
         Assert.assertTrue(Root_meta_external_store_deephaven_metamodel_type_BooleanType.class.isAssignableFrom(actualCols.get("prop3")));
         Assert.assertTrue(Root_meta_external_store_deephaven_metamodel_type_TimeType.class.isAssignableFrom(actualCols.get("prop4")));
+    }
+
+    @Test
+    public void testCompileConnection()
+    {
+        Pair<PureModelContextData, PureModel> result = test(BASIC_CONN);
     }
 }

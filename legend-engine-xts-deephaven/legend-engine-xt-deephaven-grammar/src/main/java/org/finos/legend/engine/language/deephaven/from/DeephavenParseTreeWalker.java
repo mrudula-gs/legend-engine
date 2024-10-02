@@ -194,6 +194,7 @@ public class DeephavenParseTreeWalker
         {
             throw new EngineException("URL format is not valid", this.parserInfo.walkerSourceInformation.getSourceInformation(serverUrlContext), EngineErrorType.PARSER, e);
         }
+        storeConnection.sourceSpec = sourceSpecification;
 
         DeephavenConnectionParserGrammar.AuthenticationContext authenticationContext = PureGrammarParserUtility.validateAndExtractRequiredField(
                 deephavenConnectionCtx.authentication(),

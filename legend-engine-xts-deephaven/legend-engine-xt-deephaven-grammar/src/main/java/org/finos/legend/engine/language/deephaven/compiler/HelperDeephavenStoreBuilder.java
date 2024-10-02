@@ -186,7 +186,7 @@ public class HelperDeephavenStoreBuilder
                 ._port(srcSourceSpec.url.getPort())
                 ._path(StringUtils.isEmpty(srcSourceSpec.url.getPath()) ? "/" : srcSourceSpec.url.getPath());
 
-        return new Root_meta_external_store_deephaven_metamodel_runtime_DeephavenSourceSpecification_Impl(srcSourceSpec.url.toString() + "_spec", null, context.pureModel.getClass("meta::external::store::elasticsearch::v7::metamodel::runtime::Elasticsearch7StoreURLSourceSpecification"))
+        return new Root_meta_external_store_deephaven_metamodel_runtime_DeephavenSourceSpecification_Impl(srcSourceSpec.url.toString() + "_spec", null, context.pureModel.getClass("meta::external::store::deephaven::metamodel::runtime::DeephavenSourceSpecification"))
                 ._url(url);
     }
 }

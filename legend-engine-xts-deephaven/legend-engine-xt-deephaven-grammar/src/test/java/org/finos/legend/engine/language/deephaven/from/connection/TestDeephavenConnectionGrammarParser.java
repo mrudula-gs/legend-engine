@@ -56,4 +56,6 @@ public class TestDeephavenConnectionGrammarParser extends TestGrammarParser.Test
                 "    }#;\n" +
                 "}";
     }
+
+    // TODO - tamimi add test here to check that when parsing the connection code that both sourceSpec and authSpec have been initialized to the appropriate subclasses
 }
