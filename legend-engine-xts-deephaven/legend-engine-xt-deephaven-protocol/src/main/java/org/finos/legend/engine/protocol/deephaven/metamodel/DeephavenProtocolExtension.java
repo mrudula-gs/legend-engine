@@ -21,12 +21,14 @@ import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.protocol.pure.v1.extension.ProtocolSubTypeInfo;
 import org.finos.legend.engine.protocol.pure.v1.extension.PureProtocolExtension;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.connection.Connection;
-//import org.finos.legend.engine.protocol.store.deephaven.metamodel.executionPlan.DeephavenRequestExecutionNode;
-//import org.finos.legend.engine.protocol.store.deephaven.metamodel.executionPlan.context.DeephavenExecutionContext;
+import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
+import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.context.DeephavenExecutionContext;
 import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore;
+import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.executionContext.ExecutionContext;
 
 import java.util.List;
 import java.util.Map;
@@ -48,17 +50,17 @@ public class DeephavenProtocolExtension implements PureProtocolExtension
                         .withSubtype(DeephavenConnection.class, "deephavenConnection")
                         .build(),
 //                // Execution Nodes
-//                ProtocolSubTypeInfo.newBuilder(ExecutionNode.class)
-//                        .withSubtype(Elasticsearch7RequestExecutionNode.class, "elasticsearch7RequestExecutionNode")
-//                        .build(),
+                ProtocolSubTypeInfo.newBuilder(ExecutionNode.class)
+                        .withSubtype(DeephavenExecutionNode.class, "DeephavenExecutionNode")
+                        .build(),
                 // Packageable element
                 ProtocolSubTypeInfo.newBuilder(PackageableElement.class)
                         .withSubtype(DeephavenStore.class, "deephavenStore")
-                        .build()
+                        .build(),
 //                // Execution Context
-//                ProtocolSubTypeInfo.newBuilder(ExecutionContext.class)
-//                        .withSubtype(Elasticsearch7ExecutionContext.class, "elasticsearch7ExecutionContext")
-//                        .build()
+                ProtocolSubTypeInfo.newBuilder(ExecutionContext.class)
+                        .withSubtype(DeephavenExecutionContext.class, "DeephavenExecutionContext")
+                        .build()
         ));
     }
 

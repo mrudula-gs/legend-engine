@@ -73,9 +73,9 @@ Runtime test::DeephavenRuntime
   ];
   connections:
   [
-    test::Store:
+    test::DeephavenStore:
     [
-      connection: test::Connection
+      connection: test::DeephavenConnection
     ]
   ];
 }

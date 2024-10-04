@@ -1,0 +1,6 @@
+function meta::external::store::deephaven::vX_X_X::extension::getExtension(type: String[1]): meta::pure::extension::SerializerExtension[1]
+{
+  assertEquals($type, 'Deephaven');
+  ^meta::protocols::pure::vX_X_X::extension::SerializerExtension_vX_X_X(
+  );
+}

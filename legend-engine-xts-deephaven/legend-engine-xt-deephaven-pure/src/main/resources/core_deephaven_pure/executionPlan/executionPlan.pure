@@ -16,15 +16,15 @@ import meta::pure::executionPlan::toString::*;
 import meta::pure::extension::*;
 import meta::external::store::deephaven::metamodel::executionPlan::*;
 
-// Class meta::external::store::deephaven::metamodel::executionPlan::DeephavenRequestExecutionNode extends meta::pure::executionPlan::ExecutionNode
-// {
-//    connection : meta::external::store::deephaven::metamodel::runtime::DeephavenStoreConnection[1];
-// }
+Class meta::external::store::deephaven::metamodel::executionPlan::DeephavenExecutionNode extends meta::pure::executionPlan::ExecutionNode
+{
+   connection : meta::external::store::deephaven::metamodel::runtime::DeephavenConnection[1];
+}
 
-// Class meta::external::store::deephaven::metamodel::executionPlan::context::DeephavenExecutionContext extends meta::pure::runtime::ExecutionContext
-// {
+Class meta::external::store::deephaven::metamodel::executionPlan::context::DeephavenExecutionContext extends meta::pure::runtime::ExecutionContext
+{
 
-// }
+}
 
 // Class meta::external::store::deephaven::metamodel::executionPlan::tds::TDSColumnResultPath
 // {     

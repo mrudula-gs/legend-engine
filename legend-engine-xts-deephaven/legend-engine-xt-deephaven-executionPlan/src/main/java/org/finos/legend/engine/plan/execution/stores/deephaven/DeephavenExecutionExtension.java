@@ -21,7 +21,7 @@ import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.plan.execution.extension.ExecutionExtension;
 import org.finos.legend.engine.plan.execution.stores.StoreType;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
-//import org.finos.legend.engine.protocol.store.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
+import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
 import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
 import org.finos.legend.engine.plan.execution.result.Result;
 import org.finos.legend.engine.shared.core.identity.Identity;
@@ -43,10 +43,21 @@ public class DeephavenExecutionExtension implements ExecutionExtension
         return Collections.singletonList(((executionNode, identity, executionState) ->
         {
             // TODO: tammimi - fix this next
-//            if (executionNode instanceof DeephavenExecutionNode)
-//            {
-//                return executionNode.accept(executionState.getStoreExecutionState(StoreType.ESv7).getVisitor(identity, executionState));
-//            }
+            if (executionNode instanceof DeephavenExecutionNode)
+            {
+                return executionNode.accept(executionState.getStoreExecutionState(StoreType.Deephaven).getVisitor(identity, executionState));
+
+                // long term
+                // TODO ESTABLISH SESSION
+                // Execute generated code
+                // Future<Table> result = executionNode.queryEntryPoint.execute(session);
+                // translate to TDS Result???
+
+                // hack
+                // TODO ESTABLISH SESSION
+                // handcraft some table expression / query
+                // translate to TDS Result
+            }
             return null;
         }));
     }

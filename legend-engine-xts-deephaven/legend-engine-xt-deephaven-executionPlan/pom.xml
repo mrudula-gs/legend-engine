@@ -70,17 +70,39 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.finos.legend.engine</groupId>-->
-<!--            <artifactId>legend-engine-xt-deephaven-protocol</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.finos.legend.engine</groupId>
+            <artifactId>legend-engine-xt-deephaven-protocol</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>org.finos.legend.engine</groupId>-->
 <!--            <artifactId>legend-engine-xt-deephaven-pure</artifactId>-->
 <!--            <version>${project.version}</version>-->
 <!--        </dependency>-->
         <!-- Deephaven XT -->
+
+        <!-- Deephaven -->
+        <dependency>
+            <groupId>io.deephaven</groupId>
+            <artifactId>deephaven-java-client-session</artifactId>
+            <version>0.36.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.deephaven</groupId>
+            <artifactId>deephaven-uri</artifactId>
+            <version>0.36.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.deephaven</groupId>
+            <artifactId>deephaven-java-client-barrage</artifactId>
+            <version>0.36.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-services</artifactId>
+        </dependency>
+        <!-- Deephaven -->
 
         <dependency>
             <groupId>junit</groupId>
