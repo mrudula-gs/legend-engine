@@ -116,22 +116,21 @@ public class DeephavenCompilerExtension implements CompilerExtension
                 }
                 org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore ds = (org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore) store;
 
-                String schemaName = (accessor.path.size() == 3) ? accessor.path.get(1) : null;
-                String tableName = (accessor.path.size() == 3) ? accessor.path.get(2) : accessor.path.get(1);
+                if (accessor.path.size() != 2)
+                {
+                    throw new EngineException("Deephaven accessor requires 2 params (Store and Table); the number of params " + accessor.path.size() + " does not match the number expected" + store._name(), accessor.sourceInformation, EngineErrorType.COMPILATION);
+                }
+
+                String tableName = accessor.path.get(1);
 
                 List<Table> tables = ds.tables;
-                // TODO - check schema and throw exception if unexpected
-                org.finos.legend.pure.m3.coreinstance.meta.relational.metamodel.Schema schema = schemaName == null ? ds._schemas().getFirst() : ds._schemas().select(c -> c.getName().equals(schemaName)).getFirst();
 
-                if (schema == null)
-                {
-                    throw new EngineException(schemaName == null ? "The database " + store._name() + " has no schemas" : "The schema " + schemaName + " can't be found in the store " + store._name(), accessor.sourceInformation, EngineErrorType.COMPILATION);
-                }
-                Table table = schema._tables().select(c -> c.getName().equals(tableName)).getFirst();
+                Table table = tables.stream().filter(t -> t.name == tableName).findFirst().orElse(null);;
                 if (table == null)
                 {
                     throw new EngineException("The table " + accessor.path.get(1) + " can't be found in the store " + store._name(), accessor.sourceInformation, EngineErrorType.COMPILATION);
                 }
+
                 ProcessorSupport processorSupport = context.pureModel.getExecutionSupport().getProcessorSupport();
 
                 org.finos.legend.pure.m4.coreinstance.SourceInformation sourceInformation = null;
