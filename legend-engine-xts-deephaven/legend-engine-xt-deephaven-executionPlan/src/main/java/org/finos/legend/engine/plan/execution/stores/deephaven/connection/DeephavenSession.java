@@ -1,3 +1,18 @@
+// Copyright 2023 Goldman Sachs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
 package org.finos.legend.engine.plan.execution.stores.deephaven.connection;
 
 import io.deephaven.client.impl.BarrageSession;
@@ -30,13 +45,13 @@ public class DeephavenSession
 
         // ClientConfig describes the configuration to connect to the host
         ClientConfig clientConfig = ClientConfig.builder()
-                .target(DeephavenTarget.of(URI.create(connStr.get_dhtarget())))
+                .target(DeephavenTarget.of(URI.create(deephavenTarget)))
                 .build();
 
         // SessionConfig describes the configuration needed to create a session
         SessionConfig sessionConfig = SessionConfig.builder()
                 // TODO: make this neater
-                .authenticationTypeAndValue("io.deephaven.authentication.psk.PskAuthenticationHandler " + connStr.get_psk())
+                .authenticationTypeAndValue(authTypeAndValue)
                 .build();
 
         // Create a FlightSessionFactory. This stitches together the above components to create the real, live
@@ -48,9 +63,8 @@ public class DeephavenSession
                 .build()
                 .factory();
 
-        this._barrageSession = barrageSessionfactory.newBarrageSession(this._sessionConfig);
+        this._barrageSession = barrageSessionFactory.newBarrageSession(sessionConfig);
         this.clientSession = this._barrageSession.session();
-
     }
 
     public void close() throws Exception

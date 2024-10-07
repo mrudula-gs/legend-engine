@@ -45,7 +45,8 @@ public class DeephavenExecutionExtension implements ExecutionExtension
             // TODO: tammimi - fix this next
             if (executionNode instanceof DeephavenExecutionNode)
             {
-                return executionNode.accept(executionState.getStoreExecutionState(StoreType.Deephaven).getVisitor(identity, executionState));
+                throw new UnsupportedOperationException("todo");
+                // return executionNode.accept(executionState.getStoreExecutionState(StoreType.Deephaven).getVisitor(identity, executionState));
 
                 // long term
                 // TODO ESTABLISH SESSION

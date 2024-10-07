@@ -15,8 +15,11 @@
 
 package org.finos.legend.engine.plan.execution.stores.deephaven.plugin;
 
+import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
 import org.finos.legend.engine.plan.execution.result.TDSResult;
 
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNodeVisitor;
 
 import org.finos.legend.engine.shared.core.identity.Identity;
@@ -24,9 +27,8 @@ import org.finos.legend.engine.shared.core.identity.Identity;
 public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<TDSResult>
 {
     private final Identity identity;
-    //TODO: tamimi - create these
-    //private final ExecutionState executionState;
-    //private final DeephavenStoreState state;
+    private final ExecutionState executionState;
+    private final DeephavenStoreState state;
 
     // TODO: tamimi - check if can use TDS result in future
     public DeephavenExecutionNodeExecutor(Identity identity, ExecutionState executionState, DeephavenStoreState state)
@@ -34,6 +36,14 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<TDSR
         this.identity = identity;
         this.executionState = executionState;
         this.state = state;
+    }
+
+    public TDSResult visit(ExecutionNode executionNode)
+    {
+//        DeephavenExecutionNode deephavenNode = (DeephavenExecutionNode) executionNode;
+//        DeephavenConnection connection = deephavenNode.connection;
+
+        return null;
     }
 
 }

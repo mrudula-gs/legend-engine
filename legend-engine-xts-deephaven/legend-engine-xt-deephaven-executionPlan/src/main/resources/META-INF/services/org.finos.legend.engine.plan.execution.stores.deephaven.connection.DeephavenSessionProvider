@@ -1,1 +1,1 @@
-org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSessionPSKProvider
+connection.deephaven.stores.execution.org.finos.legend.engine.plan.DeephavenSessionPSKProvider

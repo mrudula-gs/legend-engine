@@ -15,11 +15,24 @@
 
 package org.finos.legend.engine.plan.execution.stores.deephaven.plugin;
 
+import java.util.List;
+
 import org.finos.legend.engine.plan.execution.stores.StoreState;
 import org.finos.legend.engine.plan.execution.stores.StoreType;
+import org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession;
+import org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSessionProvider;
 
 public class DeephavenStoreState implements StoreState
 {
+    private final List<DeephavenSessionProvider> providers = DeephavenSessionProvider.providers();
+
+    private final DeephavenSession session;
+
+    DeephavenStoreState(DeephavenSession session)
+    {
+        this.session = session;
+    }
+
     @Override
     public StoreType getStoreType()
     {
@@ -31,4 +44,15 @@ public class DeephavenStoreState implements StoreState
     {
         return null;
     }
+
+    public List<DeephavenSessionProvider> getProviders()
+    {
+        return this.providers;
+    }
+
+    public DeephavenSession getSession()
+    {
+        return this.session;
+    }
+
 }
