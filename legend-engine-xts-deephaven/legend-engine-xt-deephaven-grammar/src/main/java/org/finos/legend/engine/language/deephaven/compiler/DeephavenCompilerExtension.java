@@ -17,7 +17,9 @@ package org.finos.legend.engine.language.deephaven.compiler;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.function.Function2;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
@@ -51,6 +53,17 @@ import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.cla
 import org.finos.legend.engine.shared.core.function.Function4;
 import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
 import org.finos.legend.pure.generated.Root_meta_core_runtime_Connection;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_store_Column;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_store_DeephavenStore;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_store_Table;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_store_Table_Impl;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_BooleanType;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_DoubleType;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_FloatType;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_IntType;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_StringType;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_TimeType;
+import org.finos.legend.pure.generated.Root_meta_external_store_deephaven_metamodel_type_Type;
 import org.finos.legend.pure.generated.Root_meta_pure_metamodel_type_generics_GenericType_Impl;
 import org.finos.legend.pure.generated.Root_meta_pure_metamodel_valuespecification_InstanceValue_Impl;
 import org.finos.legend.pure.generated.Root_meta_pure_runtime_ExecutionContext;
@@ -61,6 +74,7 @@ import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.relation.Relati
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.generics.GenericType;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.valuespecification.ValueSpecification;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.store.Store;
+import org.finos.legend.pure.m3.coreinstance.meta.relational.metamodel.Column;
 import org.finos.legend.pure.m3.navigation.ProcessorSupport;
 import org.finos.legend.pure.m3.navigation._package._Package;
 import org.finos.legend.pure.m3.navigation.relation._Column;
@@ -108,24 +122,20 @@ public class DeephavenCompilerExtension implements CompilerExtension
         // todo TAMIMI look at RelationalCompilerExtension
         return Lists.mutable.with((accessor, store, context, processingContext) ->
         {
-            if (store instanceof org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore) ->
+            if (store instanceof Root_meta_external_store_deephaven_metamodel_store_DeephavenStore)
             {
-                if (accessor.path.size() <= 1)
-                {
-                    throw new EngineException("Error in the accessor definition. Please provide a table.", accessor.sourceInformation, EngineErrorType.COMPILATION);
-                }
-                org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore ds = (org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore) store;
-
                 if (accessor.path.size() != 2)
                 {
                     throw new EngineException("Deephaven accessor requires 2 params (Store and Table); the number of params " + accessor.path.size() + " does not match the number expected" + store._name(), accessor.sourceInformation, EngineErrorType.COMPILATION);
                 }
 
+                Root_meta_external_store_deephaven_metamodel_store_DeephavenStore ds = (Root_meta_external_store_deephaven_metamodel_store_DeephavenStore) store;
+
                 String tableName = accessor.path.get(1);
 
-                List<Table> tables = ds.tables;
+                MutableList<? extends Root_meta_external_store_deephaven_metamodel_store_Table> tables = ds._tables().toList();
 
-                Table table = tables.stream().filter(t -> t.name == tableName).findFirst().orElse(null);;
+                Root_meta_external_store_deephaven_metamodel_store_Table table = tables.stream().filter(t -> t._name().equals(tableName)).findFirst().orElse(null);;
                 if (table == null)
                 {
                     throw new EngineException("The table " + accessor.path.get(1) + " can't be found in the store " + store._name(), accessor.sourceInformation, EngineErrorType.COMPILATION);
@@ -137,13 +147,14 @@ public class DeephavenCompilerExtension implements CompilerExtension
 
                 RelationType<?> type = _RelationType.build(table._columns().collect(c ->
                 {
-                    Column col = (Column) c;
+                    Root_meta_external_store_deephaven_metamodel_store_Column col = (Root_meta_external_store_deephaven_metamodel_store_Column) c;
                     String name = col._name();
                     if (name.startsWith("\""))
                     {
                         name = name.substring(1, name.length() - 1);
                     }
-                    return (CoreInstance) _Column.getColumnInstance(name, false, convertTypes(col._type(), processorSupport), (Multiplicity) org.finos.legend.pure.m3.navigation.multiplicity.Multiplicity.newMultiplicity(col._nullable() ? 0 : 1, 1, processorSupport), sourceInformation, processorSupport);
+                    // TODO: tamimi - right now no columns are nullable - enable nullable in future.
+                    return (CoreInstance) _Column.getColumnInstance(name, false, convertTypes(col._type(), processorSupport), (Multiplicity) org.finos.legend.pure.m3.navigation.multiplicity.Multiplicity.newMultiplicity(1, 1, processorSupport), sourceInformation, processorSupport);
                 }).toList(), sourceInformation, processorSupport);
 
                 GenericType genericType = new Root_meta_pure_metamodel_type_generics_GenericType_Impl("", null, context.pureModel.getClass("meta::pure::metamodel::type::generics::GenericType"))
@@ -171,10 +182,10 @@ public class DeephavenCompilerExtension implements CompilerExtension
         });
     }
 
-    private GenericType convertTypes(Type c, ProcessorSupport processorSupport)
+    private GenericType convertTypes(Root_meta_external_store_deephaven_metamodel_type_Type c, ProcessorSupport processorSupport)
     {
         String primitiveType;
-        if (c instanceof BooleanType)
+        if (c instanceof Root_meta_external_store_deephaven_metamodel_type_BooleanType)
         {
             primitiveType = "Boolean";
         }
@@ -191,7 +202,7 @@ public class DeephavenCompilerExtension implements CompilerExtension
 //        {
 //            primitiveType = "Boolean";
 //        }
-        else if (c instanceof IntType)
+        else if (c instanceof Root_meta_external_store_deephaven_metamodel_type_IntType)
         {
             primitiveType = "Integer";
         }
@@ -199,15 +210,15 @@ public class DeephavenCompilerExtension implements CompilerExtension
 //        {
 //            primitiveType = "Integer";
 //        }
-        else if (c instanceof DoubleType || c instanceof FloatType)
+        else if (c instanceof Root_meta_external_store_deephaven_metamodel_type_DoubleType || c instanceof Root_meta_external_store_deephaven_metamodel_type_FloatType)
         {
             primitiveType = "Float";
         }
-        else if (c instanceof StringType)
+        else if (c instanceof Root_meta_external_store_deephaven_metamodel_type_StringType)
         {
             primitiveType = "String";
         }
-        else if (c instanceof TimeType)
+        else if (c instanceof Root_meta_external_store_deephaven_metamodel_type_TimeType)
         {
             primitiveType = "DateTime";
         }
