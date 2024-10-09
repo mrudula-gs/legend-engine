@@ -11,8 +11,10 @@ import meta::external::store::deephaven::metamodel::executionPlan::*;
 import meta::external::store::deephaven::metamodel::executionPlan::tds::*;
 
 
-function meta::external::store::deephaven::protocol::vX_X_X::deephavenStoreExtension(type: String[1]): SerializerExtension[1]
+//TODO tamimi - consider renaming/refactor later
+function meta::external::store::deephaven::protocol::vX_X_X::deephavenStoreExtension(type: String[1]): meta::pure::extension::SerializerExtension[1]
 {
+  assertEquals($type, 'deephavenStore');
   ^SerializerExtension_vX_X_X(
 
       transfers_valueSpecification_transformAny = {inScope:String[*], open:Map<String,List<Any>>[1], m:Multiplicity[1], fe:FunctionExpression[0..1],useAppliedFunction:Boolean[1], extensions:meta::pure::extension::Extension[*] |
@@ -60,6 +62,7 @@ function meta::external::store::deephaven::protocol::vX_X_X::deephavenStoreExten
               dhNode: DeephavenExecutionNode[1] | ^meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenExecutionNode(
                 _type = 'deephavenExecutionNode',
                 resultType = $dhNode.resultType->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::executionPlan::transformResultType($extensions),
+                //TODO: tamimi - need to double check if need to pass auth specification but that should already be in the connection
                 connection = $dhNode.connection->meta::external::store::deephaven::protocol::vX_X_X::runtime::transformConnection($extensions)//,
                 // TODO: complete this part once execution has a result to return
                 // request = $dhNode.request,

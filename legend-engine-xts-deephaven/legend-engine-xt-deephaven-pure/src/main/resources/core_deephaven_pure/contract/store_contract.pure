@@ -33,7 +33,6 @@ function meta::external::store::deephaven::extension::deephavenExtension() : met
       availableStores = [
         deephavenStoreContract()
       ],
-      // TODO: ask beyraf - why does elastic have a serializer extension but not mongodb? is it because elasticsearch uses json? keeping for now as it may be good to try to track the version in any case
       serializerExtension = meta::external::store::deephaven::contract::deephavenStoreSerializerExtension_String_1__String_1_
    )
 }
