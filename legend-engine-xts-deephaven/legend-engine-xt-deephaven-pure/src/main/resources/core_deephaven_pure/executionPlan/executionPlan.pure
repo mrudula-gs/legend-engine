@@ -13,8 +13,10 @@
 // limitations under the License.
 
 import meta::pure::executionPlan::toString::*;
+import meta::pure::executionPlan::*;
 import meta::pure::extension::*;
 import meta::external::store::deephaven::metamodel::executionPlan::*;
+import meta::external::store::deephaven::metamodel::store::*;
 
 Class meta::external::store::deephaven::metamodel::executionPlan::DeephavenExecutionNode extends meta::pure::executionPlan::ExecutionNode
 {
@@ -26,10 +28,11 @@ Class meta::external::store::deephaven::metamodel::executionPlan::context::Deeph
 
 }
 
-// Class meta::external::store::deephaven::metamodel::executionPlan::tds::TDSColumnResultPath
-// {     
-//   // TODO: ask beyraf - check with beyraf what's the expectation for result here -should I also create some TDS result even though I don't use resultpath (that's ES specific)
-// }
+//TODO: tamimi - update this later -result is actually a table handle/ticket
+Class meta::external::store::deephaven::metamodel::executionPlan::tds::DeephavenTDSResult
+{     
+  table: Table[1];
+}
 
 // Class meta::external::store::deephaven::metamodel::executionPlan::ElasticsearchV7ExecutionActivity extends meta::pure::mapping::Activity
 // {
