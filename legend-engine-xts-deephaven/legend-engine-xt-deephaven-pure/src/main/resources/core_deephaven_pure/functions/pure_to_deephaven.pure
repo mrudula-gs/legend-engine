@@ -18,21 +18,26 @@ import meta::pure::router::metamodel::*;
 import meta::pure::metamodel::serialization::grammar::*;
 import meta::pure::extension::*;
 import meta::pure::mapping::*;
+import meta::core::runtime::*;
 
 // TODO: ask beyraf or think more - should I make DeephavenOperationElement part of metamodel::store instead?
 import meta::external::store::deephaven::metamodel::*;
 import meta::external::store::deephaven::metamodel::store::*;
+import meta::external::store::deephaven::metamodel::executionPlan::context::*;
 import meta::external::store::deephaven::extension::*;
 import meta::external::store::deephaven::pureToDeephaven::*;
 
 Class meta::external::store::deephaven::pureToDeephaven::State
 {
-  inScopeVars:Map<String, List<Any>>[1];
+  //inScopeVars:Map<String, List<Any>>[1];
   mapping:Mapping[0..1];
   propertyMappingFromRouter : PropertyMapping[*];
   inFilter: Boolean[1];
   inProject: Boolean[1];
-
+  sq: StoreQuery[1];
+  exeCtx: DeephavenExecutionContext[1];
+  extensions: Extension[*];
+  ext: RoutedValueSpecification[0..1];
   // TODO: ask beyraf or double check - pureToSQL has multiplicity of 1 for these functions but for elasticsearch is *; any reason?
   // TODO: ask beyraf or revisit - why does Relational and elastic use "xyzOperationElement" should I use DeephavenOperationElement in future? if not, then clean up that class; 
   // TODO: tamimi - also should do I not need those params since they are in ValueSpec? but how did they get there and if so why did relational not use it
@@ -49,7 +54,7 @@ Class meta::external::store::deephaven::pureToDeephaven::State
     if($this.debug.debug, |println($this.debug.space + $s->eval()), |[]);
   }:Any[0];
 
-  // TODO: tamimi - possibly remove this - not sure if this class is needed for deephaven
+  // TODO: need class for result here
   tdsDEDetails: TDSDEDetail[*];
 }
 
@@ -144,7 +149,7 @@ function meta::external::store::deephaven::pureToDeephaven::extractSimpleValue(v
   ]);
 }
 
-function meta::external::store::deephaven::pureToDeephaven::process(vs : ValueSpecification[1], req: State[1]): State[1]
+function meta::external::store::deephaven::pureToDeephaven::process(vs: ValueSpecification[1], req: State[1]): State[1]
 {
   $req.debug(|'-- processing VS ' + $vs->printValueSpecification('\n'));
   $vs->match([
@@ -154,6 +159,26 @@ function meta::external::store::deephaven::pureToDeephaven::process(vs : ValueSp
     ervs: ExtendedRoutedValueSpecification[1] | $ervs.value->process($req),
     any: Any[1] | fail('not supported: ' + $any->type()->toString());$req;
   ]);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::process(sq:StoreQuery[1], ext:RoutedValueSpecification[0..1], m:Mapping[0..1], runtime:Runtime[0..1], exeCtx:DeephavenExecutionContext[1], extensions:Extension[*], debug:DebugContext[1]): State[1]
+{
+  let req = ^State(
+    //search = ^SearchRequestBody(_source = ^SourceConfig(fetch = false->literal())),
+    inFilter = false,
+    inProject = false,
+
+    sq = $sq,
+    exeCtx = $exeCtx,
+    extensions = $extensions,
+    ext = $ext,
+    debug = $debug,
+    supportedFilterFunctions = supportedFilterFunctions(),
+    supportedRoutingFunctions = supportedRoutingFunctions(),
+    supportedSimpleValueFunctions = supportedSimpleValueFunctions()
+    //supportedAggregationFunctions = supportedAggregationFunctions(),
+    //supportedForPainlessScriptFunctions = supportedForPainlessScriptFunctions()
+  );
 }
 
 function meta::external::store::deephaven::pureToDeephaven::processEqual(vs : FunctionExpression[1], initReq: State[1]): State[1]
@@ -198,12 +223,12 @@ function meta::external::store::deephaven::pureToDeephaven::processFilter(vs : F
 {
   $initReq.debug(|'Processing ->filter');
   let debug = $initReq.debug;
+  // TODO - tamimi should it just be process() here?
   let currReq = process($vs.parametersValues->at(0), ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
   // TODO: tamimi - revisit whether deephaven allows filter in aggregation queries - however for PoC this is not covered
   //assertFalse($currReq.aggregationQuery, |'filter not supported in aggregation queries');
-  //let withFilterReq = processFilterLambda($vs.parametersValues->at(1), ^$currReq(inFilter = true));
-  //^$withFilterReq(inFilter = false, debug = $debug);
-  ^State(inScopeVars = $initReq.inScopeVars, mapping = $initReq.mapping, debug = $initReq.debug, inFilter = $initReq.inFilter, inProject = $initReq.inProject);
+  let withFilterReq = processFilterLambda($vs.parametersValues->at(1), ^$currReq(inFilter = true));
+  ^$withFilterReq(inFilter = false, debug = $debug);
 }
 
 function meta::external::store::deephaven::pureToDeephaven::evaluateAsPureExpressionNode(fe: FunctionExpression[1], req: State[1]): Pair<List<Any>, State>[1]
