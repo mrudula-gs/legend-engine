@@ -46,7 +46,7 @@ function meta::external::store::deephaven::executionPlan::generation::planExecut
   //Hack
     let deephavenNode = ^DeephavenExecutionNode(
     connection = $runtime->toOne('missing required runtime for Deephaven plan execution').connectionByElement($sq.store)->cast(@DeephavenConnection),
-    resultType = ^meta::pure::executionPlan::TDSResultType(type = TabularDataSet, tdsColumns = $tdsDetailsIndexed->map(p | ^TDSColumn(name = $p.second.name, offset = $p.first, type = $p.second.type)))
+    resultType = ^meta::pure::executionPlan::TDSResultType(type = TabularDataSet, tdsColumns = ^TDSColumn(name = 'dummy name', offset = 0, type=String))
     //metadata = ^TDSMetadata(columnResultPaths = $tdsDetailsIndexed->map(ci | ^TDSColumnResultPath(index = $ci.first, resultPath = $ci.second.resultPath)))
   );
 

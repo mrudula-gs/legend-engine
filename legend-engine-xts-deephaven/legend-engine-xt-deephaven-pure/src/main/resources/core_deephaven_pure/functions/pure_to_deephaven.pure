@@ -20,7 +20,7 @@ import meta::pure::extension::*;
 import meta::pure::mapping::*;
 import meta::core::runtime::*;
 
-// TODO: ask beyraf or think more - should I make DeephavenOperationElement part of metamodel::store instead?
+// TODO: tamimi - think more - do I need/should I make DeephavenOperationElement part of metamodel::store instead?
 import meta::external::store::deephaven::metamodel::*;
 import meta::external::store::deephaven::metamodel::store::*;
 import meta::external::store::deephaven::metamodel::executionPlan::context::*;
@@ -29,7 +29,6 @@ import meta::external::store::deephaven::pureToDeephaven::*;
 
 Class meta::external::store::deephaven::pureToDeephaven::State
 {
-  //inScopeVars:Map<String, List<Any>>[1];
   mapping:Mapping[0..1];
   propertyMappingFromRouter : PropertyMapping[*];
   inFilter: Boolean[1];
@@ -38,9 +37,7 @@ Class meta::external::store::deephaven::pureToDeephaven::State
   exeCtx: DeephavenExecutionContext[1];
   extensions: Extension[*];
   ext: RoutedValueSpecification[0..1];
-  // TODO: ask beyraf or double check - pureToSQL has multiplicity of 1 for these functions but for elasticsearch is *; any reason?
-  // TODO: ask beyraf or revisit - why does Relational and elastic use "xyzOperationElement" should I use DeephavenOperationElement in future? if not, then clean up that class; 
-  // TODO: tamimi - also should do I not need those params since they are in ValueSpec? but how did they get there and if so why did relational not use it
+  // TODO: tamimi - should do I not need those params since they are in ValueSpec? but how did they get there and if so why did relational not use it
   //supportedRoutingFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], DebugContext[1], Extension[*]->DeephavenOperationElement[1]}>>[*];
   //supportedFilterFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],  DebugContext[1], Extension[*]->DeephavenOperationElement[1]}>>[*];
   supportedRoutingFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->State[1]}>>[*];
@@ -280,8 +277,6 @@ function meta::external::store::deephaven::pureToDeephaven::supportedFilterFunct
   ]
 }
 
-//TODO: ask beyraf - not exactly sure what this is for yet - why are the 2 in here called "catchall"
-// implementation detail - for elastic - to catch only if in filter or in project some match boolean? probably not important
 function meta::external::store::deephaven::pureToDeephaven::supportedSimpleValueFunctions(): Pair<LambdaFunction<{Function<Any>[1],  State[1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->Pair<List<Any>, State>[1]}>>[*]
 {
   let supported = [

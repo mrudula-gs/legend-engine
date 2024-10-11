@@ -89,8 +89,6 @@ public class DeephavenExecutionTest
                 lambdaFunction,
                 Lists.mutable.empty(),
                 new Root_meta_pure_runtime_ExecutionContext_Impl(""),
-                // TODO: ask beyraf - does this imply we need a dependency on alloy project? seems wrong
-                // import com.gs.alloy.execution.configuration.GsPureExtension;
                 pureExtensions,
                 pureModel.getExecutionSupport()
         );

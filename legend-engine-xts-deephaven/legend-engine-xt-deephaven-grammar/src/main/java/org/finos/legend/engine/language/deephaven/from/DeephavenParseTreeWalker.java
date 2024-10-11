@@ -97,9 +97,7 @@ public class DeephavenParseTreeWalker
         store.name = PureGrammarParserUtility.fromIdentifier(ctx.qualifiedName().identifier());
         store._package = ctx.qualifiedName().packagePath() == null ? "" : PureGrammarParserUtility.fromPath(ctx.qualifiedName().packagePath().identifier());
         store.sourceInformation = this.parserInfo.walkerSourceInformation.getSourceInformation(ctx);
-
-        // fields defined for deephaven
-        // TODO: ask beyraf/check undertanding - validateAndExtractRequiredField only does "return contexts.get(0);" so what about the rest of the items? or because tables is the entire set of tableDefinitions (by the way it's defined in parser grammar so there is only 1)?
+        
         store.tables = PureGrammarParserUtility.validateAndExtractRequiredField(ctx.tables(), DeephavenLexerGrammar.VOCABULARY.getLiteralName(DeephavenLexerGrammar.TABLES), store.sourceInformation)
                 .tableDefinition()
                 .stream()
