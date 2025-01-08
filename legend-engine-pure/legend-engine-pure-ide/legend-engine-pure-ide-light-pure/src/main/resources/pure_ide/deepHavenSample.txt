@@ -1,0 +1,170 @@
+###Deephaven
+Deephaven test::DeephavenStore
+(
+    //TODO: anumam - below should be anonymized because this is not possible to put in open source
+    Table nds_desktops
+    (
+        Desktop_ID: int,
+        City_Name: string,
+        Desktop_Name: string
+    )
+
+    Table personTable
+    (
+        id: int,
+        firstName: string,
+        lastName: string,
+        age: int,
+        addressId: int,
+        firmId: int,
+        managerId: int,
+        startDate: datetime
+    )
+
+    Table t1
+    (
+        Letter1: string,
+        Value: int,
+        Truth: boolean
+    )
+
+    Table t2
+    (
+        Letter2: string,
+        Color: string,
+        Count: int,
+        Remaining: int
+    )
+
+    Table t3
+    (
+        Letter: string,
+        Color: string,
+        Value: int,
+        Truth: boolean
+    )
+)
+
+###Pure
+
+function test::basicInnerJoin(): Any[*]
+{
+  // #>{test::DeephavenStore.t1}#->join(#>{test::DeephavenStore.t2}#, JoinKind.INNER, {a,b|$a.Letter == $b.Letter})->from(test::DeephavenRuntime)
+  #>{test::DeephavenStore.t1}#->join(#>{test::DeephavenStore.t2}#, JoinKind.INNER, {a,b|$a.Letter1 == $b.Letter2})->from(test::DeephavenRuntime)
+}
+
+function test::basicSelect(): Any[*]
+{
+  #>{test::DeephavenStore.nds_desktops}#->select()->from(test::DeephavenRuntime)
+}
+
+function test::basicSelectOneCol(): Any[*]
+{
+  #>{test::DeephavenStore.nds_desktops}#->select(~[City_Name])->from(test::DeephavenRuntime)
+}
+
+function test::basicSelectTwoCols(): Any[*]
+{
+  #>{test::DeephavenStore.nds_desktops}#->select(~[Desktop_ID, City_Name])->from(test::DeephavenRuntime)
+}
+
+function test::basicWhere(): Any[*]
+{
+  #>{test::DeephavenStore.nds_desktops}#->filter(c | $c.City_Name == 'Dallas')->from(test::DeephavenRuntime)
+}
+
+function test::basicWhereWithSelect(): Any[*]
+{
+  #>{test::DeephavenStore.nds_desktops}#->filter(c | $c.City_Name == 'Dallas')->select(~[Desktop_Name])->from(test::DeephavenRuntime)
+}
+
+function test::basicTwoWhereWithSelect(): Any[*]
+{
+  #>{test::DeephavenStore.nds_desktops}#->filter(c | $c.City_Name == 'Dallas')->filter(c | $c.Desktop_ID == 1)->select(~[Desktop_Name])->from(test::DeephavenRuntime)
+}
+
+function test::basicTwoWhereWithAnd(): Any[*]
+{
+  #>{test::DeephavenStore.nds_desktops}#->filter(c | ($c.City_Name == 'Dallas') && ($c.Desktop_ID == 1))->from(test::DeephavenRuntime)
+}
+
+function test::basicTwoWhereWithOr(): Any[*]
+{
+  #>{test::DeephavenStore.nds_desktops}#->filter(c | ($c.City_Name == 'Dallas') || ($c.Desktop_ID == 2))->from(test::DeephavenRuntime)
+}
+
+function test::basicWhereWithIn(): Any[*]
+{
+  #>{test::DeephavenStore.nds_desktops}#->filter(c | $c.City_Name->in(['Dallas', 'New York']))->from(test::DeephavenRuntime)
+}
+
+function test::basicWhereWithNotEqual(): Any[*]
+{
+  // #>{test::DeephavenStore.nds_desktops}#->filter(c | $c.City_Name != 'Dallas')->from(test::DeephavenRuntime)
+  #>{test::DeephavenStore.nds_desktops}#->filter(c | !($c.City_Name == 'Dallas'))->from(test::DeephavenRuntime)
+}
+
+function test::basicSort(): Any[*]
+{
+  #>{test::DeephavenStore.nds_desktops}#->sort([~City_Name->ascending(), ~Desktop_Name->descending()])->from(test::DeephavenRuntime)
+}
+
+
+
+function test::basicSelect_PersonTable(): Any[*]
+{
+  #>{test::DeephavenStore.personTable}#->select()->from(test::DeephavenRuntime)
+}
+
+function test::basicSelectOneCol_PersonTable(): Any[*]
+{
+  #>{test::DeephavenStore.personTable}#->select(~[firstName])->from(test::DeephavenRuntime)
+}
+
+function test::basicSelectMoreCols_PersonTable(): Any[*]
+{
+  #>{test::DeephavenStore.personTable}#->select(~[id, firstName, lastName])->from(test::DeephavenRuntime)
+}
+
+function test::basicWhere_PersonTable(): Any[*]
+{
+  #>{test::DeephavenStore.personTable}#->filter(c | $c.firstName == 'John')->from(test::DeephavenRuntime)
+}
+
+function test::basicTwoWhere_PersonTable(): Any[*]
+{
+  #>{test::DeephavenStore.personTable}#->filter(c | $c.firstName == 'John')->filter(c | $c.lastName == 'Johnson')->from(test::DeephavenRuntime)
+}
+
+function test::basicWhereWithSelect_PersonTable(): Any[*]
+{
+  #>{test::DeephavenStore.personTable}#->filter(c | $c.firstName == 'John')->select(~[id])->from(test::DeephavenRuntime)
+}
+
+###Connection
+DeephavenConnection test::DeephavenConnection
+{
+    store: test::DeephavenStore;
+    serverUrl: 'http://localhost:10000'
+    authentication: # PSK {
+        psk: LegendDeephavenSecret
+        {
+            systemPropertyName: 'org.finos.legend.engine.plan.execution.stores.deephaven.test.psk';
+        };
+    }#;
+}
+
+###Runtime
+Runtime test::DeephavenRuntime
+{
+  mappings:
+  [
+  ];
+  connections:
+  [
+    test::DeephavenStore:
+    [
+      connection: test::DeephavenConnection
+    ]
+  ];
+}

@@ -1,4 +1,4 @@
-// Copyright 2024 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,12 +26,12 @@ public class DeephavenStoreState implements StoreState
 {
     private final List<DeephavenSessionProvider> providers = DeephavenSessionProvider.providers();
 
-    private final DeephavenSession session;
+//    private final DeephavenSession session;
 
-    DeephavenStoreState(DeephavenSession session)
-    {
-        this.session = session;
-    }
+//    DeephavenStoreState(DeephavenSession session)
+//    {
+//        this.session = session;
+//    }
 
     @Override
     public StoreType getStoreType()
@@ -50,9 +50,9 @@ public class DeephavenStoreState implements StoreState
         return this.providers;
     }
 
-    public DeephavenSession getSession()
-    {
-        return this.session;
-    }
+//    public DeephavenSession getSession()
+//    {
+//        return this.session;
+//    }
 
 }

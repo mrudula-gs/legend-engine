@@ -1,4 +1,4 @@
-// Copyright 2024 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import meta::external::store::deephaven::generation::*;
+import meta::external::store::deephaven::metamodel::*;
+import meta::external::store::deephaven::metamodel::store::*;
+import meta::external::store::deephaven::*;
+import meta::external::store::deephaven::pureToDeephaven::*;
 import meta::external::store::deephaven::specification::utils::*;
 import meta::external::store::deephaven::metamodel::executionPlan::context::*;
 import meta::external::store::deephaven::metamodel::specification::global::search::*;
@@ -25,34 +30,111 @@ import meta::pure::executionPlan::*;
 
 function meta::external::store::deephaven::executionPlan::generation::planExecution(sq:meta::pure::mapping::StoreQuery[1], ext:RoutedValueSpecification[0..1], m:Mapping[0..1], runtime:Runtime[0..1], exeCtx:meta::pure::runtime::ExecutionContext[1], extensions:Extension[*], debug:DebugContext[1]):ExecutionNode[1]
 {
-  //let dhCtx = if ($exeCtx->instanceOf(DeephavenExecutionContext), |$exeCtx->cast(@DeephavenExecutionContext), |^DeephavenExecutionContext());
+  let dhCtx = if ($exeCtx->instanceOf(DeephavenExecutionContext), |$exeCtx->cast(@DeephavenExecutionContext), |^DeephavenExecutionContext());
+  let processOutput = meta::external::store::deephaven::pureToDeephaven::process($sq, $ext, $m, $runtime, $dhCtx, $extensions, $debug);
 
-  //let processOutput = meta::external::store::deephaven::pureToDeephaven::process($sq, $ext, $m, $runtime, $dhCtx, $extensions, $debug);
+  let deephavenNode = ^DeephavenExecutionNode(
+                                                connection = $runtime->toOne('missing required runtime for Deephaven plan execution').connectionByElement($sq.store)->cast(@DeephavenConnection),
+                                                generatedJava = generateJavaCode($processOutput.dhQuery->toOne()),
+                                                // resultType = ^meta::pure::executionPlan::TDSResultType(type = TabularDataSet, tdsColumns = $tdsDetailsIndexed->map(p | ^TDSColumn(name = $p.second.name, offset = $p.first, type = $p.second.type)))
+                                                resultType = ^meta::pure::executionPlan::TDSResultType(type = TabularDataSet, tdsColumns = ^TDSColumn(name = 'dummy name', offset = 0, type=String))
+                                             );
+  $deephavenNode;
+}
 
-  //TODO: tamimi need to update this part to reflect deephaven query and results
-  //let request = ^SearchRequest(body = $processOutput.search, index = $processOutput.index().indexName->literal());
+function meta::external::store::deephaven::literalToString(lt:Literal[1]):String[1]
+{
+  $lt.value->match([
+                     s:String[1]  | '`' + $s->toString() + '`',
+                     i:Integer[1] | $i->toString()
+                  ]);
+}
 
-  // let tdsDetailsIndexed = $processOutput.tdsDEDetails->toIndexed()->toOneMany('TDS operations should have at least one output column');
+function meta::external::store::deephaven::filterOp(op:DeephavenOperationElement[1]):String[1]
+{
+  $op->match([
+              eq:EqOperatorExpression[1]  | $eq.expressions->map(p | $p->match([
+                                                                                  lt:Literal[1] | literalToString($lt),
+                                                                                  c:Column[1]   | $c.name;
+                                                                              ]))->joinStrings(' == '),
+              eq:AndOperatorExpression[1] | $eq.expressions->map(p | filterOp($p))->joinStrings(' && '),
+              eq:OrOperatorExpression[1]  | $eq.expressions->map(p | filterOp($p))->joinStrings(' || ')
+            ]);
+}
 
-  // let deephavenNode = ^DeephavenExecutionNode(
-  //   connection = $runtime->toOne('missing required runtime for Deephaven plan execution').connectionByElement($sq.store)->cast(@DeephavenConnection),
-  //   resultType = ^meta::pure::executionPlan::TDSResultType(type = TabularDataSet, tdsColumns = $tdsDetailsIndexed->map(p | ^TDSColumn(name = $p.second.name, offset = $p.first, type = $p.second.type)))
-  //   //metadata = ^TDSMetadata(columnResultPaths = $tdsDetailsIndexed->map(ci | ^TDSColumnResultPath(index = $ci.first, resultPath = $ci.second.resultPath)))
-  // );
+function meta::external::store::deephaven::dhQueryToString(s:State[1]):String[1]
+{
+  println('----------------------- dhQuery To String -------------------');
+  println($s.dhQuery);
+  let res = $s.dhQuery.source->toOne().name + 
+             $s.dhQuery.operations->generateOperationCode1($s.dhQuery->toOne()); 
+  $res;
+}
 
-   let tdsDetailsIndexed = $ext->toIndexed()->toOneMany('TDS operations should have at least one output column');
+function meta::external::store::deephaven::generation::generateOperationCode1(op: QueryOperation[*], q:DeephavenQuery[1]): String[1]
+{
+  let jop = $op->filter( o | $o->instanceOf(JoinOperation));
+  let fop = $op->filter( o | $o->instanceOf(FilterOperation));
+  let sop = $op->filter( o | $o->instanceOf(SortOperation));
 
+  println('-------------------------------------------------------------------------- generateOperationCode1 -------------------');
+  println($op);
 
-  //Hack
-    let deephavenNode = ^DeephavenExecutionNode(
-    connection = $runtime->toOne('missing required runtime for Deephaven plan execution').connectionByElement($sq.store)->cast(@DeephavenConnection),
-    resultType = ^meta::pure::executionPlan::TDSResultType(type = TabularDataSet, tdsColumns = ^TDSColumn(name = 'dummy name', offset = 0, type=String))
-    //metadata = ^TDSMetadata(columnResultPaths = $tdsDetailsIndexed->map(ci | ^TDSColumnResultPath(index = $ci.first, resultPath = $ci.second.resultPath)))
-  );
+  if($jop->isNotEmpty(),
+        | '.' + $jop->toOne()->cast(@JoinOperation).joinType->toString()->toLower() + '(table=' + $jop->toOne()->cast(@JoinOperation).rightTable.name +
+          ', on=[' + $jop->toOne()->cast(@JoinOperation).conditions->map(c | '"' + $c.leftColumn + '=' + $c.rightColumn + '"')->joinStrings(', ') +
+          '])',
+        | '') +
+  if($fop->isNotEmpty(),
+        | $fop->map( f | generateFilterCode1($f->cast(@FilterOperation)))->joinStrings(''), | '')    +
+  if($q.selectQueryExists == true, // && $s.columns->isNotEmpty(), 
+        | $op->filter( o | $o->instanceOf(SelectOperation))->toOne()->cast(@SelectOperation)->generateSelectCode1(), | '') +
+  if($sop->isNotEmpty(),
+        | '.sort([' + $sop->toOne()->cast(@SortOperation).columns->map(c | '"' + $c.name + '"')->joinStrings(', ') +
+          '], [' +
+          $sop->toOne()->cast(@SortOperation).columns
+          ->map(c | 'SortDirection.' + if($c.direction == meta::external::store::deephaven::metamodel::SortDirection.ASCENDING, 
+                                            |'ASCENDING', 
+                                            |'DESCENDING'))
+                                        ->joinStrings(', ') + '])',
+        | '');
+}
 
-  // TODO: tamimi look into processOutput class
-  // if ($processOutput.extraNodes->isEmpty(),
-  //   |$deephavenNode,
-  //   |^SequenceExecutionNode(resultType = $deephavenNode.resultType, executionNodes = $processOutput.extraNodes->removeDuplicatesBy(x | $x.varName)->concatenate($esNode))
-  // );
+function meta::external::store::deephaven::generation::generateSelectCode1(select: SelectOperation[1]): String[1]
+{
+  '.select([' +
+  $select.columns->map(c | '"' + $c.name + '"')->joinStrings(', ') +
+  '])';
+}
+
+function meta::external::store::deephaven::generation::generateFilterCode1(filter: FilterOperation[1]): String[1]
+{
+  '.where(["' + generateFilterExpression1($filter.condition) + '"])';
+}
+
+function meta::external::store::deephaven::generation::generateFilterExpression1(expr: FilterExpression[1]): String[1]
+{
+  $expr->match([
+                eq: EqOperatorExpression[1] | generateOperandCode1($eq.expressions->at(0)) + ' == ' + generateOperandCode1($eq.expressions->at(1)),
+                and: AndOperatorExpression[1] | generateOperandCode1($and.expressions->at(0)) + ' && ' + generateOperandCode1($and.expressions->at(1)),
+                or: OrOperatorExpression[1] | generateOperandCode1($or.expressions->at(0)) + ' || ' + generateOperandCode1($or.expressions->at(1)),
+                in: InOperatorExpression[1] | generateOperandCode1($in.expressions->at(0)) + ' in ' + generateOperandCode1($in.expressions->at(1));
+  ])
+}
+
+function meta::external::store::deephaven::generation::generateOperandCode1(op: DeephavenOperationElement[1]): String[1]
+{
+  $op->match([
+                o: FilterExpression[1] | generateFilterExpression1($op->cast(@FilterExpression)),
+                c: Column[1] | $c.name,
+                l: Literal[1] | generateLiteralCode1($l)
+  ])
+}
+
+function meta::external::store::deephaven::generation::generateLiteralCode1(literal: Literal[1]): String[1]
+{
+  if($literal.value->at(0)->instanceOf(String),
+      | $literal.value->map(l | '`' + $l->toString() + '`')->joinStrings(', '),
+      | $literal.value->map(l | $l->toString())->joinStrings(', ')
+    );
 }

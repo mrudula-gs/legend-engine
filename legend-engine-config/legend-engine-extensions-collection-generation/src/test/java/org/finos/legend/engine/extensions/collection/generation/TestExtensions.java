@@ -35,6 +35,7 @@ import org.finos.legend.engine.generation.SearchDocumentArtifactGenerationExtens
 import org.finos.legend.engine.language.bigqueryFunction.compiler.toPureGraph.BigQueryFunctionCompilerExtension;
 import org.finos.legend.engine.language.bigqueryFunction.grammar.from.BigQueryFunctionGrammarParserExtension;
 import org.finos.legend.engine.language.bigqueryFunction.grammar.to.BigQueryFunctionGrammarComposer;
+import org.finos.legend.engine.language.deephaven.to.DeephavenGrammarComposerExtension;
 import org.finos.legend.engine.language.graphQL.grammar.integration.GraphQLGrammarParserExtension;
 import org.finos.legend.engine.language.graphQL.grammar.integration.GraphQLPureGrammarComposerExtension;
 import org.finos.legend.engine.language.memsqlFunction.compiler.toPureGraph.MemSqlFunctionCompilerExtension;
@@ -92,6 +93,7 @@ import org.finos.legend.engine.language.sql.grammar.integration.SQLPureGrammarCo
 import org.finos.legend.engine.language.stores.elasticsearch.v7.from.ElasticsearchGrammarParserExtension;
 import org.finos.legend.engine.language.deephaven.from.DeephavenGrammarParserExtension;
 import org.finos.legend.engine.protocol.bigqueryFunction.metamodel.BigQueryFunctionProtocolExtension;
+import org.finos.legend.engine.protocol.deephaven.metamodel.DeephavenProtocolExtension;
 import org.finos.legend.engine.protocol.hostedService.metamodel.HostedServiceProtocolExtension;
 import org.finos.legend.engine.protocol.memsqlFunction.metamodel.MemSqlFunctionProtocolExtension;
 import org.finos.legend.engine.protocol.pure.v1.extension.ProtocolSubTypeInfo;
@@ -329,6 +331,7 @@ public class TestExtensions
                 .with(org.finos.legend.engine.language.sql.grammar.integration.SQLPureProtocolExtension.class)
                 .with(org.finos.legend.engine.protocol.store.elasticsearch.v7.ElasticsearchV7ProtocolExtension.class)
                 .with(org.finos.legend.engine.protocol.mongodb.schema.metamodel.MongoDBPureProtocolExtension.class)
+                .with(org.finos.legend.engine.protocol.deephaven.metamodel.DeephavenProtocolExtension.class)
                 ;
     }
 
@@ -404,6 +407,7 @@ public class TestExtensions
                 .with(AuthenticationGrammarComposerExtension.class)
                 .with(TextGrammarComposerExtension.class)
                 .with(ElasticsearchGrammarComposerExtension.class)
+                .with(DeephavenGrammarComposerExtension.class)
                 .with(org.finos.legend.engine.language.pure.grammar.integration.MongoDBGrammarComposerExtension.class)
                 ;
     }
@@ -451,6 +455,7 @@ public class TestExtensions
                 .with(org.finos.legend.engine.language.stores.elasticsearch.v7.compiler.ElasticsearchCompilerExtension.class)
                 .with(org.finos.legend.engine.language.pure.grammar.integration.MongoDBCompilerExtension.class)
                 .with(org.finos.legend.engine.external.format.json.compile.JsonSchemaCompiler.class)
+                .with(org.finos.legend.engine.language.deephaven.compiler.DeephavenCompilerExtension.class)
                 ;
     }
 
@@ -461,6 +466,7 @@ public class TestExtensions
                 .with(JSONJavaBindingLegendPureCoreExtension.class)
                 .with(MongoDBLegendPureCoreExtension.class)
                 .with(FlatDataLegendPureCoreExtension.class)
+                .with(DeephavenLegendPureCoreExtension.class)
                 .with(ElasticsearchLegendPureCoreExtension.class)
                 .with(CoreLegendPureCoreExtension.class)
                 .with(JSONLegendPureCoreExtension.class)

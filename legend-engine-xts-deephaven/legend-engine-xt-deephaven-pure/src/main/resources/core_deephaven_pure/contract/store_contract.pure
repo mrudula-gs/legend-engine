@@ -1,4 +1,4 @@
-// Copyright 2024 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +47,11 @@ function meta::external::store::deephaven::contract::deephavenStoreContract(): S
     supports = supports(),
     supportsNativeJoinAmongElements = true,
     // Routing
+
+    // ExecutionPlan
+    supportsStreamFunction = f: FunctionExpression[1] | false,
+    planExecution = meta::external::store::deephaven::executionPlan::generation::planExecution_StoreQuery_1__RoutedValueSpecification_$0_1$__Mapping_$0_1$__Runtime_$0_1$__ExecutionContext_1__Extension_MANY__DebugContext_1__ExecutionNode_1_,
+    // ExecutionPlan
 
     // Core
     supportsSetImplementation = s: SetImplementation[1] | false,

@@ -1,4 +1,4 @@
-// Copyright 2024 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class TestDeephavenCompiler extends TestCompilationFromGrammar.TestCompilationFromGrammarTestSuite
@@ -100,5 +99,11 @@ public class TestDeephavenCompiler extends TestCompilationFromGrammar.TestCompil
     public void testCompileConnection()
     {
         Pair<PureModelContextData, PureModel> result = test(BASIC_CONN);
+    }
+
+    @Test
+    public void testFullCompileStore()
+    {
+        test(BASIC_STORE);
     }
 }

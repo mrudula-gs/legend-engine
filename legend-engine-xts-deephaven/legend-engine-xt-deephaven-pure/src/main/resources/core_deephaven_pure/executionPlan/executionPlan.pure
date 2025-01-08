@@ -1,4 +1,4 @@
-// Copyright 2024 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import meta::external::store::deephaven::metamodel::*;
 import meta::pure::executionPlan::toString::*;
 import meta::pure::executionPlan::*;
 import meta::pure::extension::*;
@@ -20,7 +21,9 @@ import meta::external::store::deephaven::metamodel::store::*;
 
 Class meta::external::store::deephaven::metamodel::executionPlan::DeephavenExecutionNode extends meta::pure::executionPlan::ExecutionNode
 {
-   connection : meta::external::store::deephaven::metamodel::runtime::DeephavenConnection[1];
+  // deepHavenQuery : String[1];
+  generatedJava :  meta::external::store::deephaven::metamodel::executionPlan::DeephavenJavaCode[1];
+  connection : meta::external::store::deephaven::metamodel::runtime::DeephavenConnection[1];
 }
 
 Class meta::external::store::deephaven::metamodel::executionPlan::context::DeephavenExecutionContext extends meta::pure::runtime::ExecutionContext
@@ -28,14 +31,8 @@ Class meta::external::store::deephaven::metamodel::executionPlan::context::Deeph
 
 }
 
-//TODO: tamimi - update this later -result is actually a table handle/ticket
+//TODO: anumam - update this later - result is actually a table handle/ticket
 Class meta::external::store::deephaven::metamodel::executionPlan::tds::DeephavenTDSResult
 {     
   table: Table[1];
 }
-
-// Class meta::external::store::deephaven::metamodel::executionPlan::ElasticsearchV7ExecutionActivity extends meta::pure::mapping::Activity
-// {
-//   esRequest: String[1];
-//   uri: String[1];
-// }

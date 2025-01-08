@@ -1,4 +1,4 @@
-// Copyright 2024 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public class DeephavenProtocolExtension implements PureProtocolExtension
                 ProtocolSubTypeInfo.newBuilder(Connection.class)
                         .withSubtype(DeephavenConnection.class, "deephavenConnection")
                         .build(),
-//                // Execution Nodes
+                // Execution Nodes
                 ProtocolSubTypeInfo.newBuilder(ExecutionNode.class)
                         .withSubtype(DeephavenExecutionNode.class, "DeephavenExecutionNode")
                         .build(),
@@ -57,7 +57,7 @@ public class DeephavenProtocolExtension implements PureProtocolExtension
                 ProtocolSubTypeInfo.newBuilder(PackageableElement.class)
                         .withSubtype(DeephavenStore.class, "deephavenStore")
                         .build(),
-//                // Execution Context
+                // Execution Context
                 ProtocolSubTypeInfo.newBuilder(ExecutionContext.class)
                         .withSubtype(DeephavenExecutionContext.class, "DeephavenExecutionContext")
                         .build()

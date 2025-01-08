@@ -1,4 +1,4 @@
-// Copyright 2024 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,18 +18,17 @@ package org.finos.legend.engine.plan.execution.stores.deephaven;
 import org.eclipse.collections.api.block.function.Function3;
 import org.eclipse.collections.api.list.MutableList;
 
-import org.finos.legend.engine.plan.execution.extension.ExecutionExtension;
-import org.finos.legend.engine.plan.execution.stores.StoreType;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
-import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
 import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
 import org.finos.legend.engine.plan.execution.result.Result;
+import org.finos.legend.engine.plan.execution.stores.StoreType;
+import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
 import org.finos.legend.engine.shared.core.identity.Identity;
 
 import java.util.Collections;
 import java.util.List;
 
-public class DeephavenExecutionExtension implements ExecutionExtension
+public class DeephavenExecutionExtension implements IDeephavenStoreExecutionExtension
 {
     @Override
     public MutableList<String> group()
@@ -42,11 +41,10 @@ public class DeephavenExecutionExtension implements ExecutionExtension
     {
         return Collections.singletonList(((executionNode, identity, executionState) ->
         {
-            // TODO: tammimi - fix this next
             if (executionNode instanceof DeephavenExecutionNode)
             {
-                throw new UnsupportedOperationException("todo");
-                // return executionNode.accept(executionState.getStoreExecutionState(StoreType.Deephaven).getVisitor(identity, executionState));
+                Result temp = executionNode.accept(executionState.getStoreExecutionState(StoreType.Deephaven).getVisitor(identity, executionState));
+                return temp;
 
                 // long term
                 // TODO ESTABLISH SESSION

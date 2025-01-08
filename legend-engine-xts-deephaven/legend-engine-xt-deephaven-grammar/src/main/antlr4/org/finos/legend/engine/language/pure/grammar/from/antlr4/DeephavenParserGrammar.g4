@@ -32,22 +32,22 @@ definition:                                 imports
 ;
 
 deephavenDefinition:                        DEEPHAVEN qualifiedName
-                                                BRACE_OPEN
+                                                PAREN_OPEN
                                                     (
                                                         tables
                                                     )*
-                                                BRACE_CLOSE
+                                                PAREN_CLOSE
 ;
 
-tables:                                     tableDefinition (COMMA tableDefinition)*
+tables:                                     tableDefinition (tableDefinition)*
 ;
 
 tableDefinition:                            TABLE tableName
-                                            BRACE_OPEN
+                                            PAREN_OPEN
                                                 (
                                                     columns
                                                 )*
-                                            BRACE_CLOSE
+                                            PAREN_CLOSE
 ;
 
 columns:                                    columnDefinition (COMMA columnDefinition)*

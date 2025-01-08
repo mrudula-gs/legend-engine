@@ -1,4 +1,4 @@
-// Copyright 2024 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,20 +28,23 @@ Class meta::external::store::deephaven::metamodel::store::Table
   columns : Column[1..*];
 }
 
-Class meta::external::store::deephaven::metamodel::store::Column
+Class meta::external::store::deephaven::metamodel::store::Column extends meta::external::store::deephaven::metamodel::DeephavenOperationElement
 {
   name : String[1];
   type : meta::external::store::deephaven::metamodel::type::Type[1];
 }
 
-// TODO: tamimi - add the sourceInformation fields to all classes for Deephaven such that the parser can add metadata back into the pojos/pmcd
+// TODO: anumam - add the sourceInformation fields to all classes for Deephaven such that the parser can add metadata back into the pojos/pmcd
+Class meta::external::store::deephaven::metamodel::store::Literal extends meta::external::store::deephaven::metamodel::DeephavenOperationElement
+{
+   <<equality.Key>> value:Any[*];
+}
 
 // Class meta::external::store::deephaven::metamodel::DeephavenOperationElement
 // {
 // }
 
 // TODO: Think about whether we need subclasses - e.g. Ring/Blink etc
-
 // TODO: think about whether we need lower level classes like RowSet
 // Class meta::external::store::deephaven::RowSet extends ResultSet
 // {
@@ -49,7 +52,7 @@ Class meta::external::store::deephaven::metamodel::store::Column
 //   url: String[1];
 //   dataSourceName: String[1];
 // }
-//Class meta::external::store::deephaven::Table
+// Class meta::external::store::deephaven::Table
 // {
 //   rowset: RowSet[1];
 //   columnSource: Pair<String[1], Column[1]> 

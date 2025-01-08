@@ -1,20 +1,19 @@
+import meta::external::store::deephaven::metamodel::store::*;
+import meta::external::store::deephaven::metamodel::*;
 import meta::pure::executionPlan::*;
 import meta::protocols::pure::vX_X_X::metamodel::runtime::connection::authentication::*;
-
 import meta::pure::extension::*;
 import meta::protocols::pure::vX_X_X::extension::*;
-
-//TODO: tamimi - double check, not sure if these imports are right
 import meta::pure::functions::io::http::*;
 import meta::external::store::deephaven::metamodel::runtime::*;
 import meta::external::store::deephaven::metamodel::executionPlan::*;
 import meta::external::store::deephaven::metamodel::executionPlan::tds::*;
 
 
-//TODO tamimi - consider renaming/refactor later
+//TODO anumam - consider renaming/refactor later
 function meta::external::store::deephaven::protocol::vX_X_X::deephavenStoreExtension(type: String[1]): meta::pure::extension::SerializerExtension[1]
 {
-  assertEquals($type, 'deephavenStore');
+  // assertEquals($type, 'deephavenStore');
   ^SerializerExtension_vX_X_X(
 
       transfers_valueSpecification_transformAny = {inScope:String[*], open:Map<String,List<Any>>[1], m:Multiplicity[1], fe:FunctionExpression[0..1],useAppliedFunction:Boolean[1], extensions:meta::pure::extension::Extension[*] |
@@ -60,9 +59,21 @@ function meta::external::store::deephaven::protocol::vX_X_X::deephavenStoreExten
       transfers_executionPlan_transformNode = {extensions:Extension[*] |
           [
               dhNode: DeephavenExecutionNode[1] | ^meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenExecutionNode(
-                _type = 'deephavenExecutionNode',
+                _type = 'DeephavenExecutionNode',
+                // deepHavenQuery = $dhNode.deepHavenQuery,
+                // deepHavenQuery = ^meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenQuery(
+                //                                                                                                     // source = $dhNode.deepHavenQuery.source,
+                //                                                                                                     source = meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformSource($dhNode.deepHavenQuery.source),
+                //                                                                                                     // operations = $dhNode.deepHavenQuery.operations,
+                //                                                                                                     operations = meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformOperations($dhNode.deepHavenQuery.operations),
+                //                                                                                                     selectQueryExists = $dhNode.deepHavenQuery.selectQueryExists
+                //                                                                                                    ),
+                generatedJava = ^meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenJavaCode(
+                                                                                                                    imports = $dhNode.generatedJava.imports,
+                                                                                                                    code = $dhNode.generatedJava.code
+                                                                                                                   ),
                 resultType = $dhNode.resultType->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::executionPlan::transformResultType($extensions),
-                //TODO: tamimi - need to double check if need to pass auth specification but that should already be in the connection
+                //TODO: anumam - need to double check if need to pass auth specification but that should already be in the connection
                 connection = $dhNode.connection->meta::external::store::deephaven::protocol::vX_X_X::runtime::transformConnection($extensions)//,
                 // TODO: complete this part once execution has a result to return
                 // request = $dhNode.request,
@@ -77,10 +88,20 @@ function meta::external::store::deephaven::protocol::vX_X_X::deephavenStoreExten
                 //         )
                 //     )
                 // ])
-              )
+              );
           ]
       }
   );
+}
+
+function meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformSource(table: Table[0..1]): meta::external::store::deephaven::protocol::vX_X_X::store::Table[1]
+{
+  ^meta::external::store::deephaven::protocol::vX_X_X::store::Table(name = $table->toOne().name, columns = $table->toOne().columns->map(c | ^meta::external::store::deephaven::protocol::vX_X_X::store::Column(name = $c.name, type = $c.type)));
+}
+
+function meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformOperations(table: Table[0..1]): meta::external::store::deephaven::protocol::vX_X_X::store::Table[1]
+{
+  ^meta::external::store::deephaven::protocol::vX_X_X::store::Table(name = $table->toOne().name, columns = $table->toOne().columns->map(c | ^meta::external::store::deephaven::protocol::vX_X_X::store::Column(name = $c.name, type = $c.type)));
 }
 
 function meta::external::store::deephaven::protocol::vX_X_X::executionPlan::tds::transformTDSResult(tdsResult: DeephavenTDSResult[1], extensions:Extension[*]): meta::external::store::deephaven::protocol::vX_X_X::executionPlan::tds::DeephavenTDSResult[1]
@@ -108,7 +129,7 @@ function meta::external::store::deephaven::protocol::vX_X_X::executionPlan::tds:
 function meta::external::store::deephaven::protocol::vX_X_X::runtime::transformConnection(conn: DeephavenConnection[1],extensions:Extension[*]): meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection[1]
 {
   ^meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection(
-    _type = 'DeephavenConnection',
+    _type = 'deephavenConnection',
     element = '',
     sourceSpec = ^meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenSourceSpecification(
             url = '%s://%s:%d%s'->format([$conn.sourceSpec.url.scheme->defaultIfEmpty(URLScheme.http)->toOne(), $conn.sourceSpec.url.host, $conn.sourceSpec.url.port, $conn.sourceSpec.url.path])
@@ -164,7 +185,7 @@ Class meta::external::store::deephaven::protocol::vX_X_X::type::TimeType extends
 
 Class meta::external::store::deephaven::protocol::vX_X_X::type::CustomType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
 {
-  // TODO: tamimi - double check if this is right; componentType was taken from ArrayType but what is property of Custom type column that tracks the type?
+  // TODO: anumam - double check if this is right; componentType was taken from ArrayType but what is property of Custom type column that tracks the type?
   componentType : meta::external::store::deephaven::protocol::vX_X_X::type::Type[1];
 }
 
@@ -205,8 +226,35 @@ Class meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenSour
 //deephaven executionPlan.pure as vX_X_X protocol
 Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenExecutionNode extends meta::protocols::pure::vX_X_X::metamodel::executionPlan::ExecutionNode
 {
-  _type: String[1] = 'deephavenExecutionNode';
+  // _type: String[1] = 'deephavenExecutionNode';
+  // deepHavenQuery : String[1];
+  // deepHavenQuery : meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenQuery[1];
+  generatedJava : meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenJavaCode[1];
   connection : meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection[1];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenJavaCode 
+{
+  // _type: String[1] = 'DeephavenJavaCode';
+  imports: String[*];
+  code: String[1];
+}
+
+
+Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenQuery // extends DeephavenQuery
+{
+  _type: String[1] = 'deephavenQuery';
+  source : meta::external::store::deephaven::protocol::vX_X_X::store::Table[0..1];
+  operations: meta::external::store::deephaven::protocol::vX_X_X::executionPlan::QueryOperation[*];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenOperationElement
+{
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::QueryOperation extends meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenOperationElement
+{
+  _type: String[1] = 'operation1';
 }
 
 Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::context::DeephavenExecutionContext extends meta::protocols::pure::vX_X_X::metamodel::ExecutionContext
