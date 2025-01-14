@@ -119,6 +119,14 @@ public abstract class LegendCompileTest
     }
 
     @Test
+    public void testDeephaven()
+    {
+        test("let x =  meta::legend::compile('###Deephaven\\n Deephaven test::DeephavenStore\\n { Table nds_desktops {BuildDate: datetime, DesktopName: string}\\n" +
+                "}')->cast(@meta::external::store::deephaven::metamodel::store::DeephavenStore);\n" +
+                "assertEquals('oeoeoeo', $x.content);");
+    }
+
+    @Test
     public void testValueSpecification()
     {
         test("let x =  meta::legend::compileVS('1');\n" +

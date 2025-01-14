@@ -82,7 +82,8 @@ public class PureSession
 
         this.repos = Lists.mutable.withAll(repos).with(new WelcomeCodeStorage(Paths.get(rootPath)));
 
-        this.functionExecution = new FunctionExecutionInterpretedWithDebugSupport();
+        this.functionExecution = new FunctionExecutionInterpreted(VoidExecutionActivityListener.VOID_EXECUTION_ACTIVITY_LISTENER);
+//        this.functionExecution = new FunctionExecutionInterpretedWithDebugSupport();
 
         for (String property : System.getProperties().stringPropertyNames())
         {

@@ -169,7 +169,7 @@ function meta::external::store::deephaven::pureToDeephaven::process(sq:StoreQuer
     supportedRoutingFunctions = supportedRoutingFunctions(),
     supportedSimpleValueFunctions = supportedSimpleValueFunctions()
   );
-  let processedReq = $sq.fe->processValueSpecification(^DeephavenQuery(), $req);
+  let processedReq = $sq.vs->processValueSpecification(^DeephavenQuery(), $req);
   ^$req(dhQuery = $processedReq->toOne()->cast(@DeephavenQuery));
 }
 
