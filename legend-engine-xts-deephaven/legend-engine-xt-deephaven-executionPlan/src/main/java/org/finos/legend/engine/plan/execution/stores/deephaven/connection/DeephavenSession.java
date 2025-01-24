@@ -21,41 +21,36 @@ import io.deephaven.client.impl.ClientConfig;
 import io.deephaven.client.impl.Session;
 import io.deephaven.client.impl.SessionConfig;
 import io.deephaven.uri.DeephavenTarget;
-import org.apache.arrow.memory.BufferAllocator;
 import org.apache.arrow.memory.RootAllocator;
-
-import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
-
-import java.net.URI;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class DeephavenSession
 {
-    final Session clientSession;
+    private final Session clientSession;
     private final BarrageSession _barrageSession;
+    private final RootAllocator bufferAllocator;
     private final ScheduledExecutorService _threadPool;
 
-    public DeephavenSession(String deephavenTarget, String authTypeAndValue)
+    public DeephavenSession(DeephavenTarget target, String authTypeAndValue)
     {
-        // TODO: tamimi - there should be a constructor(s) that accept params "mtls" and "explicit" - however, would need to incorporate these concepts into AuthenticationSpecification first
-        RootAllocator bufferAllocator = new RootAllocator();
+        // TODO: anumam - there should be a constructor(s) that accept params "mtls" and "explicit" - however, would need to incorporate these concepts into AuthenticationSpecification first
+        this.bufferAllocator = new RootAllocator();
+
         // Create a scheduler thread pool. This is used by the Flight session.
         this._threadPool = Executors.newScheduledThreadPool(4);
 
         // ClientConfig describes the configuration to connect to the host
         ClientConfig clientConfig = ClientConfig.builder()
-                .target(DeephavenTarget.of(URI.create(deephavenTarget)))
+                .target(target)
                 .build();
 
         // SessionConfig describes the configuration needed to create a session
         SessionConfig sessionConfig = SessionConfig.builder()
-                // TODO: make this neater
                 .authenticationTypeAndValue(authTypeAndValue)
                 .build();
 
-        // Create a FlightSessionFactory. This stitches together the above components to create the real, live
-        // API session with the server.
+        // Create a FlightSessionFactory. This stitches together the above components to create the real, live API session with the server.
         BarrageSessionFactoryConfig.Factory barrageSessionFactory = BarrageSessionFactoryConfig.builder()
                 .clientConfig(clientConfig)
                 .allocator(bufferAllocator)
@@ -67,10 +62,21 @@ public class DeephavenSession
         this.clientSession = this._barrageSession.session();
     }
 
+    public Session getClientSession()
+    {
+        return clientSession;
+    }
+
+    public BarrageSession getBarrageSession()
+    {
+        return _barrageSession;
+    }
+
     public void close() throws Exception
     {
         this._barrageSession.close();
         this.clientSession.close();
         this._threadPool.shutdown();
+        this.bufferAllocator.close();
     }
 }

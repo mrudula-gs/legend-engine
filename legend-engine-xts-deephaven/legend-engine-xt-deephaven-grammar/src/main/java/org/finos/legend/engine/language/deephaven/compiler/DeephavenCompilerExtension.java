@@ -119,7 +119,7 @@ public class DeephavenCompilerExtension implements CompilerExtension
 
     public List<Function4<RelationStoreAccessor, Store, CompileContext, ProcessingContext, ValueSpecification>>  getExtraRelationStoreAccessorProcessors()
     {
-        // todo TAMIMI look at RelationalCompilerExtension
+        // todo anumam look at RelationalCompilerExtension
         return Lists.mutable.with((accessor, store, context, processingContext) ->
         {
             if (store instanceof Root_meta_external_store_deephaven_metamodel_store_DeephavenStore)
@@ -153,7 +153,7 @@ public class DeephavenCompilerExtension implements CompilerExtension
                     {
                         name = name.substring(1, name.length() - 1);
                     }
-                    // TODO: tamimi - right now no columns are nullable - enable nullable in future.
+                    // TODO: anumam - right now no columns are nullable - enable nullable in future.
                     return (CoreInstance) _Column.getColumnInstance(name, false, convertTypes(col._type(), processorSupport), (Multiplicity) org.finos.legend.pure.m3.navigation.multiplicity.Multiplicity.newMultiplicity(1, 1, processorSupport), sourceInformation, processorSupport);
                 }).toList(), sourceInformation, processorSupport);
 
@@ -189,7 +189,7 @@ public class DeephavenCompilerExtension implements CompilerExtension
         {
             primitiveType = "Boolean";
         }
-        // TODO: tamimi fix the commented types to be appropriate pure types
+        // TODO: anumam fix the commented types to be appropriate pure types
 //        else if (c instanceof ByteType)
 //        {
 //            primitiveType = "Integer";

@@ -46,7 +46,7 @@ function meta::protocols::pure::vX_X_X::transformation::fromPureGraph::authentic
                             _type = 'kerberos'
                  ),
       other: meta::pure::runtime::connection::authentication::AuthenticationSpecification[1] |
-              //  fail('Unsupported AuthenticationSpecification. TODO - epsstan');
+              //  TODO: anumam - fail('Unsupported AuthenticationSpecification. TODO - epsstan');
                ^meta::protocols::pure::vX_X_X::metamodel::runtime::connection::authentication::AuthenticationSpecification(
                       // _type = 'unknown'
                       _type = 'PSK'

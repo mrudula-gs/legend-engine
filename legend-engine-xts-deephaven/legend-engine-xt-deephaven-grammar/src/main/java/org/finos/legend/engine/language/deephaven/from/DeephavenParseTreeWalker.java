@@ -139,7 +139,7 @@ public class DeephavenParseTreeWalker
 
             Type columnType = null;
 
-            // TODO: tamimi - consider... should we raise exception for unknown type (null type)
+            // TODO: anumam - consider... should we raise exception for unknown type (null type)
             switch (type.getSymbol().getType())
             {
                 case DeephavenParserGrammar.DATE_TIME:

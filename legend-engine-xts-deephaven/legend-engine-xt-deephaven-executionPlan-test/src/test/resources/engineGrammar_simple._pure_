@@ -1,7 +1,7 @@
 ###Deephaven
 Deephaven test::DeephavenStore
 {
-    //TODO: tamimi - below should be anonymized because this is not possible to put in open source
+    //TODO: anumam - below should be anonymized because this is not possible to put in open source
     Table nds_desktops
     {
         BuildDate: datetime,

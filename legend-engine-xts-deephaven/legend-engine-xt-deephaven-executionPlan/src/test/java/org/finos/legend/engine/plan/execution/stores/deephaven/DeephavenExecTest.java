@@ -96,7 +96,7 @@ public class DeephavenExecTest
 //                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name == `Dallas` && Desktop_ID == 1");
 //                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name == `Dallas` || Desktop_ID == 2");
 //                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name in `Dallas`, `New York`");
-                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Namee != `Dallas`");
+                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name != `Dallas`");
 //                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").sort();
                 TableHandle th = session.session().execute(ts);
                 TicketId tickID = th.ticketId();

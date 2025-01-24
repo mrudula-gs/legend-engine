@@ -42,7 +42,7 @@ public class TestDeephavenConnectionGrammarParser extends TestGrammarParser.Test
     @Override
     public String getParserGrammarIdentifierInclusionTestCode(List<String> keywords)
     {
-        // TODO - tamimi - add a test to see if unquoted serverUrl throws an error (it should) - and some more tests
+        // TODO - anumam - add a test to see if unquoted serverUrl throws an error (it should) - and some more tests
         return  "###Connection\n" +
                 "DeephavenConnection " + ListAdapter.adapt(keywords).makeString("::") + "\n" +
                 "{\n" +
@@ -57,5 +57,5 @@ public class TestDeephavenConnectionGrammarParser extends TestGrammarParser.Test
                 "}";
     }
 
-    // TODO - tamimi add test here to check that when parsing the connection code that both sourceSpec and authSpec have been initialized to the appropriate subclasses
+    // TODO - anumam add test here to check that when parsing the connection code that both sourceSpec and authSpec have been initialized to the appropriate subclasses
 }

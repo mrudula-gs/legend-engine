@@ -132,8 +132,8 @@ function meta::external::store::deephaven::protocol::vX_X_X::runtime::transformC
     _type = 'deephavenConnection',
     element = '',
     sourceSpec = ^meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenSourceSpecification(
-            url = '%s://%s:%d%s'->format([$conn.sourceSpec.url.scheme->defaultIfEmpty(URLScheme.http)->toOne(), $conn.sourceSpec.url.host, $conn.sourceSpec.url.port, $conn.sourceSpec.url.path])
-          ),
+                                                                                                              url = '%s://%s:%d%s'->format([$conn.sourceSpec.url.scheme->defaultIfEmpty(URLScheme.http)->toOne(), $conn.sourceSpec.url.host, $conn.sourceSpec.url.port, $conn.sourceSpec.url.path])
+                                                                                                           ),
     authSpec = $conn.authSpec->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::authentication::transformAuthenticationSpecification($extensions)
   )
 }
