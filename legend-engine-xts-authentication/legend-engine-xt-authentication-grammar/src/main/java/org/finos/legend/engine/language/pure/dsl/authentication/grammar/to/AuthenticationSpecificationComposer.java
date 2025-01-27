@@ -74,6 +74,17 @@ public class AuthenticationSpecificationComposer implements AuthenticationSpecif
                 context.getIndentationString() + getTabString(indentLevel + 1) + "passphrase: " + renderCredentialVaultSecret(authenticationSpecification.passphrase, indentLevel + 1) + ";\n" +
                 context.getIndentationString() + getTabString(indentLevel) + "}#";
     }
+    
+    @Override
+    public String visit(PSKAuthenticationSpecification authenticationSpecification)
+    {
+        return "# PSK {\n" +
+                context.getIndentationString() + getTabString(indentLevel + 1) + "psk: " + authenticationSpecification.psk + "\n" +
+                context.getIndentationString() + getTabString(indentLevel) + "{\n" +
+                context.getIndentationString() + getTabString(indentLevel + 1) + "systemPropertyName: '" + authenticationSpecification.psk + "';\n" +
+                context.getIndentationString() + getTabString(indentLevel) + "}" +
+                context.getIndentationString() + getTabString(indentLevel) + "}#";
+    }
 
     @Override
     public String visit(GCPWIFWithAWSIdPAuthenticationSpecification authenticationSpecification)
