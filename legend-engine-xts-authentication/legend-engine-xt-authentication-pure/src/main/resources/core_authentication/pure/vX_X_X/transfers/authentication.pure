@@ -48,7 +48,8 @@ function meta::protocols::pure::vX_X_X::transformation::fromPureGraph::authentic
       other: meta::pure::runtime::connection::authentication::AuthenticationSpecification[1] |
                fail('Unsupported AuthenticationSpecification. TODO - epsstan');
                ^meta::protocols::pure::vX_X_X::metamodel::runtime::connection::authentication::AuthenticationSpecification(
-                      _type = 'unknown'
+                      // _type = 'unknown'
+                      _type = 'PSK'
                 );
    ])->toOneMany())
 }
