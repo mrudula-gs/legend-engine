@@ -33,7 +33,7 @@ public abstract class StringJavaSource extends SimpleJavaFileObject
 {
     private static final Pattern PACKAGE_DECLARATION_PATTERN = Pattern.compile("^\\h*package\\h+[^;\\s]+\\h*;", Pattern.MULTILINE);
 
-    private StringJavaSource(String packageName, String name)
+    public StringJavaSource(String packageName, String name)
     {
         super(URI.create("string:///" + packageName.replace('.', '/') + (packageName.endsWith(".") ? "" : "/") + name.replace('.', '/') + Kind.SOURCE.extension), Kind.SOURCE);
     }
