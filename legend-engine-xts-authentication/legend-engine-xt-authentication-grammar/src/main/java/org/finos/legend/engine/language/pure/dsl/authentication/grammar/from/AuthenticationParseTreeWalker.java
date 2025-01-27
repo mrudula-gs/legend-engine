@@ -140,6 +140,12 @@ public class AuthenticationParseTreeWalker
         return authenticationSpecification;
     }
 
+    public PSKAuthenticationSpecification visitPskAuthentication(AuthenticationParserGrammar.PskAuthenticationContext ctx)
+    {
+        PSKAuthenticationSpecification pskAuthenticationSpecification = new PSKAuthenticationSpecification(ctx.pskString().getText());
+        return pskAuthenticationSpecification;
+    }
+    
     public EncryptedPrivateKeyPairAuthenticationSpecification visitEncryptedKeyPairAuthentication(AuthenticationParserGrammar.EncryptedPrivateKeyAuthenticationContext ctx)
     {
         EncryptedPrivateKeyPairAuthenticationSpecification authenticationSpecification = new EncryptedPrivateKeyPairAuthenticationSpecification();
