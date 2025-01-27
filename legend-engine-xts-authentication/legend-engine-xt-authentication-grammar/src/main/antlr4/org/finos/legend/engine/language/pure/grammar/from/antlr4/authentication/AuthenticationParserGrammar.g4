@@ -102,6 +102,14 @@ encryptedPrivateKeyAuthentication_privateKey:    ENCRYPTED_PRIVATE_KEY_PRIVATE_K
 encryptedPrivateKeyAuthentication_passphrase:    ENCRYPTED_PRIVATE_KEY_PASSPHRASE COLON secret_value SEMI_COLON
 ;
 
+// ------------------------------------- Deephaven Pre-shared Key (PSK)  -----------------------------------------------
+
+pskAuthentication:    PSK COLON pskString
+;
+
+pskString:            VALID_STRING
+;
+
 // -------------------------------------- GCP WIF With AWS IdP Authentication --------------------------------------
 
 gcpWIFWithAWSIdPAuthentication : (
