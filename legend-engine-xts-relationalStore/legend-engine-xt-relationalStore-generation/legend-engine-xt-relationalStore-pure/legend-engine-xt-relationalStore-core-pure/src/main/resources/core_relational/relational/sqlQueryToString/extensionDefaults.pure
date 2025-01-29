@@ -652,21 +652,28 @@ function meta::relational::functions::sqlQueryToString::default::transformRound(
        | [$p->at(0), '0']);
 }
 
-function meta::relational::functions::sqlQueryToString::default::processJoinStringsOperation(js:JoinStrings[1], sgc:SqlGenerationContext[1],
-         groupByCat:meta::pure::metamodel::function::Function<{String[1], String[1] -> String[1]}>[0..1], stringCat:meta::pure::metamodel::function::Function<{String[*], String[1] -> String[1]}>[0..1]):String[1]
+function meta::relational::functions::sqlQueryToString::default::processJoinStringsOperation(js:JoinStrings[1], sgc:SqlGenerationContext[1], groupByCat:meta::pure::metamodel::function::Function<{String[1], String[1] -> String[1]}>[0..1], stringCat:meta::pure::metamodel::function::Function<{String[*], String[1] -> String[1]}>[0..1]):String[1]
 {
-    let strings = $js.strings->map(s | $s->processOperation($sgc));
-    let isGroupByCat = $js.strings->size() == 1;
+  let strings = $js.strings->map(s | $s->processOperation($sgc));
+  let isGroupByCat = $js.strings->size() == 1;
 
-    let separator = if($js.separator->isEmpty(), |'\'\'', |$js.separator->toOne()->processOperation($sgc));
-    let prefix = if($js.prefix->isEmpty(), |'\'\'', |$js.prefix->toOne()->processOperation($sgc));
-    let suffix = if($js.suffix->isEmpty(), |'\'\'', |$js.suffix->toOne()->processOperation($sgc));
-    let strs = if(eq($prefix, '\'\''),
-                  | if(eq($suffix, '\'\''), | $strings, | $strings->add($suffix)),
-                  | if(eq($suffix, '\'\''), | $strings->add(0, $prefix), | $strings->add(0, $prefix)->add($suffix)));
-    if ($strs->size() == 0, | $strs->at(0), | if ($isGroupByCat,
-        |assert($groupByCat->isNotEmpty(), 'The database type \''+$sgc.dbConfig.dbType->id()+'\' is not supported yet!'); $groupByCat->toOne()->eval($strs->at(0), $separator);,
-        |assert($stringCat->isNotEmpty(), 'The database type \''+$sgc.dbConfig.dbType->id()+'\' is not supported yet!'); $stringCat->toOne()->eval($strs, $separator);));
+  let separator = if($js.separator->isEmpty(), |'\'\'', |$js.separator->toOne()->processOperation($sgc));
+  let prefix = if($js.prefix->isEmpty(), |'\'\'', |$js.prefix->toOne()->processOperation($sgc));
+  let suffix = if($js.suffix->isEmpty(), |'\'\'', |$js.suffix->toOne()->processOperation($sgc));
+
+  let stringsSeparated = if($strings->size() == 0, 
+                              | $strings->at(0), 
+                              | if($isGroupByCat,
+                                    | assert($groupByCat->isNotEmpty(), 'The database type \''+$sgc.dbConfig.dbType->id()+'\' is not supported yet!'); $groupByCat->toOne()->eval($strings->at(0), $separator);,
+                                    | assert($stringCat->isNotEmpty(), 'The database type \''+$sgc.dbConfig.dbType->id()+'\' is not supported yet!'); $stringCat->toOne()->eval($strings, $separator);));
+
+  if(eq($prefix, '\'\''),
+      | if(eq($suffix, '\'\''), 
+            | $stringsSeparated, 
+            | $stringCat->toOne()->eval($stringsSeparated->add($suffix), '\'\'')),
+      | if(eq($suffix, '\'\''), 
+            | $stringCat->toOne()->eval($stringsSeparated->add(0, $prefix), '\'\''), 
+            | $stringCat->toOne()->eval($stringsSeparated->add(0, $prefix)->add($suffix), '\'\'')); );
 }
 
 function meta::relational::functions::sqlQueryToString::default::convertDateTimeFunctionHasCorrectParams(params:String[*]):Boolean[1]
