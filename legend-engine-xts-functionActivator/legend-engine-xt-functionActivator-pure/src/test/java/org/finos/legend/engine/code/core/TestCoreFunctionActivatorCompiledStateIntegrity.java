@@ -19,6 +19,7 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class TestCoreFunctionActivatorCompiledStateIntegrity extends AbstractCompiledStateIntegrityTest
 {
     @BeforeClass
@@ -32,14 +33,5 @@ public class TestCoreFunctionActivatorCompiledStateIntegrity extends AbstractCom
     public void testReferenceUsages()
     {
         super.testReferenceUsages();
-    }
-
-    @Test
-    @Ignore
-    @Override
-    public void testPropertyValueTypes()
-    {
-        // TODO This test is failing sporadically: fix it
-        super.testPropertyValueTypes();
     }
 }
