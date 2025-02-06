@@ -1,0 +1,42 @@
+function meta::relational::functions::sqlQueryToString::default::processJoinStringsOperation(
+    js:JoinStrings[1], 
+    sgc:SqlGenerationContext[1],
+    groupByCat:meta::pure::metamodel::function::Function<{String[1], String[1] -> String[1]}>[0..1], 
+    stringCat:meta::pure::metamodel::function::Function<{String[*], String[1] -> String[1]}>[0..1]
+):String[1]
+{
+    let strings = $js.strings->map(s | $s->processOperation($sgc));
+    let isGroupByCat = $js.strings->size() == 1;
+    let separator = if($js.separator->isEmpty(), |'\'\'', |$js.separator->toOne()->processOperation($sgc));
+    let prefix = if($js.prefix->isEmpty(), |'\'\'', |$js.prefix->toOne()->processOperation($sgc));
+    let suffix = if($js.suffix->isEmpty(), |'\'\'', |$js.suffix->toOne()->processOperation($sgc));
+    
+    if($strings->isEmpty(),
+        | if(eq($prefix, '\'\'') && eq($suffix, '\'\''),
+            | '\'\'',
+            | $stringCat->toOne()->eval([$prefix, $suffix]->filter(s | !eq($s, '\'\'')), '\'\'')),
+        | let baseResult = if($isGroupByCat,
+            | assert($groupByCat->isNotEmpty(), 
+                'The database type \'' + $sgc.dbConfig.dbType->id() + '\' is not supported yet!');
+              $groupByCat->toOne()->eval($strings->at(0), $separator),
+            | assert($stringCat->isNotEmpty(), 
+                'The database type \'' + $sgc.dbConfig.dbType->id() + '\' is not supported yet!');
+              $stringCat->toOne()->eval($strings, $separator));
+          if(eq($prefix, '\'\'') && eq($suffix, '\'\''),
+             | $baseResult,
+             | $stringCat->toOne()->eval([$prefix, $baseResult, $suffix]->filter(s | !eq($s, '\'\'')), '\'\''));
+    );
+}
+
+// Updated DuckDB specific implementation
+function meta::relational::functions::sqlQueryToString::duckDB::processJoinStringsOperationForDuckDB(
+    js:JoinStrings[1], 
+    sgc:SqlGenerationContext[1]
+): String[1] 
+{
+    processJoinStringsOperation(
+        $js, 
+        $sgc, 
+        {col, sep| 'group_concat(' + $col + if($sep == '\'\'', |'', |',' + $sep) + ')'}, 
+        {strs, sep| 'concat(' + $strs->joinStrings(if('\'\'' == $sep, |', ', |',' + $sep + ',')) + ')'});
+}
