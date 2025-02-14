@@ -74,26 +74,34 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
 
    let conventions = $context.conventions;
 
+   
+
    // Create base execution class
    let executeClass = $conventions->planNodeClass('public', $path, 'Execute')
       ->usingKnownPackages($conventions->knownPackages())
       ->imports($conventions->standardImports())
       ->imports([
-         'io.deephaven.qst.table.TicketTable',
-         'io.deephaven.qst.table.TableSpec',
-         'io.deephaven.client.impl.TableHandle',
-         'io.deephaven.client.impl.BarrageSession'
+         javaClass('io.deephaven.qst.table.TicketTable'),
+         javaClass('io.deephaven.qst.table.TableSpec'),
+         javaClass('io.deephaven.client.impl.TableHandle'),
+         javaClass('io.deephaven.client.impl.BarrageSession')
       ]);
 
+   let ticketTableClass = javaClass('io.deephaven.qst.table.TicketTable');
+   let tableSpecClass = javaClass('io.deephaven.qst.table.TableSpec');
+
    // Generate TableSpec creation
-   let tableSpecVar = j_variable(javaClass('io.deephaven.qst.table.TableSpec'), 'tableSpec');
+   let tableSpecVar = j_variable($tableSpecClass, 'tableSpec');
    let tableSpecCreation = $tableSpecVar->j_declare(
-      javaClass('io.deephaven.qst.table.TicketTable')
-         ->j_invoke('fromQueryScopeField', [j_string($node.query.source->toOne().name)], javaClass('io.deephaven.qst.table.TableSpec'))
+      $ticketTableClass->j_invoke('fromQueryScopeField', [j_string($node.generatedJava.source->toOne().name)], $tableSpecClass)
    );
 
+   // Store tableSpec as a field to access it throughout the class
+   let tableSpecField = javaField('private final', $tableSpecClass, 'tableSpec');
+   let executeClassWithField = $executeClass->addField($tableSpecField);
+
    // Generate operation chain
-   let operationChain = generateDeephavenOperationChain($node.query, $tableSpecVar, $context);
+   let operationChain = generateDeephavenOperationChain($node.generatedJava, $tableSpecField, $tableSpecClass, $context);
 
    // Add execution method
    let executeMethod = javaMethod(
@@ -107,29 +115,32 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
       ]
    );
 
-   let executeProject = newProject()->addClasses($executeClass->addMethod($executeMethod));
-   $executeProject->mergeProjects()->generatedCode($executeClass);
+   let executeProject = newProject()->addClasses($executeClassWithField->addMethod($executeMethod));
+   $executeProject->mergeProjects()->generatedCode($executeClassWithField);
 }
 
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateDeephavenOperationChain(
    query: DeephavenQuery[1],
-   tableSpec: Code[1],
+   tableSpecField: Field[1],
+   tableSpecClass: Type[1],
    context: GenerationContext[1]
 ): Code[1]
 {
    let result = $query.operations->fold({op, code |
       $op->match([
-         s: SelectOperation[1] | generateSelectOperation($s, $code),
-         f: FilterOperation[1] | generateFilterOperation($f, $code)
+         s: SelectOperation[1] | generateSelectOperation($s, $code, $tableSpecField, $tableSpecClass),
+         f: FilterOperation[1] | generateFilterOperation($f, $code, $tableSpecField, $tableSpecClass)
       ]);
-   }, $tableSpec);
+   }, $tableSpecField);
 
    $result;
 }
 
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateSelectOperation(
    op: SelectOperation[1],
-   chain: Code[1]
+   chain: Code[1],
+   tableSpecField: Field[1],
+   tableSpecClass: Type[1]
 ): Code[1]
 {
    let columnNames = $op.columns->map(c | j_string($c.name));
@@ -138,39 +149,45 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
 
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateFilterOperation(
    op: FilterOperation[1],
-   chain: Code[1]
+   chain: Code[1],
+   tableSpecField: Field[1],
+   tableSpecClass: Type[1]
 ): Code[1]
 {
-   let condition = generateFilterCondition($op.condition);
+   let condition = generateFilterCondition($op.condition, $tableSpecField, $tableSpecClass);
    $chain->j_invoke('where', [$condition], javaClass('io.deephaven.qst.table.TableSpec'));
 }
 
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateFilterCondition(
-   expr: FilterExpression[1]
+   expr: FilterExpression[1],
+   tableSpecField: Field[1],
+   tableSpecClass: Type[1]
 ): Code[1]
 {
    $expr->match([
-      eq: EqOperatorExpression[1] | generateOperand($eq.expressions->at(0))
-         ->j_invoke('eq', [generateOperand($eq.expressions->at(1))], javaClass('io.deephaven.engine.column.expression.BooleanExpression')),
+      eq: EqOperatorExpression[1] | generateOperand($eq.expressions->at(0), $tableSpecField, $tableSpecClass)
+         ->j_invoke('eq', [generateOperand($eq.expressions->at(1), $tableSpecField, $tableSpecClass)], javaClass('io.deephaven.engine.column.expression.BooleanExpression')),
 
-      and: AndOperatorExpression[1] | generateOperand($and.expressions->at(0))
-         ->j_invoke('and', [generateOperand($and.expressions->at(1))], javaClass('io.deephaven.engine.column.expression.BooleanExpression')),
+      and: AndOperatorExpression[1] | generateOperand($and.expressions->at(0), $tableSpecField, $tableSpecClass)
+         ->j_invoke('and', [generateOperand($and.expressions->at(1), $tableSpecField, $tableSpecClass)], javaClass('io.deephaven.engine.column.expression.BooleanExpression')),
 
-      or: OrOperatorExpression[1] | generateOperand($or.expressions->at(0))
-         ->j_invoke('or', [generateOperand($or.expressions->at(1))], javaClass('io.deephaven.engine.column.expression.BooleanExpression')),
+      or: OrOperatorExpression[1] | generateOperand($or.expressions->at(0), $tableSpecField, $tableSpecClass)
+         ->j_invoke('or', [generateOperand($or.expressions->at(1), $tableSpecField, $tableSpecClass)], javaClass('io.deephaven.engine.column.expression.BooleanExpression')),
 
-      in: InOperatorExpression[1] | generateOperand($in.expressions->at(0))
-         ->j_invoke('in', [generateOperand($in.expressions->at(1))], javaClass('io.deephaven.engine.column.expression.BooleanExpression'))
+      in: InOperatorExpression[1] | generateOperand($in.expressions->at(0), $tableSpecField, $tableSpecClass)
+         ->j_invoke('in', [generateOperand($in.expressions->at(1), $tableSpecField, $tableSpecClass)], javaClass('io.deephaven.engine.column.expression.BooleanExpression'))
    ]);
 }
 
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateOperand(
-   op: DeephavenOperationElement[1]
+   op: DeephavenOperationElement[1],
+   tableSpecField: Field[1],
+   tableSpecClass: Type[1]
 ): Code[1]
 {
    $op->match([
-      f: FilterExpression[1] | generateFilterCondition($f),
-      c: Column[1] | j_field($c.name),
+      f: FilterExpression[1] | generateFilterCondition($f, $tableSpecField, $tableSpecClass),
+      c: Column[1] | j_field($tableSpecClass, $c.name),
       l: Literal[1] | if($l.value->at(0)->instanceOf(String),
                         | j_string($l.value->at(0)->toString()),
                         | j_number($l.value->at(0)->toString()))
