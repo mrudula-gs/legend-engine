@@ -190,6 +190,13 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
       c: Column[1] | j_field($tableSpecClass, $c.name),
       l: Literal[1] | if($l.value->at(0)->instanceOf(String),
                         | j_string($l.value->at(0)->toString()),
-                        | j_number($l.value->at(0)->toString()))
+                        | if($l.value->at(0)->instanceOf(Integer),
+                            | j_int($l.value->at(0)->toString()),
+                            | if($l.value->at(0)->instanceOf(Float),
+                                | j_float($l.value->at(0)->toString()),
+                                | if($l.value->at(0)->instanceOf(Decimal),  
+                                    | j_bigDecimal($l.value->at(0)->cast(@Decimal)),
+                                    | j_double($l.value->at(0)->toString())
+                                ))))
    ]);
 }
