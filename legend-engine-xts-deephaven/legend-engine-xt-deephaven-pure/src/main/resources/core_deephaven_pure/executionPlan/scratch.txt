@@ -1,0 +1,50 @@
+Caused by: java.lang.RuntimeException: org.finos.legend.engine.shared.javaCompiler.JavaCompileException: 5 errors compiling /_pure/plan/root/Execute.java
+/_pure/plan/root/Execute.java:3: error: package io.deephaven.client.impl does not exist
+import io.deephaven.client.impl.BarrageSession;
+                               ^
+/_pure/plan/root/Execute.java:4: error: package io.deephaven.client.impl does not exist
+import io.deephaven.client.impl.TableHandle;
+                               ^
+/_pure/plan/root/Execute.java:5: error: package io.deephaven.qst.table does not exist
+import io.deephaven.qst.table.TableSpec;
+                             ^
+/_pure/plan/root/Execute.java:6: error: package io.deephaven.qst.table does not exist
+import io.deephaven.qst.table.TicketTable;
+                             ^
+/_pure/plan/root/Execute.java:18: error: cannot find symbol
+    private final TableSpec tableSpec;
+                  ^
+  symbol:   class TableSpec
+  location: class _pure.plan.root.Execute
+
+/_pure/plan/root/Execute.java
+0001 package _pure.plan.root;
+0002 
+0003 import io.deephaven.client.impl.BarrageSession;
+0004 import io.deephaven.client.impl.TableHandle;
+0005 import io.deephaven.qst.table.TableSpec;
+0006 import io.deephaven.qst.table.TicketTable;
+0007 import java.math.*;
+0008 import java.util.*;
+0009 import java.util.function.*;
+0010 import java.util.stream.*;
+0011 import org.finos.legend.engine.plan.dependencies.domain.date.DayOfWeek;
+0012 import org.finos.legend.engine.plan.dependencies.domain.date.DurationUnit;
+0013 import org.finos.legend.engine.plan.dependencies.domain.date.PureDate;
+0014 import org.finos.legend.engine.plan.dependencies.util.Library;
+0015 
+0016 public class Execute
+0017 {
+0018     private final TableSpec tableSpec;
+0019 
+0020     public void execute()
+0021     {
+0022         TableSpec tableSpec = TicketTable.fromQueryScopeField("nds_desktops");
+0023         return tableSpec.select("Desktop_ID", "City_Name", "Desktop_Name");
+0024     }
+	at org.finos.legend.engine.plan.execution.PlanExecutor.possiblyCompilePlan(PlanExecutor.java:362)
+	at org.finos.legend.engine.plan.execution.PlanExecutor.executeWithArgs(PlanExecutor.java:280)
+	at org.finos.legend.engine.pure.runtime.execution.shared.LegendExecute.doExecute(LegendExecute.java:54)
+	at org.finos.legend.engine.pure.runtime.execution.interpreted.natives.LegendExecute.execute(LegendExecute.java:63)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:771)
+	... 92 more
