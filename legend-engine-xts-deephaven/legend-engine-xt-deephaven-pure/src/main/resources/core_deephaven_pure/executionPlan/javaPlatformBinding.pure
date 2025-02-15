@@ -1,4 +1,26 @@
-function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenLegendJavaPlatformBindingExtension(): LegendJavaPlatformBindingExtension[1]
+import meta::external::store::deephaven::metamodel::store::*;
+import meta::external::language::java::metamodel::*;
+import meta::external::store::deephaven::metamodel::*;
+import meta::pure::executionPlan::*;
+import meta::external::language::java::factory::project::*;
+import meta::external::language::java::factory::*;
+import meta::external::language::java::transform::*;
+import meta::pure::executionPlan::platformBinding::legendJava::shared::naming::*;
+import meta::pure::executionPlan::platformBinding::legendJava::shared::constraints::*;
+import meta::external::format::shared::binding::validation::*;
+import meta::pure::executionPlan::platformBinding::typeInfo::*;
+import meta::external::store::deephaven::executionPlan::platformBinding::legendJava::*;
+import meta::external::store::deephaven::metamodel::executionPlan::*;
+import meta::pure::extension::*;
+import meta::pure::executionPlan::platformBinding::legendJava::*;
+
+
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::DeephavenLegendJavaPlatformBindingDescriptor extends LegendJavaPlatformBindingAdhocExtension
+{
+  enginePlatformDependencies: Function<{Conventions[1]->Conventions[1]}>[*];
+}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenStoreLegendJavaPlatformBindingExtension(): LegendJavaPlatformBindingExtension[1]
 {
    ^LegendJavaPlatformBindingExtension
    (
@@ -8,12 +30,28 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
       supportedExecutionNodes = [DeephavenExecutionNode],
 
       adhocExtensions = [
-         ^LegendJavaPlatformDependencyUpdateExtension(
+        //  ^LegendJavaPlatformDependencyUpdateExtension(
+        //     platformDependencyUpdate = {conventions: Conventions[1], extensions: Extension[*] |
+        //        meta::external::store::deephaven::executionPlan::platformBinding::legendJava::extendDeephavenJavaEngineDependencies($conventions)
+        //     }
+        //  )
+
+          ^LegendJavaPlatformDependencyUpdateExtension
+         (
             platformDependencyUpdate = {conventions: Conventions[1], extensions: Extension[*] |
-               extendDeephavenJavaEngineDependencies($conventions)
+               $extensions->extractLegendJavaAdhocExtensionsOfType(DeephavenLegendJavaPlatformBindingDescriptor)
+                  ->fold({e, uc |
+                     $e.enginePlatformDependencies
+                        ->map(e | $e->eval($uc))->first()->orElse($uc)
+                  }, extendDeephavenJavaEngineDependencies($conventions))
             }
          )
+
       ],
+
+      
+// Class <<typemodifiers.abstract>> meta::pure::executionPlan::platformBinding::legendJava::LegendJavaPlatformBindingAdhocExtension {}
+
 
       updateGenerationContextForNode = {node: ExecutionNode[1], context: GenerationContext[1], path: String[1], extensions: Extension[*], debug: DebugContext[1] |
          $node->match([
@@ -22,13 +60,15 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
          ])
       },
 
-      generateLegendJavaCodeForNode = {node: ExecutionNode[1], path: String[1], context: GenerationContext[1], extensions: Extension[*], debug: DebugContext[1] |
-         $node->match([
-            d: DeephavenExecutionNode[1] | generateForDeephavenExecutionNode($d, $path, $context, $debug),
-            n: ExecutionNode[1] | ^GeneratedCode()
-         ])
+      generateLegendJavaCodeForNode = {node: meta::pure::executionPlan::ExecutionNode[1], path: String[1], context: GenerationContext[1], extensions: meta::pure::extension::Extension[*], debug: DebugContext[1] |
+         
+       // fail();
+        $node->match([
+            d: DeephavenExecutionNode[1]   | $d->meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateForDeephavenExecutionNode($path, $context, $debug),
+            n: meta::pure::executionPlan::ExecutionNode[1]   | ^GeneratedCode()
+         ]);
       }
-   );
+   )
 }
 
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::prepareForDeephavenExecutionNode(
@@ -46,8 +86,8 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
 
    // Add type information for Deephaven specific classes
    let updatedTypeInfo = $context.typeInfos
-      ->addForClass(meta::external::store::deephaven::metamodel::store::DeephavenQuery)
-      ->addForClass(meta::external::store::deephaven::metamodel::store::DeephavenTable);
+      ->addForClass(DeephavenQuery);
+      // ->addForClass(meta::external::store::deephaven::metamodel::store::DeephavenTable);
 
    let nodeInfo = ^NodeInfo(
       path = $path,
@@ -63,21 +103,24 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
       ->setTypeInfos($updatedTypeInfo);
 }
 
-function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateForDeephavenExecutionNode(
-   node: DeephavenExecutionNode[1],
-   path: String[1],
-   context: GenerationContext[1],
-   debug: DebugContext[1]
-): GeneratedCode[1]
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateForDeephavenExecutionNode(node:DeephavenExecutionNode[1], path:String[1], context:GenerationContext[1], debug:DebugContext[1]): GeneratedCode[1]
 {
-   print(if($debug.debug, | $debug.space + '(' + $path + ') generate DeephavenExecutionNode\n', | ''));
+  print(if($debug.debug, | $debug.space + '(' + $path + ') generate DeephavenExecutionNode\n', | ''));
+  let conventions = $context.conventions;
+  // let executeClassWithImports = $conventions->planNodeClass('public', $path, 'Execute')
+  //     ->usingKnownPackages($conventions->knownPackages())
+  //     ->imports($conventions->standardImports())
+  //     ->imports($conventions->className(_IDeephavenExecutionNodeSpecifics))
+  //     ->implements($conventions->className(_IDeephavenExecutionNodeSpecifics));
 
-   let conventions = $context.conventions;
+  // let executeClass   = $executeClassWithImports;
+  // let project = newProject()->addClasses($executeClass)->toOneMany()->mergeProjects();
+  // generatedCode($project, $executeClass);
 
-   
+  // let bindingDetail = $context->nodeInfosForPath($path).data->toOne();
 
-   // Create base execution class
-   let executeClass = $conventions->planNodeClass('public', $path, 'Execute')
+  // Create base execution class
+  let executeClass = $conventions->planNodeClass('public', $path, 'Execute')
       ->usingKnownPackages($conventions->knownPackages())
       ->imports($conventions->standardImports())
       ->imports([
@@ -85,7 +128,12 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
          javaClass('io.deephaven.qst.table.TableSpec'),
          javaClass('io.deephaven.client.impl.TableHandle'),
          javaClass('io.deephaven.client.impl.BarrageSession')
-      ]);
+      ])
+      // ->imports([_IDeephavenExecutionNodeSpecifics, StoreStreamReader]->map(x | $conventions->className($x)))
+      ->imports([_IDeephavenExecutionNodeSpecifics, StoreStreamReader]->map(x | $conventions->className($x)))
+      ->implements($conventions->className(_IDeephavenExecutionNodeSpecifics));
+
+      
 
    let ticketTableClass = javaClass('io.deephaven.qst.table.TicketTable');
    let tableSpecClass = javaClass('io.deephaven.qst.table.TableSpec');
@@ -97,7 +145,7 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
    );
 
    // Store tableSpec as a field to access it throughout the class
-   let tableSpecField = javaField('private final', $tableSpecClass, 'tableSpec');
+   let tableSpecField = javaField(['private', 'final'], $tableSpecClass, 'tableSpec');
    let executeClassWithField = $executeClass->addField($tableSpecField);
 
    // Generate operation chain
@@ -115,23 +163,29 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
       ]
    );
 
-   let executeProject = newProject()->addClasses($executeClassWithField->addMethod($executeMethod));
+   let executeProject = newProject()
+                        ->addMavenDependency('io.deephaven', 'deephaven-qst', '0.36.1')
+                        ->addMavenDependency('io.deephaven', 'deephaven-java-client-session', '0.36.1')
+                        ->addClasses($executeClassWithField->addMethod($executeMethod));
+                        //fail();
    $executeProject->mergeProjects()->generatedCode($executeClassWithField);
 }
 
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateDeephavenOperationChain(
    query: DeephavenQuery[1],
    tableSpecField: Field[1],
-   tableSpecClass: Type[1],
+   tableSpecClass: meta::external::language::java::metamodel::Type[1],
    context: GenerationContext[1]
 ): Code[1]
 {
+  //  let initial = j_field($tableSpecClass, $tableSpecField.name);
+   let initial = j_variable($tableSpecClass, $tableSpecField.name);
    let result = $query.operations->fold({op, code |
       $op->match([
          s: SelectOperation[1] | generateSelectOperation($s, $code, $tableSpecField, $tableSpecClass),
          f: FilterOperation[1] | generateFilterOperation($f, $code, $tableSpecField, $tableSpecClass)
       ]);
-   }, $tableSpecField);
+   }, $initial);
 
    $result;
 }
@@ -140,7 +194,7 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
    op: SelectOperation[1],
    chain: Code[1],
    tableSpecField: Field[1],
-   tableSpecClass: Type[1]
+   tableSpecClass: meta::external::language::java::metamodel::Type[1]
 ): Code[1]
 {
    let columnNames = $op.columns->map(c | j_string($c.name));
@@ -151,7 +205,7 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
    op: FilterOperation[1],
    chain: Code[1],
    tableSpecField: Field[1],
-   tableSpecClass: Type[1]
+   tableSpecClass: meta::external::language::java::metamodel::Type[1]
 ): Code[1]
 {
    let condition = generateFilterCondition($op.condition, $tableSpecField, $tableSpecClass);
@@ -161,7 +215,7 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateFilterCondition(
    expr: FilterExpression[1],
    tableSpecField: Field[1],
-   tableSpecClass: Type[1]
+   tableSpecClass: meta::external::language::java::metamodel::Type[1]
 ): Code[1]
 {
    $expr->match([
@@ -182,13 +236,13 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateOperand(
    op: DeephavenOperationElement[1],
    tableSpecField: Field[1],
-   tableSpecClass: Type[1]
+   tableSpecClass: meta::external::language::java::metamodel::Type[1]
 ): Code[1]
 {
    $op->match([
       f: FilterExpression[1] | generateFilterCondition($f, $tableSpecField, $tableSpecClass),
       c: Column[1] | j_field($tableSpecClass, $c.name),
-      l: Literal[1] | if($l.value->at(0)->instanceOf(String),
+      l: meta::external::store::deephaven::metamodel::store::Literal[1] | if($l.value->at(0)->instanceOf(String),
                         | j_string($l.value->at(0)->toString()),
                         | if($l.value->at(0)->instanceOf(Integer),
                             | j_int($l.value->at(0)->toString()),
@@ -199,4 +253,52 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
                                     | j_double($l.value->at(0)->toString())
                                 ))))
    ]);
+}
+
+// Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::_IDeephavenExecutionNodeSpecifics {}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions(): Extension[*]
+{
+  // Pulls together store extension + PlatformBinding extensions required for Deephaven, excludes stuff already loaded by core..
+  [
+    meta::external::store::deephaven::extension::deephavenExtension(),
+    meta::pure::executionPlan::platformBinding::platformBindingExtension('PlatformBinding - LegendJava - Deephaven', [
+    meta::pure::executionPlan::platformBinding::legendJava::legendJavaPlatformBinding([
+                                                                                        meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenStoreLegendJavaPlatformBindingExtension()
+                                                                                      ])
+  ])
+  ]
+}
+
+/*
+ * This function should be assigned to the router extension:
+ *
+ *     plan_javaRuntime_enginePlatformDependencies_conventions = meta::external::format::json::executionPlan::platformBinding::legendJava::extendJavaEngineDependencies_Conventions_1__Conventions_1_
+ */
+
+ 
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics {}
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenConnection {}
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenSession {}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::extendDeephavenJavaEngineDependencies(conventions:Conventions[1]):Conventions[1]
+{
+  //  let jIStoreStreamReader = $conventions->className(meta::pure::executionPlan::platformBinding::legendJava::StoreStreamReader);
+
+  //  let jIDeephavenExecutionNodeSpecifics = javaClass('public', 'org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics')
+      let jDeephavenExecutionNode = javaClass('public', 'org.finos.legend.engine.plan.execution.stores.deephaven.DeephavenExecutionNode')
+                                    ->addMethod(javaMethod('public', javaVoid(), 'execute', []))
+                                    ->addMethod(javaMethod('public', javaClass('io.deephaven.qst.table.TableSpec'), 'getTableSpec', []));
+                                    
+      let jDeephavenConnection = javaClass('public', 'org.finos.legend.engine.plan.execution.stores.deephaven.DeephavenConnection')
+                                    ->addMethod(javaMethod('public', javaVoid(), 'connect', []))
+                                    ->addMethod(javaMethod('public', javaVoid(), 'disconnect', []));
+
+      let jDeephavenSession = javaClass('public', 'org.finos.legend.engine.plan.execution.stores.deephaven.DeephavenSession')
+                                    ->addMethod(javaMethod('public', javaClass('io.deephaven.client.impl.BarrageSession'), 'getSession', []));
+
+   $conventions
+      ->addProvidedType(meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics, $jDeephavenExecutionNode)
+      ->addProvidedType(meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenConnection, $jDeephavenConnection)
+      ->addProvidedType(meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenSession, $jDeephavenSession);
 }
