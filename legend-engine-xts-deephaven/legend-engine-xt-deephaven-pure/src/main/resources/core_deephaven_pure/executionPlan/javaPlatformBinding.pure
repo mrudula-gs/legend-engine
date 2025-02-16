@@ -130,8 +130,8 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
          javaClass('io.deephaven.client.impl.BarrageSession')
       ])
       // ->imports([_IDeephavenExecutionNodeSpecifics, StoreStreamReader]->map(x | $conventions->className($x)))
-      ->imports([_IDeephavenExecutionNodeSpecifics, StoreStreamReader]->map(x | $conventions->className($x)))
-      ->implements($conventions->className(_IDeephavenExecutionNodeSpecifics));
+      ->imports([meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics, StoreStreamReader]->map(x | $conventions->className($x)))
+      ->implements($conventions->className(meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics));
 
       
 
@@ -141,7 +141,7 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
    // Generate TableSpec creation
    let tableSpecVar = j_variable($tableSpecClass, 'tableSpec');
    let tableSpecCreation = $tableSpecVar->j_declare(
-      $ticketTableClass->j_invoke('fromQueryScopeField', [j_string($node.generatedJava.source->toOne().name)], $tableSpecClass)
+      $ticketTableClass->j_invoke('fromQueryScopeField', [j_string($node.deephavenMetamodelQuery.source->toOne().name)], $tableSpecClass)
    );
 
    // Store tableSpec as a field to access it throughout the class
@@ -149,7 +149,7 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
    let executeClassWithField = $executeClass->addField($tableSpecField);
 
    // Generate operation chain
-   let operationChain = generateDeephavenOperationChain($node.generatedJava, $tableSpecField, $tableSpecClass, $context);
+   let operationChain = generateDeephavenOperationChain($node.deephavenMetamodelQuery, $tableSpecField, $tableSpecClass, $context);
 
    // Add execution method
    let executeMethod = javaMethod(
@@ -277,7 +277,12 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
  */
 
  
-Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics {}
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics
+{
+  // <<abstract>> execute(): Void[1];
+  // <<abstract>> getTableSpec(): TableSpec[1];
+}
+
 Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenConnection {}
 Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenSession {}
 
