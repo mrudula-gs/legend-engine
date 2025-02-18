@@ -1,33 +1,7 @@
-Caused by: org.finos.legend.engine.shared.javaCompiler.JavaCompileException: 8 errors compiling /_pure/plan/root/Execute.java
-/_pure/plan/root/Execute.java:3: error: package io.deephaven.client.impl does not exist
-import io.deephaven.client.impl.BarrageSession;
-                               ^
-/_pure/plan/root/Execute.java:4: error: package io.deephaven.client.impl does not exist
-import io.deephaven.client.impl.TableHandle;
-                               ^
-/_pure/plan/root/Execute.java:5: error: package io.deephaven.qst.table does not exist
-import io.deephaven.qst.table.TableSpec;
-                             ^
-/_pure/plan/root/Execute.java:6: error: package io.deephaven.qst.table does not exist
-import io.deephaven.qst.table.TicketTable;
-                             ^
-/_pure/plan/root/Execute.java:16: error: package org.finos.legend.engine.plan.execution.stores.deephaven does not exist
-import org.finos.legend.engine.plan.execution.stores.deephaven.DeephavenExecutionNode;
-                                                              ^
-/_pure/plan/root/Execute.java:18: error: cannot find symbol
-public class Execute implements DeephavenExecutionNode
-                                ^
-  symbol: class DeephavenExecutionNode
-/_pure/plan/root/Execute.java:20: error: cannot find symbol
-    public static TableHandle execute(BarrageSession session)
-                                      ^
-  symbol:   class BarrageSession
-  location: class _pure.plan.root.Execute
-/_pure/plan/root/Execute.java:20: error: cannot find symbol
-    public static TableHandle execute(BarrageSession session)
-                  ^
-  symbol:   class TableHandle
-  location: class _pure.plan.root.Execute
+Caused by: org.finos.legend.engine.shared.javaCompiler.JavaCompileException: 1 error compiling /_pure/plan/root/Execute.java
+/_pure/plan/root/Execute.java:22: error: unreported exception io.deephaven.client.impl.TableHandle.TableHandleException; must be caught or declared to be thrown
+        return session.session().execute(ts);
+                                        ^
 
 /_pure/plan/root/Execute.java
 0001 package _pure.plan.root;
@@ -43,15 +17,13 @@ public class Execute implements DeephavenExecutionNode
 0011 import org.finos.legend.engine.plan.dependencies.domain.date.DayOfWeek;
 0012 import org.finos.legend.engine.plan.dependencies.domain.date.DurationUnit;
 0013 import org.finos.legend.engine.plan.dependencies.domain.date.PureDate;
-0014 import org.finos.legend.engine.plan.dependencies.store.inMemory.IStoreStreamReader;
-0015 import org.finos.legend.engine.plan.dependencies.util.Library;
-0016 import org.finos.legend.engine.plan.execution.stores.deephaven.DeephavenExecutionNode;
-0017 
-0018 public class Execute implements DeephavenExecutionNode
-0019 {
-0020     public static TableHandle execute(BarrageSession session)
-0021     {
-0022         TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops");
-0023         ts.select("Desktop_ID", "City_Name", "Desktop_Name");
-0024         return session.session().execute(ts);
-0025     }
+0014 import org.finos.legend.engine.plan.dependencies.util.Library;
+0015 
+0016 public class Execute
+0017 {
+0018     public static TableHandle execute(BarrageSession session)
+0019     {
+0020         TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops");
+0021         ts.select("Desktop_ID", "City_Name", "Desktop_Name");
+0022         return session.session().execute(ts);
+0023     }
