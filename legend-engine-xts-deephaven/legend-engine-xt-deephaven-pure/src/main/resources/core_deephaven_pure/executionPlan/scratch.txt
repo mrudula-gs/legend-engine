@@ -1,4 +1,4 @@
-Caused by: java.lang.RuntimeException: org.finos.legend.engine.shared.javaCompiler.JavaCompileException: 5 errors compiling /_pure/plan/root/Execute.java
+Caused by: org.finos.legend.engine.shared.javaCompiler.JavaCompileException: 8 errors compiling /_pure/plan/root/Execute.java
 /_pure/plan/root/Execute.java:3: error: package io.deephaven.client.impl does not exist
 import io.deephaven.client.impl.BarrageSession;
                                ^
@@ -11,10 +11,22 @@ import io.deephaven.qst.table.TableSpec;
 /_pure/plan/root/Execute.java:6: error: package io.deephaven.qst.table does not exist
 import io.deephaven.qst.table.TicketTable;
                              ^
+/_pure/plan/root/Execute.java:16: error: package org.finos.legend.engine.plan.execution.stores.deephaven does not exist
+import org.finos.legend.engine.plan.execution.stores.deephaven.DeephavenExecutionNode;
+                                                              ^
 /_pure/plan/root/Execute.java:18: error: cannot find symbol
-    private final TableSpec tableSpec;
+public class Execute implements DeephavenExecutionNode
+                                ^
+  symbol: class DeephavenExecutionNode
+/_pure/plan/root/Execute.java:20: error: cannot find symbol
+    public static TableHandle execute(BarrageSession session)
+                                      ^
+  symbol:   class BarrageSession
+  location: class _pure.plan.root.Execute
+/_pure/plan/root/Execute.java:20: error: cannot find symbol
+    public static TableHandle execute(BarrageSession session)
                   ^
-  symbol:   class TableSpec
+  symbol:   class TableHandle
   location: class _pure.plan.root.Execute
 
 /_pure/plan/root/Execute.java
@@ -31,32 +43,15 @@ import io.deephaven.qst.table.TicketTable;
 0011 import org.finos.legend.engine.plan.dependencies.domain.date.DayOfWeek;
 0012 import org.finos.legend.engine.plan.dependencies.domain.date.DurationUnit;
 0013 import org.finos.legend.engine.plan.dependencies.domain.date.PureDate;
-0014 import org.finos.legend.engine.plan.dependencies.util.Library;
-0015 
-0016 public class Execute
-0017 {
-0018     private final TableSpec tableSpec;
-0019 
-0020     public void execute()
+0014 import org.finos.legend.engine.plan.dependencies.store.inMemory.IStoreStreamReader;
+0015 import org.finos.legend.engine.plan.dependencies.util.Library;
+0016 import org.finos.legend.engine.plan.execution.stores.deephaven.DeephavenExecutionNode;
+0017 
+0018 public class Execute implements DeephavenExecutionNode
+0019 {
+0020     public static TableHandle execute(BarrageSession session)
 0021     {
-0022         TableSpec tableSpec = TicketTable.fromQueryScopeField("nds_desktops");
-0023         return tableSpec.select("Desktop_ID", "City_Name", "Desktop_Name");
-0024     }
-	at org.finos.legend.engine.plan.execution.PlanExecutor.possiblyCompilePlan(PlanExecutor.java:362)
-	at org.finos.legend.engine.plan.execution.PlanExecutor.executeWithArgs(PlanExecutor.java:280)
-	at org.finos.legend.engine.pure.runtime.execution.shared.LegendExecute.doExecute(LegendExecute.java:54)
-	at org.finos.legend.engine.pure.runtime.execution.interpreted.natives.LegendExecute.execute(LegendExecute.java:63)
-	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:771)
-	... 92 more
-
-
-
-
-Compilation error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:330 column:53), "The system can't find a match for the function: addProvidedType(_:Conventions[1],_:Class[1],_:Class[1])
-
-These functions, in packages already imported, would match the function call if you changed the parameters.
-  meta::external::language::java::transform::addProvidedType(Conventions[1], Type[1], Class[1]):Conventions[1]
-  meta::external::language::java::transform::addProvidedType(Conventions[1], Type[1], String[1]):Conventions[1]
-
-No functions, in packages not imported, match the function name.
-"
+0022         TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops");
+0023         ts.select("Desktop_ID", "City_Name", "Desktop_Name");
+0024         return session.session().execute(ts);
+0025     }
