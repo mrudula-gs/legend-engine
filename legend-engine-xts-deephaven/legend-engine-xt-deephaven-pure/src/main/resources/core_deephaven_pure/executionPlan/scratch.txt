@@ -51,10 +51,12 @@ import io.deephaven.qst.table.TicketTable;
 
 
 
-Compilation error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:161 column:25), "The system can't find a match for the function: generateDeephavenOperationChain(_:DeephavenQuery[1],_:Code[1],_:Class[1],_:GenerationContext[1])
+
+Compilation error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:330 column:53), "The system can't find a match for the function: addProvidedType(_:Conventions[1],_:Class[1],_:Class[1])
 
 These functions, in packages already imported, would match the function call if you changed the parameters.
-  meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateDeephavenOperationChain(DeephavenQuery[1], Variable[1], Type[1], GenerationContext[1]):Code[1]
+  meta::external::language::java::transform::addProvidedType(Conventions[1], Type[1], Class[1]):Conventions[1]
+  meta::external::language::java::transform::addProvidedType(Conventions[1], Type[1], String[1]):Conventions[1]
 
 No functions, in packages not imported, match the function name.
 "
