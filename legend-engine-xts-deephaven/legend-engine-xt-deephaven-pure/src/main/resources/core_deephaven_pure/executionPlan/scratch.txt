@@ -1,8 +1,16 @@
-Execution error at (resource:/core_external_execution/execution.pure line:37 column:32), "org.finos.legend.engine.shared.javaCompiler.JavaCompileException: 1 error compiling /_pure/plan/root/Execute.java
-/_pure/plan/root/Execute.java:19: error: execute(io.deephaven.client.impl.BarrageSession) in _pure.plan.root.Execute cannot implement execute(io.deephaven.client.impl.BarrageSession) in org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics
-    public static TableHandle execute(BarrageSession session)
-                              ^
-  overriding method is static
+Caused by: org.finos.legend.engine.shared.javaCompiler.JavaCompileException: 3 errors compiling /_pure/plan/root/Execute.java
+/_pure/plan/root/Execute.java:21: error: cannot access io.deephaven.qst.table.TableBase
+        TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops");
+                                  ^
+  class file for io.deephaven.qst.table.TableBase not found
+/_pure/plan/root/Execute.java:22: error: cannot access io.deephaven.api.TableOperationsDefaults
+        ts.select("Desktop_ID", "City_Name", "Desktop_Name");
+          ^
+  class file for io.deephaven.api.TableOperationsDefaults not found
+/_pure/plan/root/Execute.java:25: error: cannot access io.deephaven.client.impl.BarrageSubscription
+            return session.session().execute(ts);
+                          ^
+  class file for io.deephaven.client.impl.BarrageSubscription not found
 
 /_pure/plan/root/Execute.java
 0001 package _pure.plan.root;
@@ -23,7 +31,7 @@ Execution error at (resource:/core_external_execution/execution.pure line:37 col
 0016 
 0017 public class Execute implements IDeephavenExecutionNodeSpecifics
 0018 {
-0019     public static TableHandle execute(BarrageSession session)
+0019     public TableHandle execute(BarrageSession session)
 0020     {
 0021         TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops");
 0022         ts.select("Desktop_ID", "City_Name", "Desktop_Name");
@@ -39,4 +47,4 @@ Execution error at (resource:/core_external_execution/execution.pure line:37 col
 0032         {
 0033             throw new RuntimeException(e);
 0034         }
-0035     }"
+0035     }
