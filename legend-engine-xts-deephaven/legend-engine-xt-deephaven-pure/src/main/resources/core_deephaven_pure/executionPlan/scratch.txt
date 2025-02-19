@@ -1,50 +1,26 @@
-Caused by: org.finos.legend.engine.shared.javaCompiler.JavaCompileException: 3 errors compiling /_pure/plan/root/Execute.java
-/_pure/plan/root/Execute.java:21: error: cannot access io.deephaven.qst.table.TableBase
-        TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops");
-                                  ^
-  class file for io.deephaven.qst.table.TableBase not found
-/_pure/plan/root/Execute.java:22: error: cannot access io.deephaven.api.TableOperationsDefaults
-        ts.select("Desktop_ID", "City_Name", "Desktop_Name");
-          ^
-  class file for io.deephaven.api.TableOperationsDefaults not found
-/_pure/plan/root/Execute.java:25: error: cannot access io.deephaven.client.impl.BarrageSubscription
-            return session.session().execute(ts);
-                          ^
-  class file for io.deephaven.client.impl.BarrageSubscription not found
+Dependency convergence error for com.google.protobuf:protobuf-java:3.25.3 paths to dependency are:
++-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
+  +-io.deephaven:deephaven-java-client-session:0.36.1
+    +-io.deephaven:deephaven-proto-backplane-grpc:0.36.1
+      +-com.google.protobuf:protobuf-java:3.25.3
+and
++-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
+  +-io.deephaven:deephaven-java-client-session:0.36.1
+    +-io.deephaven:deephaven-proto-backplane-grpc:0.36.1
+      +-io.grpc:grpc-protobuf:1.58.0
+        +-com.google.protobuf:protobuf-java:3.24.0
+and
++-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
+  +-io.deephaven:deephaven-java-client-session:0.36.1
+    +-io.deephaven:deephaven-proto-backplane-grpc:0.36.1
+      +-io.grpc:grpc-protobuf:1.58.0
+        +-com.google.api.grpc:proto-google-common-protos:2.22.0
+          +-com.google.protobuf:protobuf-java:3.23.2
+and
++-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
+  +-io.deephaven:deephaven-java-client-flight:0.36.1
+    +-org.apache.arrow:flight-grpc:13.0.0
+      +-com.google.protobuf:protobuf-java:3.23.1
 
-/_pure/plan/root/Execute.java
-0001 package _pure.plan.root;
-0002 
-0003 import io.deephaven.client.impl.BarrageSession;
-0004 import io.deephaven.client.impl.TableHandle;
-0005 import io.deephaven.qst.table.TableSpec;
-0006 import io.deephaven.qst.table.TicketTable;
-0007 import java.math.*;
-0008 import java.util.*;
-0009 import java.util.function.*;
-0010 import java.util.stream.*;
-0011 import org.finos.legend.engine.plan.dependencies.domain.date.DayOfWeek;
-0012 import org.finos.legend.engine.plan.dependencies.domain.date.DurationUnit;
-0013 import org.finos.legend.engine.plan.dependencies.domain.date.PureDate;
-0014 import org.finos.legend.engine.plan.dependencies.util.Library;
-0015 import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
-0016 
-0017 public class Execute implements IDeephavenExecutionNodeSpecifics
-0018 {
-0019     public TableHandle execute(BarrageSession session)
-0020     {
-0021         TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops");
-0022         ts.select("Desktop_ID", "City_Name", "Desktop_Name");
-0023         try
-0024         {
-0025             return session.session().execute(ts);
-0026         }
-0027         catch (io.deephaven.client.impl.TableHandle.TableHandleException e)
-0028         {
-0029             throw new RuntimeException(e);
-0030         }
-0031         catch (InterruptedException e)
-0032         {
-0033             throw new RuntimeException(e);
-0034         }
-0035     }
+[WARNING] Rule 2: org.apache.maven.plugins.enforcer.DependencyConvergence failed with message:
+Failed while enforcing releasability. See above detailed error message.
