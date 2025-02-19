@@ -1,26 +1,35 @@
 Dependency convergence error for com.google.protobuf:protobuf-java:3.25.3 paths to dependency are:
-+-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
-  +-io.deephaven:deephaven-java-client-session:0.36.1
-    +-io.deephaven:deephaven-proto-backplane-grpc:0.36.1
-      +-com.google.protobuf:protobuf-java:3.25.3
++-org.finos.legend.engine:legend-engine-extensions-collection-execution:4.69.2-SNAPSHOT
+  +-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
+    +-io.deephaven:deephaven-java-client-session:0.36.1
+      +-io.deephaven:deephaven-proto-backplane-grpc:0.36.1
+        +-com.google.protobuf:protobuf-java:3.25.3
 and
-+-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
-  +-io.deephaven:deephaven-java-client-session:0.36.1
-    +-io.deephaven:deephaven-proto-backplane-grpc:0.36.1
-      +-io.grpc:grpc-protobuf:1.58.0
-        +-com.google.protobuf:protobuf-java:3.24.0
++-org.finos.legend.engine:legend-engine-extensions-collection-execution:4.69.2-SNAPSHOT
+  +-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
+    +-io.deephaven:deephaven-java-client-session:0.36.1
+      +-io.deephaven:deephaven-proto-backplane-grpc:0.36.1
+        +-io.grpc:grpc-protobuf:1.58.0
+          +-com.google.protobuf:protobuf-java:3.24.0
 and
-+-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
-  +-io.deephaven:deephaven-java-client-session:0.36.1
-    +-io.deephaven:deephaven-proto-backplane-grpc:0.36.1
-      +-io.grpc:grpc-protobuf:1.58.0
-        +-com.google.api.grpc:proto-google-common-protos:2.22.0
-          +-com.google.protobuf:protobuf-java:3.23.2
++-org.finos.legend.engine:legend-engine-extensions-collection-execution:4.69.2-SNAPSHOT
+  +-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
+    +-io.deephaven:deephaven-java-client-session:0.36.1
+      +-io.deephaven:deephaven-proto-backplane-grpc:0.36.1
+        +-io.grpc:grpc-protobuf:1.58.0
+          +-com.google.api.grpc:proto-google-common-protos:2.22.0
+            +-com.google.protobuf:protobuf-java:3.23.2
 and
-+-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
-  +-io.deephaven:deephaven-java-client-flight:0.36.1
-    +-org.apache.arrow:flight-grpc:13.0.0
++-org.finos.legend.engine:legend-engine-extensions-collection-execution:4.69.2-SNAPSHOT
+  +-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
+    +-io.deephaven:deephaven-java-client-flight:0.36.1
+      +-org.apache.arrow:flight-grpc:13.0.0
+        +-com.google.protobuf:protobuf-java:3.23.1
+and
++-org.finos.legend.engine:legend-engine-extensions-collection-execution:4.69.2-SNAPSHOT
+  +-org.finos.legend.engine:legend-engine-xt-deephaven-executionPlan:4.69.2-SNAPSHOT
+    +-org.apache.arrow:flight-core:13.0.0
       +-com.google.protobuf:protobuf-java:3.23.1
 
-[WARNING] Rule 2: org.apache.maven.plugins.enforcer.DependencyConvergence failed with message:
+[WARNING] Rule 1: org.apache.maven.plugins.enforcer.DependencyConvergence failed with message:
 Failed while enforcing releasability. See above detailed error message.
