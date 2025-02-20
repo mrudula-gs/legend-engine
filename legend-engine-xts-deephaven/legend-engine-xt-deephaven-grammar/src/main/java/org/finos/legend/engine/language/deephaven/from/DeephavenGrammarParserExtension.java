@@ -35,8 +35,8 @@ import org.finos.legend.engine.language.pure.grammar.from.extension.PureGrammarP
 import org.finos.legend.engine.language.pure.grammar.from.extension.PureGrammarParserExtensions;
 import org.finos.legend.engine.language.pure.grammar.from.extension.SectionParser;
 import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
+import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.SourceInformation;
-import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.Section;
 
 import java.util.function.Consumer;

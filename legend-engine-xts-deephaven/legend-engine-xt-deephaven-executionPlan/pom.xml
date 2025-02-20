@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.finos.legend.engine</groupId>
         <artifactId>legend-engine-xts-deephaven</artifactId>
-        <version>4.68.1-SNAPSHOT</version>
+        <version>4.70.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>legend-engine-xt-deephaven-executionPlan</artifactId>
@@ -145,6 +145,22 @@
         </dependency>
         <dependency>
             <groupId>io.deephaven</groupId>
+            <artifactId>deephaven-table-api</artifactId>
+            <version>0.36.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.deephaven</groupId>
+            <artifactId>deephaven-java-client-flight</artifactId>
+            <version>0.36.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.grpc</groupId>
+                    <artifactId>grpc-protobuf</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.deephaven</groupId>
             <artifactId>deephaven-qst</artifactId>
             <version>0.36.1</version>
         </dependency>
@@ -158,11 +174,11 @@
             <artifactId>deephaven-java-client-barrage</artifactId>
             <version>0.36.1</version>
             <exclusions>
-                <exclusion>
-                    <groupId>com.google.protobuf</groupId>
-                    <artifactId>protobuf-java</artifactId>
-<!--                    new-->
-                </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>com.google.protobuf</groupId>-->
+<!--                    <artifactId>protobuf-java</artifactId>-->
+<!--&lt;!&ndash;                    new&ndash;&gt;-->
+<!--                </exclusion>-->
 <!--                <exclusion>-->
 <!--                    <groupId>io.grpc</groupId>-->
 <!--                    <artifactId>grpc-core</artifactId>-->
@@ -205,10 +221,10 @@
             <artifactId>flight-core</artifactId>
             <version>13.0.0</version>
             <exclusions>
-                <exclusion>
-                    <groupId>com.google.protobuf</groupId>
-                    <artifactId>protobuf-java</artifactId>
-                </exclusion>
+<!--                <exclusion>-->
+<!--                    <groupId>com.google.protobuf</groupId>-->
+<!--                    <artifactId>protobuf-java</artifactId>-->
+<!--                </exclusion>-->
                 <exclusion>
                     <groupId>com.google.errorprone</groupId>
                     <artifactId>error_prone_annotations</artifactId>
@@ -298,11 +314,11 @@
 <!--                <artifactId>error_prone_annotations</artifactId>-->
 <!--                <version>2.20.0</version>-->
 <!--            </dependency>-->
-            <dependency>
-                <groupId>com.google.protobuf</groupId>
-                <artifactId>protobuf-java</artifactId>
-                <version>3.25.3</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>com.google.protobuf</groupId>-->
+<!--                <artifactId>protobuf-java</artifactId>-->
+<!--                <version>3.25.3</version>-->
+<!--            </dependency>-->
 <!--            <dependency>-->
 <!--                <groupId>com.google.code.gson</groupId>-->
 <!--                <artifactId>gson</artifactId>-->

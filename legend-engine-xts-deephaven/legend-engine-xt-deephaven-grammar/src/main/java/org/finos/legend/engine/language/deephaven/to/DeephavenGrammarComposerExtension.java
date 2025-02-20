@@ -32,7 +32,7 @@ import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenCon
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.Column;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.DeephavenStore;
 import org.finos.legend.engine.protocol.deephaven.metamodel.store.Table;
-import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
+import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.connection.Connection;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.BooleanType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.IntType;

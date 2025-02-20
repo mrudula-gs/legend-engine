@@ -18,7 +18,7 @@
     <parent>
         <groupId>org.finos.legend.engine</groupId>
         <artifactId>legend-engine-xts-deephaven</artifactId>
-        <version>4.68.1-SNAPSHOT</version>
+        <version>4.70.1-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -32,27 +32,32 @@
             <groupId>org.finos.legend.pure</groupId>
             <artifactId>legend-pure-m3-core</artifactId>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.finos.legend.engine</groupId>-->
+<!--            <artifactId>legend-engine-pure-code-compiled-core</artifactId>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-pure-code-compiled-core</artifactId>
+            <artifactId>legend-engine-identity-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-pure-code-core-extension</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-pure-runtime-java-extension-compiled-functions-planExecution</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-pure-platform-dsl-store-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-shared-core</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.finos.legend.engine</groupId>-->
+<!--            <artifactId>legend-engine-pure-runtime-java-extension-compiled-functions-planExecution</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.finos.legend.engine</groupId>-->
+<!--            <artifactId>legend-engine-pure-platform-dsl-store-java</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.finos.legend.engine</groupId>-->
+<!--            <artifactId>legend-engine-shared-core</artifactId>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-identity-core</artifactId>
@@ -67,10 +72,10 @@
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>junit</groupId>-->
+<!--            <artifactId>junit</artifactId>-->
+<!--        </dependency>-->
 
 
         <dependency>
@@ -107,7 +112,7 @@
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-pure-runtime-java-extension-compiled-functions-unclassified</artifactId>
-            <scope>test</scope>
+<!--            <scope>test</scope>-->
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
@@ -183,12 +188,12 @@
         </dependency>
 
         <!-- Deephaven  -->
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-xt-deephaven-pure</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.finos.legend.engine</groupId>-->
+<!--            <artifactId>legend-engine-xt-deephaven-pure</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--&lt;!&ndash;            <scope>test</scope>&ndash;&gt;-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-xt-deephaven-protocol</artifactId>
@@ -211,7 +216,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- ES V7  -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -247,21 +251,21 @@
             <artifactId>legend-engine-pure-runtime-java-extension-compiled-functions-pureExtensions</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-protocol-pure</artifactId>
-<!--            <scope>test</scope>-->
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.finos.legend.engine</groupId>-->
+<!--            <artifactId>legend-engine-protocol-pure</artifactId>-->
+<!--&lt;!&ndash;            <scope>test</scope>&ndash;&gt;-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-executionPlan-execution</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-language-pure-compiler</artifactId>
-<!--            <scope>test</scope>-->
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.finos.legend.engine</groupId>-->
+<!--            <artifactId>legend-engine-language-pure-compiler</artifactId>-->
+<!--&lt;!&ndash;            <scope>test</scope>&ndash;&gt;-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-executionPlan-generation</artifactId>
@@ -332,6 +336,26 @@
             </exclusions>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-runtime-java-engine-compiled</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-m4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-runtime-java-engine-interpreted</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.collections</groupId>
+            <artifactId>eclipse-collections</artifactId>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.finos.legend.engine</groupId>-->
+<!--            <artifactId>legend-engine-pure-runtime-java-extension-interpreted-functions-legendCompiler</artifactId>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>

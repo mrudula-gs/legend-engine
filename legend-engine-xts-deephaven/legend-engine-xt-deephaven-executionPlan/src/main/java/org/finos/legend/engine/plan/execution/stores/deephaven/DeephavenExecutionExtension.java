@@ -45,17 +45,6 @@ public class DeephavenExecutionExtension implements IDeephavenStoreExecutionExte
             {
                 Result temp = executionNode.accept(executionState.getStoreExecutionState(StoreType.Deephaven).getVisitor(identity, executionState));
                 return temp;
-
-                // long term
-                // TODO ESTABLISH SESSION
-                // Execute generated code
-                // Future<Table> result = executionNode.queryEntryPoint.execute(session);
-                // translate to TDS Result???
-
-                // hack
-                // TODO ESTABLISH SESSION
-                // handcraft some table expression / query
-                // translate to TDS Result
             }
             return null;
         }));

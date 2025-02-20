@@ -22,13 +22,13 @@ public class DeephavenLegendPureCoreExtension implements StoreLegendPureCoreExte
     @Override
     public String functionFile()
     {
-        return "core_deephaven_pure/contract/store_contract.pure";
+        return "core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure";
     }
 
     @Override
     public String functionSignature()
     {
-        return "meta::external::store::deephaven::extension::deephavenExtension__Extension_1_";
+        return "meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions__Extension_MANY_";
     }
 
     @Override

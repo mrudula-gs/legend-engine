@@ -79,7 +79,7 @@ public class DeephavenExecTest
             DeephavenTarget deephavenTarget = DeephavenTarget.builder().host("localhost").port(10000).isSecure(false).build();
             ClientConfig clientConfig = ClientConfig.builder().target(deephavenTarget).build();
             SessionConfig sessionConfig = SessionConfig.builder()
-                    .authenticationTypeAndValue("io.deephaven.authentication.psk.PskAuthenticationHandler " + "122wi2fgkp76s")
+                    .authenticationTypeAndValue("io.deephaven.authentication.psk.PskAuthenticationHandler " + "5au9q4eu3yu8")
                     .build();
             RootAllocator bufferAllocator = new RootAllocator();
             BarrageSessionFactoryConfig.Factory barrageSessionFactory = BarrageSessionFactoryConfig.builder()
@@ -92,11 +92,14 @@ public class DeephavenExecTest
             {
                 System.out.println("Connected to Deephaven Server !");
 //                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").select("City_Name");
-//                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name == `Dallas`");
-//                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name == `Dallas` && Desktop_ID == 1");
+//                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").select("Desktop_ID", "City_Name", "Desktop_Name").where("City_Name == `Dallas`");
+                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name == `Dallas`").select("Desktop_ID", "City_Name", "Desktop_Name");
+
+
+                //                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name == `Dallas` && Desktop_ID == 1");
 //                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name == `Dallas` || Desktop_ID == 2");
 //                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name in `Dallas`, `New York`");
-                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name != `Dallas`");
+//                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name != `Dallas`");
 //                TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").sort();
                 TableHandle th = session.session().execute(ts);
                 TicketId tickID = th.ticketId();

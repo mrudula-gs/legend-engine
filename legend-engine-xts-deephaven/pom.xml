@@ -18,7 +18,7 @@
     <parent>
         <groupId>org.finos.legend.engine</groupId>
         <artifactId>legend-engine</artifactId>
-        <version>4.68.1-SNAPSHOT</version>
+        <version>4.70.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -30,8 +30,9 @@
         <module>legend-engine-xt-deephaven-executionPlan</module>
         <module>legend-engine-xt-deephaven-grammar</module>
         <module>legend-engine-xt-deephaven-pure</module>
-        <module>legend-engine-xt-deephaven-protocol-utils</module>
         <module>legend-engine-xt-deephaven-protocol</module>
+        <module>legend-engine-xt-deephaven-javaPlatformBinding-pure</module>
         <module>legend-engine-xt-deephaven-executionPlan-test</module>
+        <module>legend-engine-xt-deephaven-PCT</module>
     </modules>
 </project>

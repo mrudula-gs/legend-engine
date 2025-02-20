@@ -39,6 +39,7 @@ function meta::external::language::java::factory::javaStringBuilder():          
 function meta::external::language::java::factory::javaAppendable():                    meta::external::language::java::metamodel::Class[1] { javaClass('java.lang.Appendable'); }
 function meta::external::language::java::factory::javaClassType():                     meta::external::language::java::metamodel::Class[1] { javaClass('java.lang.Class'); }
 function meta::external::language::java::factory::javaNullPointerException():          meta::external::language::java::metamodel::Class[1] { javaClass('java.lang.NullPointerException'); }
+function meta::external::language::java::factory::javaInterruptedException():          meta::external::language::java::metamodel::Class[1] { javaClass('java.lang.InterruptedException'); }
 
 function meta::external::language::java::factory::javaReflectType():           meta::external::language::java::metamodel::Class[1] { javaClass('java.lang.reflect.Type'); }
 function meta::external::language::java::factory::javaReflectMethod():         meta::external::language::java::metamodel::Class[1] { javaClass('java.lang.reflect.Method'); }
@@ -3138,8 +3139,11 @@ function meta::external::language::java::factory::apiKnowledge(in:meta::external
       |
    if($in.package == javaPackage('java.util.stream'),
       | $in->smartJavaUtilStream(),   
+      | 
+   if(($in.package == javaPackage('io.deephaven.client.impl')) || ($in.package == javaPackage('io.deephaven.qst.table')),
+      | $in->smartDeephaven(),   
       | $in
-   ))))));
+   )))))));
 }
 
 function meta::external::language::java::factory::apiKnowledge(in:meta::external::language::java::metamodel::ParameterizedType[1]): meta::external::language::java::metamodel::Class[1]
@@ -3365,6 +3369,20 @@ function <<access.private>> meta::external::language::java::factory::smartJavaUt
       | $class->addMethodIfMissing(javaMethod($elementType,  'get',     [])),
       | $class
    );
+}
+
+function <<access.private>> meta::external::language::java::factory::smartDeephaven(in:meta::external::language::java::metamodel::Class[1]): meta::external::language::java::metamodel::Class[1]
+{
+   if($in.simpleName == 'BarrageSession',
+      | $in->addMethodIfMissing(javaMethod(javaClass('io.deephaven.client.impl.Session'), 'session', [])),
+      | 
+   if($in.simpleName == 'Session',
+      | $in->addMethodIfMissing(javaMethod(javaClass('io.deephaven.client.impl.TableHandle'), 'execute', [javaParam(javaClass('io.deephaven.qst.table.TableSpec'), 'tableSpec')])),
+      | 
+   if($in.simpleName == 'TicketTable',
+      | $in->addMethodIfMissing(javaMethod(javaClass('io.deephaven.qst.table.TableSpec'), 'fromQueryScopeField', [javaParam(javaString(), 'name')])),
+      | $in
+   )));
 }
 
 function <<access.private>> meta::external::language::java::factory::addCollectionMethods(col:meta::external::language::java::metamodel::Class[1], element:meta::external::language::java::metamodel::Type[1]): meta::external::language::java::metamodel::Class[1]

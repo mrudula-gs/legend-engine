@@ -28,9 +28,9 @@ import org.finos.legend.engine.language.pure.grammar.from.antlr4.connection.Deep
 import org.finos.legend.engine.language.pure.grammar.from.antlr4.connection.DeephavenConnectionParserGrammar;
 import org.finos.legend.engine.language.pure.grammar.from.extension.PureGrammarParserExtensions;
 
+import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.SourceInformation;
 import org.finos.legend.engine.protocol.pure.v1.model.context.EngineErrorType;
-import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.ImportAwareCodeSection;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.Section;
 
@@ -45,7 +45,6 @@ import org.finos.legend.engine.protocol.deephaven.metamodel.type.StringType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.TimeType;
 import org.finos.legend.engine.protocol.deephaven.metamodel.type.Type;
 
-import org.finos.legend.engine.shared.core.operational.Assert;
 import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
 
 import java.net.URI;
@@ -139,7 +138,7 @@ public class DeephavenParseTreeWalker
 
             Type columnType = null;
 
-            // TODO: anumam - consider... should we raise exception for unknown type (null type)
+            // TODO - anumam - consider... should we raise exception for unknown type (null type)
             switch (type.getSymbol().getType())
             {
                 case DeephavenParserGrammar.DATE_TIME:

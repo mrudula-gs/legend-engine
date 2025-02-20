@@ -24,7 +24,7 @@ import org.finos.legend.engine.shared.core.identity.Identity;
 public class DeephavenStoreExecutionState implements StoreExecutionState
 {
     private final DeephavenStoreState state;
-
+    private RuntimeContext runtimeContext = RuntimeContext.empty();
     private final DeephavenStoreExecutorConfiguration deephavenStoreExecutorConfiguration;
 
     public DeephavenStoreExecutionState(DeephavenStoreState state, DeephavenStoreExecutorConfiguration deephavenStoreExecutorConfiguration)
@@ -59,12 +59,12 @@ public class DeephavenStoreExecutionState implements StoreExecutionState
     @Override
     public RuntimeContext getRuntimeContext()
     {
-        return RuntimeContext.empty();
+        return this.runtimeContext;
     }
 
     @Override
     public void setRuntimeContext(RuntimeContext runtimeContext)
     {
-        // ignore
+        this.runtimeContext = runtimeContext;
     }
 }

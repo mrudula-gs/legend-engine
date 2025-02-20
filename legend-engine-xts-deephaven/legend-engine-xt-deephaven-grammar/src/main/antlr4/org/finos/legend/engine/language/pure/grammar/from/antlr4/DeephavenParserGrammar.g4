@@ -56,8 +56,7 @@ columns:                                    columnDefinition (COMMA columnDefini
 columnDefinition:                           columnName COLON columnType
 ;
 
-// TODO: anumam - fix this - for some reason it doesn't allow single quotes - causes Unexpected Token exception
-// we should allow this for columnnames that have spaces or identifiers that are doubling as names
+// TODO - current grammar parser will pick up "\'" as unknown token - need to enable single quote for col names that may contain space or as a method of identifier escape
 columnName:                           VALID_STRING | STRING
 ;
 

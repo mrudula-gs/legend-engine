@@ -149,7 +149,7 @@ Class meta::external::store::deephaven::pureToDeephaven::State
     if($this.debug.debug, |println($this.debug.space + $s->eval()), |[]);
   }:Any[0];
 
-  // TODO: need class for result here
+  // TODO - anumam - need class for result here
   // tdsDEDetails: TDSDEDetail[*];
 }
 
@@ -188,7 +188,7 @@ function meta::external::store::deephaven::pureToDeephaven::processValueSpecific
                                                                                     $req.supportedRoutingFunctions->findAndEvalSupportedFunction($fe, $operation, $req);
                                                                        ]);
                                             $res;,
-                // TODO: anumam - not sure if tds and ervs are needed
+                // TODO - anumam - not sure if tds and ervs are needed
                 tds: TDSRoutedValueSpecification[1] |       println('------------------ In process VS - TDSRoutedValueSpecification -------------------');      $tds.value->processValueSpecification($operation, $req);,
                 ervs: ExtendedRoutedValueSpecification[1] | println('------------------ In process VS - ExtendedRoutedValueSpecification -------------------'); $ervs.value->processValueSpecification($operation, $req);,
                 v: VariableExpression[1] |                  println('------------------ In process VS - VariableExpression -------------------');               $v->processVariableExpression($operation, $req);,
@@ -422,7 +422,7 @@ function meta::external::store::deephaven::pureToDeephaven::processFilter(vs : F
   let debug = $initReq.debug;
 
   let processStore = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne()->cast(@DeephavenQuery);
-  // TODO: anumam - revisit whether deephaven allows filter in aggregation queries - however for PoC this is not covered
+  // TODO - anumam - revisit whether deephaven allows filter in aggregation queries - however for PoC this is not covered
   // assertFalse($processStore.aggregationQuery, |'filter not supported in aggregation queries');
   let withFilterReq = processFilterLambda($vs.parametersValues->at(1), $processStore, ^$initReq(inFilter = true)); //->cast(@SelectSQLQuery);
   let res = if($withFilterReq->instanceOf(DeephavenQuery),

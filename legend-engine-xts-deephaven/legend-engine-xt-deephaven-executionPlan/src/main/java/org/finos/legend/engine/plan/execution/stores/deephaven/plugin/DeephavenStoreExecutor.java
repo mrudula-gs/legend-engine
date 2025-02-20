@@ -19,13 +19,12 @@ import org.finos.legend.engine.plan.execution.stores.StoreExecutor;
 
 public class DeephavenStoreExecutor implements StoreExecutor
 {
-    private final DeephavenStoreState state;
+    private final DeephavenStoreState state = new DeephavenStoreState();
 
     private final DeephavenStoreExecutorConfiguration deephavenStoreExecutorConfiguration;
 
-    public DeephavenStoreExecutor(DeephavenStoreState state, DeephavenStoreExecutorConfiguration deephavenStoreExecutorConfiguration)
+    public DeephavenStoreExecutor(DeephavenStoreExecutorConfiguration deephavenStoreExecutorConfiguration)
     {
-        this.state = state;
         this.deephavenStoreExecutorConfiguration = deephavenStoreExecutorConfiguration;
     }
 

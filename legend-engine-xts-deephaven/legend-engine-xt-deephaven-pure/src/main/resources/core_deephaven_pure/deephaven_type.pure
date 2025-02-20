@@ -65,7 +65,7 @@ Class meta::external::store::deephaven::metamodel::type::TimeType extends meta::
 
 Class meta::external::store::deephaven::metamodel::type::CustomType extends meta::external::store::deephaven::metamodel::type::Type
 {
-  // TODO: anumam - double check if this is right; componentType was taken from ArrayType but what is property of Custom type column that tracks the type?
+  // TODO - anumam - double check if this is right; componentType was taken from ArrayType but what is property of Custom type column that tracks the type?
   componentType : meta::external::store::deephaven::metamodel::type::Type[1];
 }
 

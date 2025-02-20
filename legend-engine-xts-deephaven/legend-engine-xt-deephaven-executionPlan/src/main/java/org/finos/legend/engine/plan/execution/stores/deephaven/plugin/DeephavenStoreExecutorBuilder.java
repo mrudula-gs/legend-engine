@@ -37,12 +37,12 @@ public class DeephavenStoreExecutorBuilder implements StoreExecutorBuilder
     @Override
     public DeephavenStoreExecutor build()
     {
-        return (DeephavenStoreExecutor) build(DeephavenStoreExecutorConfiguration.newInstance().build());
+        return build(DeephavenStoreExecutorConfiguration.newInstance().build());
     }
 
     @Override
     public DeephavenStoreExecutor build(StoreExecutorConfiguration storeExecutorConfiguration)
     {
-        return new DeephavenStoreExecutor(new DeephavenStoreState(), (DeephavenStoreExecutorConfiguration) storeExecutorConfiguration);
+        return new DeephavenStoreExecutor((DeephavenStoreExecutorConfiguration) storeExecutorConfiguration);
     }
 }

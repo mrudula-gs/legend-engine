@@ -43,7 +43,7 @@ public class DeephavenSessionPSKProvider implements DeephavenSessionProvider
         // TODO: anumam - should this include target prefix
         DeephavenTarget target = DeephavenTarget.builder().host(deephavenSessionContext.sourceSpec.url.getHost()).port(deephavenSessionContext.sourceSpec.url.getPort()).isSecure(false).build(); // dh+plain://localhost:10000
         // String authTypeAndPSK = this.authType + deephavenSessionContext.pskAuth.psk;
-        String authTypeAndPSK = this.authType + "122wi2fgkp76s";
+        String authTypeAndPSK = this.authType + "5au9q4eu3yu8";
         return new DeephavenSession(target, authTypeAndPSK);
     }
 

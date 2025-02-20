@@ -21,8 +21,7 @@ import meta::external::store::deephaven::metamodel::store::*;
 
 Class meta::external::store::deephaven::metamodel::executionPlan::DeephavenExecutionNode extends meta::pure::executionPlan::ExecutionNode
 {
-  // deepHavenQuery : String[1];
-  generatedJava :  meta::external::store::deephaven::metamodel::executionPlan::DeephavenJavaCode[1];
+  query :  DeephavenQuery[1];
   connection : meta::external::store::deephaven::metamodel::runtime::DeephavenConnection[1];
 }
 
@@ -31,7 +30,7 @@ Class meta::external::store::deephaven::metamodel::executionPlan::context::Deeph
 
 }
 
-//TODO: anumam - update this later - result is actually a table handle/ticket
+// TODO - anumam - update this later - result is actually a table handle/ticket
 Class meta::external::store::deephaven::metamodel::executionPlan::tds::DeephavenTDSResult
 {     
   table: Table[1];

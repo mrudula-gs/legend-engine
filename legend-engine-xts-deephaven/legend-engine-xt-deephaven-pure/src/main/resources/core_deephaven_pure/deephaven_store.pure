@@ -34,7 +34,7 @@ Class meta::external::store::deephaven::metamodel::store::Column extends meta::e
   type : meta::external::store::deephaven::metamodel::type::Type[1];
 }
 
-// TODO: anumam - add the sourceInformation fields to all classes for Deephaven such that the parser can add metadata back into the pojos/pmcd
+// TODO - anumam - add the sourceInformation fields to all classes for Deephaven such that the parser can add metadata back into the pojos/pmcd
 Class meta::external::store::deephaven::metamodel::store::Literal extends meta::external::store::deephaven::metamodel::DeephavenOperationElement
 {
    <<equality.Key>> value:Any[*];
@@ -44,8 +44,8 @@ Class meta::external::store::deephaven::metamodel::store::Literal extends meta::
 // {
 // }
 
-// TODO: Think about whether we need subclasses - e.g. Ring/Blink etc
-// TODO: think about whether we need lower level classes like RowSet
+// TODO - anumam - Think about whether we need subclasses - e.g. Ring/Blink etc
+// TODO - anumam - think about whether we need lower level classes like RowSet
 // Class meta::external::store::deephaven::RowSet extends ResultSet
 // {
 //   // some properties are used for connection - not sure if this is needed by this part of code; it's how deephaven structures it but leaving out stuff like username
