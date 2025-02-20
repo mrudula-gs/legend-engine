@@ -39,7 +39,7 @@ import org.finos.legend.engine.shared.core.operational.errorManagement.Exception
 import io.deephaven.client.impl.BarrageSession;
 import io.deephaven.client.impl.TableHandle;
 
-// get rid of * and add specific imports
+// TODO anumam - get rid of * and add specific imports
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -48,16 +48,6 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Resu
     private final Identity identity;
     private final ExecutionState executionState;
     private final DeephavenStoreState state;
-
-    private static final String CLASS_TEMPLATE = "package org.finos.legend.engine.generated;\n\n" +
-                                                 "%s\n" +
-                                                 "public class DeephavenGeneratedQuery {\n" +
-                                                 "    public static TableHandle execute(BarrageSession session) throws TableHandle.TableHandleException, InterruptedException {\n" +
-                                                 "        %s;\n" +
-                                                 "        return session.session().execute(ts);\n" +
-                                                 "        }\n" +
-                                                 "}\n";
-    private static final String IMPORT_TEMPLATE = "import %s;";
 
     public DeephavenExecutionNodeExecutor(Identity identity, ExecutionState executionState, DeephavenStoreState state)
     {
@@ -92,12 +82,14 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Resu
                 try (FlightStream flightStream = session.stream(table.ticketId()))
                 {
                     VectorSchemaRoot root = flightStream.getRoot();
+                    List<FieldVector> vectors = root.getFieldVectors();
                     while (flightStream.next())
                     {
-                        for (int i = 0; i < root.getRowCount(); i++)
+                        int rowCount = root.getRowCount();
+                        for (int i = 0; i < rowCount; i++)
                         {
-                            Map<String, Object> row = new HashMap<>();
-                            for (FieldVector vector : root.getFieldVectors())
+                            Map<String, Object> row = new HashMap<>(vectors.size());
+                            for (FieldVector vector : vectors)
                             {
                                 String columnName = vector.getName();
                                 Object value = vector.getObject(i);
