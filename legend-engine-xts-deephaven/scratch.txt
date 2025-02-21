@@ -1,31 +1,183 @@
-/opt/jdk-11-latest/bin/java -javaagent:/opt/intellij/lib/idea_rt.jar=32781:/opt/intellij/bin -Dfile.encoding=UTF-8 -classpath /local/data/scratch/projects/legend-engine/legend-engine-xts-deephaven/legend-engine-xt-deephaven-executionPlan-test/target/classes:/local/data/scratch/.m2/repository/org/testcontainers/testcontainers/1.18.3/testcontainers-1.18.3.jar:/local/data/scratch/.m2/repository/junit/junit/4.13.1/junit-4.13.1.jar:/local/data/scratch/.m2/repository/org/apache/commons/commons-compress/1.21/commons-compress-1.21.jar:/local/data/scratch/.m2/repository/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8.jar:/local/data/scratch/.m2/repository/org/jetbrains/annotations/17.0.0/annotations-17.0.0.jar:/local/data/scratch/.m2/repository/com/github/docker-java/docker-java-transport-zerodep/3.3.0/docker-java-transport-zerodep-3.3.0.jar:/local/data/scratch/.m2/repository/com/github/docker-java/docker-java-transport/3.3.0/docker-java-transport-3.3.0.jar:/local/data/scratch/.m2/repository/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar:/local/data/scratch/.m2/repository/com/github/docker-java/docker-java-api/3.3.0/docker-java-api-3.3.0.jar:/local/data/scratch/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.10.5/jackson-annotations-2.10.5.jar:/local/data/scratch/.m2/repository/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m3-core/5.33.0/legend-pure-m3-core-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m3-bootstrap-generator/5.33.0/legend-pure-m3-bootstrap-generator-5.33.0.jar:/local/data/scratch/.m2/repository/org/antlr/antlr4-runtime/4.8-1/antlr4-runtime-4.8-1.jar:/local/data/scratch/.m2/repository/com/googlecode/json-simple/json-simple/1.1.1/json-simple-1.1.1.jar:/local/data/scratch/.m2/repository/commons-codec/commons-codec/1.15/commons-codec-1.15.jar:/local/data/scratch/.m2/repository/org/apache/commons/commons-lang3/3.7/commons-lang3-3.7.jar:/local/data/scratch/.m2/repository/io/prometheus/simpleclient/0.8.1/simpleclient-0.8.1.jar:/local/data/scratch/.m2/repository/org/eclipse/collections/eclipse-collections/10.2.0/eclipse-collections-10.2.0.jar:/local/data/scratch/.m2/repository/org/eclipse/collections/eclipse-collections-api/10.2.0/eclipse-collections-api-10.2.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m4/5.33.0/legend-pure-m4-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-engine-compiled/5.33.0/legend-pure-runtime-java-engine-compiled-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-engine-shared/5.33.0/legend-pure-runtime-java-engine-shared-5.33.0.jar:/local/data/scratch/.m2/repository/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar:/local/data/scratch/.m2/repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar:/local/data/scratch/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.10.5/jackson-core-2.10.5.jar:/local/data/scratch/.m2/repository/io/github/classgraph/classgraph/4.8.25/classgraph-4.8.25.jar:/local/data/scratch/.m2/repository/io/opentracing/opentracing-api/0.32.0/opentracing-api-0.32.0.jar:/local/data/scratch/.m2/repository/io/opentracing/opentracing-util/0.32.0/opentracing-util-0.32.0.jar:/local/data/scratch/.m2/repository/io/opentracing/opentracing-noop/0.32.0/opentracing-noop-0.32.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-engine-interpreted/5.33.0/legend-pure-runtime-java-engine-interpreted-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-unclassified/legend-engine-pure-runtime-java-extension-shared-functions-unclassified/target/classes:/local/data/scratch/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.67/bcprov-jdk15on-1.67.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-unclassified/legend-engine-pure-runtime-java-extension-compiled-functions-unclassified/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-unclassified/legend-engine-pure-functions-unclassified-pure/target/classes:/local/data/scratch/.m2/repository/org/apache/commons/commons-text/1.10.0/commons-text-1.10.0.jar org.finos.legend.engine.plan.execution.stores.deephaven.test.DeephavenTestContainer
-SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
-SLF4J: Defaulting to no-operation (NOP) logger implementation
-SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
-org.testcontainers.containers.ContainerLaunchException: Container startup failed for image dockerhub.site.com:8413/deephaven/server:latest
-PSK: null
-org.testcontainers.containers.ContainerLaunchException: Container startup failed for image dockerhub.site.com:8413/deephaven/server:latest
-	at org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:349)
-	at org.testcontainers.containers.GenericContainer.start(GenericContainer.java:322)
-	at org.finos.legend.engine.plan.execution.stores.deephaven.test.DeephavenTestContainer.startDeephaven(DeephavenTestContainer.java:96)
-	at org.finos.legend.engine.plan.execution.stores.deephaven.test.DeephavenTestContainer.main(DeephavenTestContainer.java:53)
-Caused by: org.rnorth.ducttape.RetryCountExceededException: Retry limit hit with exception
-	at org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:88)
-	at org.testcontainers.containers.GenericContainer.doStart(GenericContainer.java:334)
-	... 3 more
-Caused by: org.testcontainers.containers.ContainerLaunchException: Could not create/start container
-	at org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:553)
-	at org.testcontainers.containers.GenericContainer.lambda$doStart$0(GenericContainer.java:344)
-	at org.rnorth.ducttape.unreliables.Unreliables.retryUntilSuccess(Unreliables.java:81)
-	... 4 more
-Caused by: java.lang.IllegalStateException: Wait strategy failed. Container exited with code 1
-	at org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:523)
-	... 6 more
-Caused by: org.testcontainers.containers.ContainerLaunchException: Timed out waiting for container port to open (dev-d54321-012-ABC.dc.com ports: [44819] should be listening)
-	at org.testcontainers.containers.wait.strategy.HostPortWaitStrategy.waitUntilReady(HostPortWaitStrategy.java:101)
-	at org.testcontainers.containers.wait.strategy.AbstractWaitStrategy.waitUntilReady(AbstractWaitStrategy.java:52)
-	at org.testcontainers.containers.GenericContainer.waitUntilContainerStarted(GenericContainer.java:964)
-	at org.testcontainers.containers.GenericContainer.tryStart(GenericContainer.java:490)
-	... 6 more
+package org.finos.legend.engine.plan.execution.stores.deephaven.test;
 
-Process finished with exit code 0
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.utility.DockerImageName;
+
+import java.util.concurrent.atomic.AtomicReference;
+
+public class DeephavenTestContainer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenTestContainer.class);
+    private static GenericContainer<?> deephavenContainer;
+    private static final String REGISTRY = "dockerhub.site.com:8413";
+    private static final String DEEPHAVEN_IMAGE = REGISTRY + "/deephaven/server:latest";
+    private static final int DEEPHAVEN_PORT = 10000;
+    private static final AtomicReference<String> discoveredPsk = new AtomicReference<>(null);
+
+    /**
+     * Starts a Deephaven instance and extracts the PSK from logs.
+     * @return true if started successfully, false otherwise
+     */
+    public static boolean startDeephaven() {
+        if (deephavenContainer != null && deephavenContainer.isRunning()) {
+            LOGGER.warn("Deephaven container already running; stopping it first.");
+            stopDeephaven();
+        }
+
+        try {
+            DockerImageName imageName = DockerImageName.parse(DEEPHAVEN_IMAGE);
+            deephavenContainer = new GenericContainer<>(imageName)
+                .withExposedPorts(DEEPHAVEN_PORT)
+                .withPrivilegedMode(true) // Add --privileged to match working Podman command
+                .withLogConsumer(new Slf4jLogConsumer(LOGGER).withPrefix("Deephaven"));
+
+            // Log consumer to capture PSK
+            deephavenContainer.withLogConsumer(frame -> {
+                String log = frame.getUtf8StringWithoutLineEnding();
+                LOGGER.debug("Container log: {}", log); // Log all lines for debugging
+                if (log.contains("psk=")) {
+                    String psk = log.substring(log.indexOf("psk=") + 4).trim();
+                    if (psk.contains(" ")) {
+                        psk = psk.substring(0, psk.indexOf(" "));
+                    }
+                    discoveredPsk.set(psk);
+                    int mappedPort = deephavenContainer.getMappedPort(DEEPHAVEN_PORT);
+                    LOGGER.info("Discovered PSK: {} | Connect URL: http://localhost:{}/?psk={}", 
+                                psk, mappedPort, psk);
+                }
+            });
+
+            long startTime = System.currentTimeMillis();
+            LOGGER.info("Starting Deephaven container with image: {}", DEEPHAVEN_IMAGE);
+            deephavenContainer.start();
+
+            // Wait for PSK or timeout
+            int waitSeconds = 120; // 2 minutes
+            for (int i = 0; i < waitSeconds && discoveredPsk.get() == null; i++) {
+                Thread.sleep(1000);
+            }
+
+            if (discoveredPsk.get() == null) {
+                String logs = deephavenContainer.getLogs();
+                LOGGER.error("PSK not found in logs after {} seconds. Full logs:\n{}", waitSeconds, logs);
+                throw new RuntimeException("Failed to extract PSK from Deephaven logs");
+            }
+
+            long endTime = System.currentTimeMillis();
+            LOGGER.info("Started Deephaven container on host: {} port: {} time taken (ms): {}", 
+                        deephavenContainer.getHost(), 
+                        deephavenContainer.getMappedPort(DEEPHAVEN_PORT), 
+                        (endTime - startTime));
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to start Deephaven container", e);
+            stopDeephaven();
+            throw e; // Re-throw to see full stack trace
+        }
+    }
+
+    /**
+     * Stops the running Deephaven container.
+     * @return true if stopped successfully or no container was running, false on error
+     */
+    public static boolean stopDeephaven() {
+        if (deephavenContainer != null && deephavenContainer.isRunning()) {
+            try {
+                deephavenContainer.stop();
+                LOGGER.info("Deephaven container stopped");
+                return true;
+            } catch (Exception e) {
+                LOGGER.error("Failed to stop Deephaven container", e);
+                return false;
+            } finally {
+                deephavenContainer = null;
+                discoveredPsk.set(null);
+            }
+        } else {
+            LOGGER.warn("No Deephaven container running to stop");
+            return true;
+        }
+    }
+
+    /**
+     * Authenticates using the provided PSK against the discovered one.
+     * @param psk Pre-Shared Key to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean authenticate(String psk) {
+        if (deephavenContainer == null || !deephavenContainer.isRunning()) {
+            LOGGER.error("Deephaven container not running; cannot authenticate");
+            return false;
+        }
+        String currentPsk = discoveredPsk.get();
+        if (currentPsk == null) {
+            LOGGER.error("No PSK discovered yet; cannot authenticate");
+            return false;
+        }
+        boolean isValid = currentPsk.equals(psk);
+        LOGGER.info("PSK authentication attempt with '{}': {}", psk, isValid ? "success" : "failure");
+        return isValid;
+    }
+
+    /**
+     * Loads a static table into Deephaven with the given JSON data.
+     * @param tableName Name of the table to create
+     * @param jsonData JSON string containing table data
+     * @return true if loaded successfully, false on error
+     */
+    public static boolean loadStaticTable(String tableName, String jsonData) {
+        if (deephavenContainer == null || !deephavenContainer.isRunning()) {
+            LOGGER.error("Deephaven container not running; cannot load table");
+            return false;
+        }
+        if (discoveredPsk.get() == null) {
+            LOGGER.error("PSK not discovered; cannot load table");
+            return false;
+        }
+
+        try {
+            String host = deephavenContainer.getHost();
+            int port = deephavenContainer.getMappedPort(DEEPHAVEN_PORT);
+            String psk = discoveredPsk.get();
+            LOGGER.info("Loading static table '{}' with data: {}", tableName, jsonData);
+            System.out.println("Stub: Loaded table " + tableName + " with data: " + jsonData);
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to load static table '{}'", tableName, e);
+            return false;
+        }
+    }
+
+    /**
+     * Gets the discovered PSK for use in tests.
+     * @return The PSK extracted from logs, or null if not found
+     */
+    public static String getPsk() {
+        return discoveredPsk.get();
+    }
+
+    // Native method implementations for Pure integration
+    public static boolean startDeephavenNative() {
+        return startDeephaven();
+    }
+
+    public static boolean stopDeephavenNative() {
+        return stopDeephaven();
+    }
+
+    public static boolean authenticateNative(String psk) {
+        return authenticate(psk);
+    }
+
+    public static boolean loadStaticTableNative(String tableName, String jsonData) {
+        return loadStaticTable(tableName, jsonData);
+    }
+
+    public static void main(String[] args) {
+        startDeephaven();
+        System.out.println("PSK: " + getPsk());
+        stopDeephaven();
+    }
+}
