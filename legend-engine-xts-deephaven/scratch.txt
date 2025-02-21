@@ -1,36 +1,184 @@
-//      String registry = System.getProperty("legend.engine.testcontainer.registry", "ghcr.io");
-        String registry = "dockerhub.site.com:8413";
-        DockerImageName imageName = DockerImageName.parse(registry + "/deephaven/server:latest"); //.asCompatibleSubstituteFor("ghcr.io/deephaven/server:latest");
+package org.finos.legend.engine.plan.execution.stores.deephaven.test;
 
-//      this.deephavenContainer = new FixedHostPortGenericContainer(imageName.toString()).withFixedExposedPort(DEEPHAVEN_PORT, DEEPHAVEN_PORT);
-        this.deephavenContainer = new GenericContainer<>(imageName)
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.containers.output.FrameConsumerResultCallback;
+import org.testcontainers.containers.output.ToStringConsumer;
+
+import java.util.concurrent.atomic.AtomicReference;
+
+public class DeephavenTestContainer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenTestContainer.class);
+    private static GenericContainer<?> deephavenContainer;
+    private static final String REGISTRY = "dockerhub.site.com:8413"; // Your custom registry
+    private static final String DEEPHAVEN_IMAGE = REGISTRY + "/deephaven/server:latest";
+    private static final int DEEPHAVEN_PORT = 10000; // Default port, adjust if needed
+    private static final AtomicReference<String> discoveredPsk = new AtomicReference<>(null); // Store PSK from logs
+
+    /**
+     * Starts a Deephaven instance and extracts the PSK from logs.
+     * @return true if started successfully, false otherwise
+     */
+    public static boolean startDeephaven() {
+        if (deephavenContainer != null && deephavenContainer.isRunning()) {
+            LOGGER.warn("Deephaven container already running; stopping it first.");
+            stopDeephaven();
+        }
+
+        try {
+            DockerImageName imageName = DockerImageName.parse(DEEPHAVEN_IMAGE);
+            deephavenContainer = new GenericContainer<>(imageName)
                 .withExposedPorts(DEEPHAVEN_PORT)
-                .withCreateContainerCmdModifier(cmd ->
-                {
+                .withCreateContainerCmdModifier(cmd -> {
                     cmd.getHostConfig().withUlimits(new Ulimit[] { new Ulimit("host", 2448L, 6592L) });
-                })
-//              .withStartupTimeout(Duration.ofMinutes(5))
-                .withLogConsumer(outputFrame ->
-                {
-//                  System.out.println(x.getUtf8StringWithoutLineEnding());
-                    String log = outputFrame.getUtf8String();
-                    System.out.println("Container: " + log);
-                    // Modify the URL with correct mapped port when we see the PSK
-                    if (log.contains("Connect automatically to Web UI with"))
-                    {
-                        String psk = log.substring(log.indexOf("psk=") + 4).trim();
-                        int mappedPort = deephavenContainer.getMappedPort(DEEPHAVEN_PORT);
-                        System.out.println("\n=== USE THIS URL TO CONNECT ===");
-                        System.out.println("http://localhost:" + mappedPort + "/?psk=" + psk);
-                        System.out.println("=============================\n");
-                    }
-                })
-        ;
-        this.deephavenContainer.start();
+                });
 
-//      Thread.currentThread().sleep(100000L);
+            // Log consumer to capture PSK from logs
+            ToStringConsumer logConsumer = new ToStringConsumer();
+            FrameConsumerResultCallback callback = new FrameConsumerResultCallback();
+            callback.addConsumer(OutputFrame.OutputType.STDOUT, logConsumer);
+            callback.addConsumer(OutputFrame.OutputType.STDERR, logConsumer);
+            deephavenContainer.withLogConsumer(new Slf4jLogConsumer(LOGGER).withPrefix("Deephaven"))
+                              .withLogConsumer(frame -> {
+                                  String log = frame.getUtf8StringWithoutLineEnding();
+                                  if (log.contains("Connect automatically to Web UI with")) {
+                                      String psk = log.substring(log.indexOf("psk=") + 4).trim();
+                                      discoveredPsk.set(psk);
+                                      int mappedPort = deephavenContainer.getMappedPort(DEEPHAVEN_PORT);
+                                      LOGGER.info("Discovered PSK: {} | Connect URL: http://localhost:{}/?psk={}", 
+                                                  psk, mappedPort, psk);
+                                  }
+                              });
 
-        long end = System.currentTimeMillis();
-        System.out.println("Started Deephaven container on host: " + deephavenContainer.getHost() +
-                                                         " port: " + deephavenContainer.getMappedPort(DEEPHAVEN_PORT) +
-                                                         " time taken (ms): " + (end - start));
+            long startTime = System.currentTimeMillis();
+            deephavenContainer.start();
+
+            // Wait briefly for PSK to be logged (adjust timeout as needed)
+            int waitSeconds = 30;
+            for (int i = 0; i < waitSeconds && discoveredPsk.get() == null; i++) {
+                Thread.sleep(1000); // Poll every second
+            }
+
+            if (discoveredPsk.get() == null) {
+                LOGGER.error("PSK not found in logs after {} seconds", waitSeconds);
+                throw new RuntimeException("Failed to extract PSK from Deephaven logs");
+            }
+
+            long endTime = System.currentTimeMillis();
+            LOGGER.info("Started Deephaven container on host: {} port: {} time taken (ms): {}", 
+                        deephavenContainer.getHost(), 
+                        deephavenContainer.getMappedPort(DEEPHAVEN_PORT), 
+                        (endTime - startTime));
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to start Deephaven container", e);
+            stopDeephaven(); // Clean up on failure
+            return false;
+        }
+    }
+
+    /**
+     * Stops the running Deephaven container.
+     * @return true if stopped successfully or no container was running, false on error
+     */
+    public static boolean stopDeephaven() {
+        if (deephavenContainer != null && deephavenContainer.isRunning()) {
+            try {
+                deephavenContainer.stop();
+                LOGGER.info("Deephaven container stopped");
+                return true;
+            } catch (Exception e) {
+                LOGGER.error("Failed to stop Deephaven container", e);
+                return false;
+            } finally {
+                deephavenContainer = null;
+                discoveredPsk.set(null);
+            }
+        } else {
+            LOGGER.warn("No Deephaven container running to stop");
+            return true;
+        }
+    }
+
+    /**
+     * Authenticates using the provided PSK against the discovered one.
+     * @param psk Pre-Shared Key to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean authenticate(String psk) {
+        if (deephavenContainer == null || !deephavenContainer.isRunning()) {
+            LOGGER.error("Deephaven container not running; cannot authenticate");
+            return false;
+        }
+        String currentPsk = discoveredPsk.get();
+        if (currentPsk == null) {
+            LOGGER.error("No PSK discovered yet; cannot authenticate");
+            return false;
+        }
+        boolean isValid = currentPsk.equals(psk);
+        LOGGER.info("PSK authentication attempt with '{}': {}", psk, isValid ? "success" : "failure");
+        return isValid;
+    }
+
+    /**
+     * Loads a static table into Deephaven with the given JSON data.
+     * @param tableName Name of the table to create
+     * @param jsonData JSON string containing table data
+     * @return true if loaded successfully, false on error
+     */
+    public static boolean loadStaticTable(String tableName, String jsonData) {
+        if (deephavenContainer == null || !deephavenContainer.isRunning()) {
+            LOGGER.error("Deephaven container not running; cannot load table");
+            return false;
+        }
+        if (discoveredPsk.get() == null) {
+            LOGGER.error("PSK not discovered; cannot load table");
+            return false;
+        }
+
+        try {
+            String host = deephavenContainer.getHost();
+            int port = deephavenContainer.getMappedPort(DEEPHAVEN_PORT);
+            String psk = discoveredPsk.get();
+            LOGGER.info("Loading static table '{}' with data: {}", tableName, jsonData);
+
+            // TODO: Replace with actual Deephaven API call (e.g., gRPC or REST)
+            // Example: HttpClient.post("http://" + host + ":" + port + "/table/load?psk=" + psk, 
+            //                          new TableRequest(tableName, jsonData));
+            System.out.println("Stub: Loaded table " + tableName + " with data: " + jsonData);
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to load static table '{}'", tableName, e);
+            return false;
+        }
+    }
+
+    /**
+     * Gets the discovered PSK for use in tests.
+     * @return The PSK extracted from logs, or null if not found
+     */
+    public static String getPsk() {
+        return discoveredPsk.get();
+    }
+
+    // Native method implementations for Pure integration
+    public static boolean startDeephavenNative() {
+        return startDeephaven();
+    }
+
+    public static boolean stopDeephavenNative() {
+        return stopDeephaven();
+    }
+
+    public static boolean authenticateNative(String psk) {
+        return authenticate(psk);
+    }
+
+    public static boolean loadStaticTableNative(String tableName, String jsonData) {
+        return loadStaticTable(tableName, jsonData);
+    }
+}
