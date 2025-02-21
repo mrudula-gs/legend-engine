@@ -31,19 +31,20 @@ function meta::external::store::deephaven::executionPlan::generation::planExecut
     );
 }
 
-function meta::external::store::deephaven::pureToDeephaven::mapDeephavenTypeToPureType(dhType: meta::external::store::deephaven::metamodel::type::Type[1]): DataType[1]
+
+function meta::external::store::deephaven::pureToDeephaven::mapDeephavenTypeToPureType(dhType: meta::external::store::deephaven::metamodel::type::Type[1]): GenericType[1]
 {
     $dhType->match([
-        t: meta::external::store::deephaven::metamodel::type::BooleanType[1] | Boolean,
-        t: meta::external::store::deephaven::metamodel::type::ByteType[1]   | Integer,
-        t: meta::external::store::deephaven::metamodel::type::CharType[1]   | String,
-        t: meta::external::store::deephaven::metamodel::type::ShortType[1]  | Integer,
-        t: meta::external::store::deephaven::metamodel::type::IntType[1]    | Integer,
-        t: meta::external::store::deephaven::metamodel::type::LongType[1]   | Integer,
-        t: meta::external::store::deephaven::metamodel::type::FloatType[1]  | Float,
-        t: meta::external::store::deephaven::metamodel::type::DoubleType[1] | Float,
-        t: meta::external::store::deephaven::metamodel::type::StringType[1] | String,
-        t: meta::external::store::deephaven::metamodel::type::TimeType[1]   | Date,
-        t: meta::external::store::deephaven::metamodel::type::CustomType[1] | Any // Fallback, revisit if needed
+        t: meta::external::store::deephaven::metamodel::type::BooleanType[1] | ^GenericType(rawType=Boolean),
+        t: meta::external::store::deephaven::metamodel::type::ByteType[1]   | ^GenericType(rawType=Integer),
+        t: meta::external::store::deephaven::metamodel::type::CharType[1]   | ^GenericType(rawType=String),
+        t: meta::external::store::deephaven::metamodel::type::ShortType[1]  | ^GenericType(rawType=Integer),
+        t: meta::external::store::deephaven::metamodel::type::IntType[1]    | ^GenericType(rawType=Integer),
+        t: meta::external::store::deephaven::metamodel::type::LongType[1]   | ^GenericType(rawType=Integer),
+        t: meta::external::store::deephaven::metamodel::type::FloatType[1]  | ^GenericType(rawType=Float),
+        t: meta::external::store::deephaven::metamodel::type::DoubleType[1] | ^GenericType(rawType=Float),
+        t: meta::external::store::deephaven::metamodel::type::StringType[1] | ^GenericType(rawType=String),
+        t: meta::external::store::deephaven::metamodel::type::TimeType[1]   | ^GenericType(rawType=Date),
+        t: meta::external::store::deephaven::metamodel::type::CustomType[1] | fail('CustomType not supported in TDSResultType mapping; specify a concrete DataType')
     ]);
 }
