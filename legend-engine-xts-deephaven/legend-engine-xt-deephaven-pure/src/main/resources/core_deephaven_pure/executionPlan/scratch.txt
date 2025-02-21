@@ -1,165 +1,49 @@
-package org.finos.legend.engine.plan.execution.stores.deephaven.plugin;
-
-import io.deephaven.client.impl.BarrageSession;
-import io.deephaven.client.impl.TableHandle;
-import org.apache.arrow.flight.FlightStream;
-import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.VectorSchemaRoot;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.ExecutionNodeJavaPlatformHelper;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
-import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
-import org.finos.legend.engine.plan.execution.result.Result;
-import org.finos.legend.engine.plan.execution.result.object.StreamingObjectResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession;
-import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenExecutionActivity;
-import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenStreamingResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
-import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
-import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
-import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenSourceSpecification;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNodeVisitor;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.JavaPlatformImplementation;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.authentication.specification.PSKAuthenticationSpecification;
-import org.finos.legend.engine.shared.core.identity.Identity;
-import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
-import org.finos.legend.engine.shared.core.operational.errorManagement.ExceptionCategory;
-
-import java.net.URI;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
-public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Result>
+function meta::external::store::deephaven::executionPlan::generation::planExecution(
+    sq: meta::pure::mapping::StoreQuery[1],
+    ext: RoutedValueSpecification[0..1],
+    m: Mapping[0..1],
+    runtime: Runtime[0..1],
+    exeCtx: meta::pure::runtime::ExecutionContext[1],
+    extensions: Extension[*],
+    debug: DebugContext[1]
+): ExecutionNode[1]
 {
-    private final Identity identity;
-    private final ExecutionState executionState;
-    private final DeephavenStoreState state;
+    let dhCtx = if ($exeCtx->instanceOf(DeephavenExecutionContext),
+                   | $exeCtx->cast(@DeephavenExecutionContext),
+                   | ^DeephavenExecutionContext());
+    let processOutput = meta::external::store::deephaven::pureToDeephaven::process($sq, $ext, $m, $runtime, $dhCtx, $extensions, $debug);
+    let selectOp = $processOutput.dhQuery.operations->filter(o | $o->instanceOf(SelectOperation))
+                                       ->map(o | $o->cast(@SelectOperation))
+                                       ->toOne('No SelectOperation found in DeephavenQuery');
+    let columns = $selectOp.columns->mapWithIndex((col, idx) | ^TDSColumn(
+        name = $col.name,
+        offset = $idx,
+        type = meta::external::store::deephaven::pureToDeephaven::mapDeephavenTypeToPureType($col.type)
+    ));
+    
+    ^DeephavenExecutionNode(
+        connection = $runtime->toOne('Missing required runtime for Deephaven plan execution').connectionByElement($sq.store)->cast(@DeephavenConnection),
+        query = $processOutput.dhQuery->toOne(),
+        resultType = ^meta::pure::executionPlan::TDSResultType(
+            type = TabularDataSet,
+            tdsColumns = $columns
+        )
+    );
+}
 
-    public DeephavenExecutionNodeExecutor(Identity identity, ExecutionState executionState, DeephavenStoreState state)
-    {
-        this.identity = identity;
-        this.executionState = executionState;
-        this.state = state;
-    }
-
-    @Override
-    public Result visit(ExecutionNode executionNode)
-    {
-        if (executionNode instanceof DeephavenExecutionNode)
-        {
-            return executeDeephavenNode((DeephavenExecutionNode) executionNode);
-        }
-        throw new IllegalStateException("DEEPHAVEN: Unexpected node type");
-    }
-
-    private Result executeDeephavenNode(DeephavenExecutionNode node)
-    {
-        try
-        {
-            String specificsClassName = JavaHelper.getExecutionClassFullName((JavaPlatformImplementation) node.implementation);
-            Class<?> specificsClass = ExecutionNodeJavaPlatformHelper.getClassToExecute(node, specificsClassName, executionState, identity);
-            IDeephavenExecutionNodeSpecifics specifics = (IDeephavenExecutionNodeSpecifics) specificsClass.getConstructor().newInstance();
-            DeephavenSession deephavenSession = createDeephavenSession(node.connection);
-
-            try (BarrageSession session = deephavenSession.getBarrageSession())
-            {
-                System.out.println("Connected to Deephaven Server!");
-                TableHandle table = specifics.execute(session);
-                try (FlightStream flightStream = session.stream(table.ticketId()))
-                {
-                    VectorSchemaRoot root = flightStream.getRoot();
-                    java.util.List<FieldVector> vectors = root.getFieldVectors();
-
-                    Stream<Map<String, Object>> rowStream = StreamSupport.stream(
-                        new Spliterator<Map<String, Object>>()
-                        {
-                            private int rowIndex = 0;
-                            private int rowCount = 0;
-
-                            @Override
-                            public boolean tryAdvance(java.util.function.Consumer<? super Map<String, Object>> action)
-                            {
-                                try
-                                {
-                                    if (rowIndex >= rowCount && !flightStream.next())
-                                    {
-                                        return false; // Stream ends, closed by try-with-resources
-                                    }
-                                    if (rowIndex >= rowCount)
-                                    {
-                                        rowCount = root.getRowCount();
-                                        rowIndex = 0;
-                                    }
-                                    Map<String, Object> row = new HashMap<>(vectors.size());
-                                    for (FieldVector vector : vectors)
-                                    {
-                                        row.put(vector.getName(), vector.getObject(rowIndex));
-                                    }
-                                    action.accept(row);
-                                    rowIndex++;
-                                    return true;
-                                }
-                                catch (Exception e)
-                                {
-                                    throw new RuntimeException("Error streaming Deephaven rows", e);
-                                }
-                            }
-
-                            @Override
-                            public Spliterator<Map<String, Object>> trySplit()
-                            {
-                                return null; // Non-parallel for simplicity
-                            }
-
-                            @Override
-                            public long estimateSize()
-                            {
-                                return Long.MAX_VALUE; // Unknown size
-                            }
-
-                            @Override
-                            public int characteristics()
-                            {
-                                return Spliterator.ORDERED;
-                            }
-                        },
-                        false
-                    );
-
-                    // Create execution activity
-                    DeephavenSourceSpecification sourceSpec = node.connection.sourceSpec;
-                    URI serverUrl = sourceSpec.url;
-                    String tableName = table.ticketId().toString(); // Adjust if a better name is available
-                    DeephavenExecutionActivity activity = new DeephavenExecutionActivity(serverUrl, tableName);
-                    List<org.finos.legend.engine.plan.execution.result.ExecutionActivity> activities = Collections.singletonList(activity);
-
-                    DeephavenStreamingResult deephavenResult = new DeephavenStreamingResult(activities);
-                    return new StreamingObjectResult<>(rowStream, deephavenResult.getResultBuilder(), deephavenResult);
-                }
-            }
-            finally
-            {
-                deephavenSession.close();
-            }
-        }
-        catch (Exception e)
-        {
-            throw new EngineException("Error executing Deephaven Query", e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-    }
-
-    private DeephavenSession createDeephavenSession(DeephavenConnection connection)
-    {
-        return this.state.getProviders().stream()
-                .map(x -> x.provide((PSKAuthenticationSpecification) connection.authSpec, connection.sourceSpec))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findAny()
-                .orElseThrow(() -> new EngineException("Unable to create a Deephaven Session", ExceptionCategory.USER_CREDENTIALS_ERROR));
-    }
+function meta::external::store::deephaven::pureToDeephaven::mapDeephavenTypeToPureType(dhType: meta::external::store::deephaven::metamodel::type::Type[1]): DataType[1]
+{
+    $dhType->match([
+        t: meta::external::store::deephaven::metamodel::type::BooleanType[1] | Boolean,
+        t: meta::external::store::deephaven::metamodel::type::ByteType[1]   | Integer,
+        t: meta::external::store::deephaven::metamodel::type::CharType[1]   | String,
+        t: meta::external::store::deephaven::metamodel::type::ShortType[1]  | Integer,
+        t: meta::external::store::deephaven::metamodel::type::IntType[1]    | Integer,
+        t: meta::external::store::deephaven::metamodel::type::LongType[1]   | Integer,
+        t: meta::external::store::deephaven::metamodel::type::FloatType[1]  | Float,
+        t: meta::external::store::deephaven::metamodel::type::DoubleType[1] | Float,
+        t: meta::external::store::deephaven::metamodel::type::StringType[1] | String,
+        t: meta::external::store::deephaven::metamodel::type::TimeType[1]   | Date,
+        t: meta::external::store::deephaven::metamodel::type::CustomType[1] | Any // Fallback, revisit if needed
+    ]);
 }
