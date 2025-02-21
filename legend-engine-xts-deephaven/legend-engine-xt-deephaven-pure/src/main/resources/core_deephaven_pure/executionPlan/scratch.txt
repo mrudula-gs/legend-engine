@@ -1,75 +1,227 @@
 import meta::external::store::deephaven::metamodel::*;
-import meta::external::store::deephaven::generation::*;
-import meta::external::store::deephaven::metamodel::runtime::*;
 import meta::external::store::deephaven::metamodel::executionPlan::*;
 import meta::external::store::deephaven::metamodel::executionPlan::context::*;
-import meta::pure::extension::*;
-import meta::core::runtime::*;
-import meta::pure::mapping::*;
-import meta::pure::store::*;
-import meta::pure::executionPlan::*;
-
-import meta::pure::router::routing::*;
-import meta::pure::router::clustering::*;
-
+import meta::external::store::deephaven::metamodel::runtime::*;
 import meta::external::store::deephaven::metamodel::store::*;
-import meta::external::store::deephaven::extension::*;
-import meta::external::store::deephaven::contract::*;
+import meta::external::store::deephaven::pureToDeephaven::*;
+import meta::pure::extension::*;
+import meta::pure::metamodel::type::*;
+import meta::protocols::pure::vX_X_X::externalFormat::serde::serialization::*;
 
-
-function meta::external::store::deephaven::contract::deephavenStoreContract(): StoreContract[1]
+function meta::external::store::deephaven::protocol::vX_X_X::deephavenStoreExtension(type: String[1]): meta::pure::extension::SerializerExtension[1]
 {
-  ^StoreContract
-  (
-    id = 'deephaven',
-    planExecution = meta::external::store::deephaven::executionPlan::generation::planExecution_StoreQuery_1__RoutedValueSpecification_$0_1$__Mapping_$0_1$__Runtime_$0_1$__ExecutionContext_1__Extension_MANY__DebugContext_1__ExecutionNode_1_,
-    supportsStore = store: Store[1] | $store->instanceOf(DeephavenStore),
-    supportsNativeJoinAmongElements = false,
-    supportsStreamFunction = f: FunctionExpression[1] | false,
-    supportsSetImplementation = s: SetImplementation[1] | false,
-    resolveStoreFromSetImplementation = [],
-    supports = supports()
-  )
+    ^SerializerExtension_vX_X_X(
+        transfers_valueSpecification_transformAny = {inScope: String[*], open: Map<String, List<Any>>[1], m: Multiplicity[1], fe: FunctionExpression[0..1], useAppliedFunction: Boolean[1], extensions: meta::pure::extension::Extension[*] |
+            [
+                s: meta::external::store::deephaven::metamodel::store::DeephavenStore[1] |
+                    ^meta::protocols::pure::vX_X_X::metamodel::valueSpecification::raw::PackageableElementPtr(
+                        _type = 'packageableElementPtr',
+                        fullPath = $s->elementToPath()
+                    )
+            ]
+        },
+
+        transfers_store_transformStore2 = {extensions: meta::pure::extension::Extension[*] |
+            [
+                s: meta::external::store::deephaven::metamodel::store::DeephavenStore[1] |
+                    ^meta::external::store::deephaven::protocol::vX_X_X::store::DeephavenStore(
+                        name = $s.name->toOne(),
+                        package = $s.package->map(p | $p->elementToPath()),
+                        tables = $s.tables->map(i |
+                            ^meta::external::store::deephaven::protocol::vX_X_X::store::Table(
+                                name = $i.name,
+                                columns = $i.columns->map(c |
+                                    ^meta::external::store::deephaven::protocol::vX_X_X::store::Column(
+                                        name = $c.name,
+                                        type = meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformType($c.type)
+                                    )
+                                )
+                            )
+                        )
+                    )
+            ]
+        },
+
+        invocation_execution_transformContext = [
+            e: meta::external::store::deephaven::metamodel::executionPlan::context::DeephavenExecutionContext[1] |
+                ^meta::external::store::deephaven::protocol::vX_X_X::executionPlan::context::DeephavenExecutionContext()
+        ],
+
+        transfers_store_transformConnection2 = {extensions: Extension[*] | [
+            conn: DeephavenConnection[1] |
+                $conn->meta::external::store::deephaven::protocol::vX_X_X::runtime::transformConnection($extensions)
+        ]},
+
+        transfers_executionPlan_transformNode = {extensions: Extension[*] |
+            [
+                dhNode: DeephavenExecutionNode[1] |
+                    ^meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenExecutionNode(
+                        _type = 'DeephavenExecutionNode',
+                        query = ^meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenQuery(
+                            source = meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformSource($dhNode.query.source)
+                        ),
+                        resultType = $dhNode.resultType->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::executionPlan::transformResultType($extensions),
+                        connection = $dhNode.connection->meta::external::store::deephaven::protocol::vX_X_X::runtime::transformConnection($extensions)
+                    )
+            ]
+        }
+    );
 }
 
-function meta::external::store::deephaven::executionPlan::generation::planExecution(sq:meta::pure::mapping::StoreQuery[1], ext:RoutedValueSpecification[0..1], m:Mapping[0..1], runtime:Runtime[0..1], exeCtx:meta::pure::runtime::ExecutionContext[1], extensions:Extension[*], debug:DebugContext[1]):ExecutionNode[1]
+function meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformSource(table: Table[0..1]): meta::external::store::deephaven::protocol::vX_X_X::store::Table[0..1]
 {
-  let dhCtx = if ($exeCtx->instanceOf(DeephavenExecutionContext), |$exeCtx->cast(@DeephavenExecutionContext), |^DeephavenExecutionContext());
-  let processOutput = meta::external::store::deephaven::pureToDeephaven::process($sq, $ext, $m, $runtime, $dhCtx, $extensions, $debug);
-
-  let selectOp = $processOutput.dhQuery.operations->filter(o | $o->instanceOf(SelectOperation))->map(m | $m->cast(@SelectOperation));
-  let columns = $selectOp.columns->map(col | ^TDSColumn(
-        name = $col.name,
-        type = meta::external::store::deephaven::pureToDeephaven::mapDeephavenTypeToPureType($col.type)
-    ));
-
-  ^DeephavenExecutionNode(
-                          connection = $runtime->toOne('missing required runtime for Deephaven plan execution').connectionByElement($sq.store)->cast(@DeephavenConnection),
-                          query = $processOutput.dhQuery->toOne(),
-                          resultType = ^meta::pure::executionPlan::TDSResultType(genericType = ^GenericType(rawType = TabularDataSet), tdsColumns = $columns)
-                         );
+    if ($table->isEmpty(),
+        | [],
+        | ^meta::external::store::deephaven::protocol::vX_X_X::store::Table(
+            name = $table->toOne().name,
+            columns = $table->toOne().columns->map(c |
+                ^meta::external::store::deephaven::protocol::vX_X_X::store::Column(
+                    name = $c.name,
+                    type = meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformType($c.type)
+                )
+            )
+        )
+    );
 }
 
-function meta::external::store::deephaven::pureToDeephaven::mapDeephavenTypeToPureType(dhType: meta::external::store::deephaven::metamodel::type::Type[1]): DataType[1]
+function meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformType(dhType: meta::external::store::deephaven::metamodel::type::Type[1]): meta::external::store::deephaven::protocol::vX_X_X::type::Type[1]
 {
-  let res =  $dhType->match([
-        t: meta::external::store::deephaven::metamodel::type::BooleanType[1] | Boolean,
-        t: meta::external::store::deephaven::metamodel::type::ByteType[1]   | Integer,
-        t: meta::external::store::deephaven::metamodel::type::CharType[1]   | String,
-        t: meta::external::store::deephaven::metamodel::type::ShortType[1]  | Integer,
-        t: meta::external::store::deephaven::metamodel::type::IntType[1]    | Integer,
-        t: meta::external::store::deephaven::metamodel::type::LongType[1]   | Integer,
-        t: meta::external::store::deephaven::metamodel::type::FloatType[1]  | Float,
-        t: meta::external::store::deephaven::metamodel::type::DoubleType[1] | Float,
-        t: meta::external::store::deephaven::metamodel::type::StringType[1] | String,
-        t: meta::external::store::deephaven::metamodel::type::TimeType[1]   | Date,
-        t: meta::external::store::deephaven::metamodel::type::CustomType[1] | fail('CustomeType not supported in TDSResultType mapping; specify a concrete DataType')
+    $dhType->match([
+        t: meta::external::store::deephaven::metamodel::type::BooleanType[1] | ^meta::external::store::deephaven::protocol::vX_X_X::type::BooleanType(),
+        t: meta::external::store::deephaven::metamodel::type::ByteType[1]   | ^meta::external::store::deephaven::protocol::vX_X_X::type::ByteType(),
+        t: meta::external::store::deephaven::metamodel::type::CharType[1]   | ^meta::external::store::deephaven::protocol::vX_X_X::type::CharType(),
+        t: meta::external::store::deephaven::metamodel::type::ShortType[1]  | ^meta::external::store::deephaven::protocol::vX_X_X::type::ShortType(),
+        t: meta::external::store::deephaven::metamodel::type::IntType[1]    | ^meta::external::store::deephaven::protocol::vX_X_X::type::IntType(),
+        t: meta::external::store::deephaven::metamodel::type::LongType[1]   | ^meta::external::store::deephaven::protocol::vX_X_X::type::LongType(),
+        t: meta::external::store::deephaven::metamodel::type::FloatType[1]  | ^meta::external::store::deephaven::protocol::vX_X_X::type::FloatType(),
+        t: meta::external::store::deephaven::metamodel::type::DoubleType[1] | ^meta::external::store::deephaven::protocol::vX_X_X::type::DoubleType(),
+        t: meta::external::store::deephaven::metamodel::type::StringType[1] | ^meta::external::store::deephaven::protocol::vX_X_X::type::StringType(),
+        t: meta::external::store::deephaven::metamodel::type::TimeType[1]   | ^meta::external::store::deephaven::protocol::vX_X_X::type::TimeType(),
+        t: meta::external::store::deephaven::metamodel::type::CustomType[1] | ^meta::external::store::deephaven::protocol::vX_X_X::type::CustomType(
+            componentType = meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformType($t.componentType)
+        )
     ]);
-  $res->cast(@DataType);
 }
 
-function meta::external::store::deephaven::contract::supports(): Function<{FunctionExpression[1]->Boolean[1]}>[1]
+function meta::external::store::deephaven::protocol::vX_X_X::runtime::transformConnection(conn: DeephavenConnection[1], extensions: Extension[*]): meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection[1]
 {
-  let supportedFunctions = meta::external::store::deephaven::pureToDeephaven::supportedRoutingFunctions().first;
-  {f:FunctionExpression[1]| $supportedFunctions->exists(x | $x->eval($f.func, []))};
+    ^meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection(
+        _type = 'deephavenConnection',
+        element = $conn.element,
+        sourceSpec = ^meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenSourceSpecification(
+            url = '%s://%s:%d%s'->format([$conn.sourceSpec.url.scheme->defaultIfEmpty(URLScheme.http)->toOne(), $conn.sourceSpec.url.host, $conn.sourceSpec.url.port, $conn.sourceSpec.url.path])
+        ),
+        authSpec = $conn.authSpec->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::authentication::transformAuthenticationSpecification($extensions)
+    )
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::BooleanType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'boolean';
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::ByteType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'byte';
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::CharType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'char';
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::ShortType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'short';
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::IntType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'int';
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::LongType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'long';
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::FloatType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'float';
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::DoubleType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'double';
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::StringType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'string';
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::TimeType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'time';
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::type::CustomType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
+{
+    _type: String[1] = 'custom';
+    componentType: meta::external::store::deephaven::protocol::vX_X_X::type::Type[1];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::store::DeephavenStore extends meta::protocols::pure::vX_X_X::metamodel::store::Store
+{
+    _type: String[1] = 'deephavenStore';
+    tables: meta::external::store::deephaven::protocol::vX_X_X::store::Table[1..*];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::store::Table
+{
+    name: String[1];
+    columns: meta::external::store::deephaven::protocol::vX_X_X::store::Column[1..*];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::store::Column
+{
+    _type: String[1] = 'column';
+    name: String[1];
+    type: meta::external::store::deephaven::protocol::vX_X_X::type::Type[1];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection extends meta::protocols::pure::vX_X_X::metamodel::runtime::Connection
+{
+    _type: String[1] = 'deephavenConnection';
+    element: String[1];
+    sourceSpec: meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenSourceSpecification[1];
+    authSpec: meta::protocols::pure::vX_X_X::metamodel::runtime::connection::authentication::AuthenticationSpecification[1];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenSourceSpecification
+{
+    url: String[1];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenExecutionNode extends meta::protocols::pure::vX_X_X::metamodel::executionPlan::ExecutionNode
+{
+    _type: String[1] = 'deephavenExecutionNode';
+    query: meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenQuery[1];
+    connection: meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection[1];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenQuery
+{
+    _type: String[1] = 'deephavenQuery';
+    source: meta::external::store::deephaven::protocol::vX_X_X::store::Table[0..1];
+}
+
+Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::context::DeephavenExecutionContext extends meta::protocols::pure::vX_X_X::metamodel::ExecutionContext
+{
+    _type: String[1] = 'deephavenExecutionContext';
 }
