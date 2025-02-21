@@ -1,153 +1,136 @@
-package org.finos.legend.engine.plan.execution.stores.deephaven.plugin;
+Memory was leaked by query. Memory leaked: (272)
+Allocator(flight-client) 0/272/272/9223372036854775807 (res/actual/peak/limit)
 
-import io.deephaven.client.impl.BarrageSession;
-import io.deephaven.client.impl.TableHandle;
-import org.apache.arrow.flight.FlightStream;
-import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.VectorSchemaRoot;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.ExecutionNodeJavaPlatformHelper;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
-import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
-import org.finos.legend.engine.plan.execution.result.Result;
-import org.finos.legend.engine.plan.execution.result.object.StreamingObjectResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession;
-import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenStreamingResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
-import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
-import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNodeVisitor;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.JavaPlatformImplementation;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.authentication.specification.PSKAuthenticationSpecification;
-import org.finos.legend.engine.shared.core.identity.Identity;
-import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
-import org.finos.legend.engine.shared.core.operational.errorManagement.ExceptionCategory;
+Memory was leaked by query. Memory leaked: (272)
+Outstanding child allocators : 
+  Allocator(flight-client) 0/272/272/9223372036854775807 (res/actual/peak/limit)
+Allocator(ROOT) 0/272/272/9223372036854775807 (res/actual/peak/limit)
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+Execution error at (resource:/core_external_execution/execution.pure line:37 column:32), "Error executing Deephaven Query"
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:877)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.lambda$execute$c1ef40cd$1(FunctionExpressionExecutor.java:74)
+	at org.eclipse.collections.impl.block.procedure.CollectProcedure.value(CollectProcedure.java:37)
+	at org.eclipse.collections.impl.list.immutable.ImmutableDoubletonList.each(ImmutableDoubletonList.java:68)
+	at org.eclipse.collections.impl.AbstractRichIterable.forEach(AbstractRichIterable.java:581)
+	at org.eclipse.collections.impl.list.immutable.AbstractImmutableList.collect(AbstractImmutableList.java:302)
+	at org.eclipse.collections.impl.list.immutable.AbstractImmutableList.collect(AbstractImmutableList.java:103)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:71)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.start(FunctionExecutionInterpreted.java:610)
+	at org.finos.legend.engine.ide.api.execution.go.GoRun.run(GoRun.java:67)
+	at org.finos.legend.engine.ide.session.PureSession.saveFilesAndExecute(PureSession.java:178)
+	at org.finos.legend.engine.ide.api.execution.go.ExecuteGo.lambda$executeGo$0(ExecuteGo.java:45)
+	at org.glassfish.jersey.message.internal.StreamingOutputProvider.writeTo(StreamingOutputProvider.java:78)
+	at org.glassfish.jersey.message.internal.StreamingOutputProvider.writeTo(StreamingOutputProvider.java:60)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor$TerminalWriterInterceptor.invokeWriteTo(WriterInterceptorExecutor.java:265)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor$TerminalWriterInterceptor.aroundWriteTo(WriterInterceptorExecutor.java:250)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at io.dropwizard.jersey.errors.EofExceptionWriterInterceptor.aroundWriteTo(EofExceptionWriterInterceptor.java:39)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor.aroundWriteTo(JsonWithPaddingInterceptor.java:106)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor.aroundWriteTo(MappableExceptionWrapperInterceptor.java:86)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at org.glassfish.jersey.message.internal.MessageBodyFactory.writeTo(MessageBodyFactory.java:1130)
+	at org.glassfish.jersey.server.ServerRuntime$Responder.writeResponse(ServerRuntime.java:711)
+	at org.glassfish.jersey.server.ServerRuntime$Responder.processResponse(ServerRuntime.java:444)
+	at org.glassfish.jersey.server.ServerRuntime$Responder.process(ServerRuntime.java:434)
+	at org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:329)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:315)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:297)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:267)
+	at org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)
+	at org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)
+	at org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)
+	at org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)
+	at org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)
+	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)
+	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)
+	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)
+	at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:799)
+	at org.eclipse.jetty.servlet.ServletHandler$ChainEnd.doFilter(ServletHandler.java:1631)
+	at io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:35)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
+	at io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:45)
+	at io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:39)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
+	at org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:319)
+	at org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:273)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
+	at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:548)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)
+	at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1434)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:188)
+	at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:501)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:186)
+	at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1349)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:313)
+	at io.dropwizard.jetty.ContextRoutingHandler.handle(ContextRoutingHandler.java:37)
+	at org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:713)
+	at io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:67)
+	at org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:179)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at org.eclipse.jetty.server.Server.handle(Server.java:516)
+	at org.eclipse.jetty.server.HttpChannel.lambda$handle$1(HttpChannel.java:400)
+	at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:645)
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:392)
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:277)
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:311)
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:105)
+	at org.eclipse.jetty.io.ChannelEndPoint$1.run(ChannelEndPoint.java:104)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.runTask(EatWhatYouKill.java:338)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.doProduce(EatWhatYouKill.java:315)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.tryProduce(EatWhatYouKill.java:173)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.run(EatWhatYouKill.java:131)
+	at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:409)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:883)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1034)
+	at java.base/java.lang.Thread.run(Thread.java:834)
+Caused by: org.finos.legend.engine.shared.core.operational.errorManagement.EngineException: Error executing Deephaven Query
+	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.executeDeephavenNode(DeephavenExecutionNodeExecutor.java:153)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.visit(DeephavenExecutionNodeExecutor.java:65)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.visit(DeephavenExecutionNodeExecutor.java:47)
+	at org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode.accept(ExecutionNode.java:76)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.DeephavenExecutionExtension.lambda$getExtraNodeExecutors$9d7202ba$1(DeephavenExecutionExtension.java:46)
+	at org.finos.legend.engine.plan.execution.nodes.ExecutionNodeExecutor.lambda$visit$0(ExecutionNodeExecutor.java:173)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)
+	at java.base/java.util.Spliterators$ArraySpliterator.tryAdvance(Spliterators.java:958)
+	at java.base/java.util.stream.ReferencePipeline.forEachWithCancel(ReferencePipeline.java:127)
+	at java.base/java.util.stream.AbstractPipeline.copyIntoWithCancel(AbstractPipeline.java:502)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:488)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)
+	at java.base/java.util.stream.FindOps$FindOp.evaluateSequential(FindOps.java:150)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.findFirst(ReferencePipeline.java:543)
+	at org.finos.legend.engine.plan.execution.nodes.ExecutionNodeExecutor.visit(ExecutionNodeExecutor.java:173)
+	at org.finos.legend.engine.plan.execution.nodes.ExecutionNodeExecutor.visit(ExecutionNodeExecutor.java:108)
+	at org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode.accept(ExecutionNode.java:76)
+	at org.finos.legend.engine.plan.execution.PlanExecutor.executeWithArgs(PlanExecutor.java:293)
+	at org.finos.legend.engine.pure.runtime.execution.shared.LegendExecute.doExecute(LegendExecute.java:54)
+	at org.finos.legend.engine.pure.runtime.execution.interpreted.natives.LegendExecute.execute(LegendExecute.java:63)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:771)
+	... 92 more
+Caused by: java.lang.IllegalStateException: Memory was leaked by query. Memory leaked: (272)
+Outstanding child allocators : 
+  Allocator(flight-client) 0/272/272/9223372036854775807 (res/actual/peak/limit)
+Allocator(ROOT) 0/272/272/9223372036854775807 (res/actual/peak/limit)
 
-public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Result>
-{
-    private final Identity identity;
-    private final ExecutionState executionState;
-    private final DeephavenStoreState state;
-
-    public DeephavenExecutionNodeExecutor(Identity identity, ExecutionState executionState, DeephavenStoreState state)
-    {
-        this.identity = identity;
-        this.executionState = executionState;
-        this.state = state;
-    }
-
-    @Override
-    public Result visit(ExecutionNode executionNode)
-    {
-        if (executionNode instanceof DeephavenExecutionNode)
-        {
-            return executeDeephavenNode((DeephavenExecutionNode) executionNode);
-        }
-        throw new IllegalStateException("DEEPHAVEN: Unexpected node type");
-    }
-
-    private Result executeDeephavenNode(DeephavenExecutionNode node)
-    {
-        try
-        {
-            String specificsClassName = JavaHelper.getExecutionClassFullName((JavaPlatformImplementation) node.implementation);
-            Class<?> specificsClass = ExecutionNodeJavaPlatformHelper.getClassToExecute(node, specificsClassName, executionState, identity);
-            IDeephavenExecutionNodeSpecifics specifics = (IDeephavenExecutionNodeSpecifics) specificsClass.getConstructor().newInstance();
-            DeephavenSession deephavenSession = createDeephavenSession(node.connection);
-
-            try (BarrageSession session = deephavenSession.getBarrageSession())
-            {
-                System.out.println("Connected to Deephaven Server!");
-                TableHandle table = specifics.execute(session);
-                FlightStream flightStream = session.stream(table.ticketId());
-                DeephavenStreamingResult deephavenResult = new DeephavenStreamingResult(flightStream);
-
-                // Lazy stream of rows
-                Stream<Map<String, Object>> rowStream = StreamSupport.stream(
-                    new Spliterator<Map<String, Object>>()
-                    {
-                        private VectorSchemaRoot root = flightStream.getRoot();
-                        private java.util.List<FieldVector> vectors = root.getFieldVectors();
-                        private int rowIndex = 0;
-                        private int rowCount = 0;
-
-                        @Override
-                        public boolean tryAdvance(java.util.function.Consumer<? super Map<String, Object>> action)
-                        {
-                            try
-                            {
-                                if (rowIndex >= rowCount && !flightStream.next())
-                                {
-                                    return false; // Stream ends, closed by DeephavenStreamingResult
-                                }
-                                if (rowIndex >= rowCount)
-                                {
-                                    rowCount = root.getRowCount();
-                                    rowIndex = 0;
-                                }
-                                Map<String, Object> row = new HashMap<>(vectors.size());
-                                for (FieldVector vector : vectors)
-                                {
-                                    row.put(vector.getName(), vector.getObject(rowIndex));
-                                }
-                                action.accept(row);
-                                rowIndex++;
-                                return true;
-                            }
-                            catch (Exception e)
-                            {
-                                throw new RuntimeException("Error streaming Deephaven rows", e);
-                            }
-                        }
-
-                        @Override
-                        public Spliterator<Map<String, Object>> trySplit()
-                        {
-                            return null; // Non-parallel for simplicity
-                        }
-
-                        @Override
-                        public long estimateSize()
-                        {
-                            return Long.MAX_VALUE; // Unknown size
-                        }
-
-                        @Override
-                        public int characteristics()
-                        {
-                            return Spliterator.ORDERED;
-                        }
-                    },
-                    false
-                ).onClose(deephavenResult::close);
-
-                return new StreamingObjectResult<>(rowStream, deephavenResult.getResultBuilder(), deephavenResult);
-            }
-            finally
-            {
-                deephavenSession.close();
-            }
-        }
-        catch (Exception e)
-        {
-            throw new EngineException("Error executing Deephaven Query", e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-    }
-
-    private DeephavenSession createDeephavenSession(DeephavenConnection connection)
-    {
-        return this.state.getProviders().stream()
-                .map(x -> x.provide((PSKAuthenticationSpecification) connection.authSpec, connection.sourceSpec))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findAny()
-                .orElseThrow(() -> new EngineException("Unable to create a Deephaven Session", ExceptionCategory.USER_CREDENTIALS_ERROR));
-    }
-}
+	at org.apache.arrow.memory.BaseAllocator.close(BaseAllocator.java:477)
+	at org.apache.arrow.memory.RootAllocator.close(RootAllocator.java:29)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession.close(DeephavenSession.java:80)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.executeDeephavenNode(DeephavenExecutionNodeExecutor.java:148)
+	... 113 more
