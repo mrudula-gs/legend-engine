@@ -1,227 +1,152 @@
-import meta::external::store::deephaven::metamodel::*;
-import meta::external::store::deephaven::metamodel::executionPlan::*;
-import meta::external::store::deephaven::metamodel::executionPlan::context::*;
-import meta::external::store::deephaven::metamodel::runtime::*;
-import meta::external::store::deephaven::metamodel::store::*;
-import meta::external::store::deephaven::pureToDeephaven::*;
-import meta::pure::extension::*;
-import meta::pure::metamodel::type::*;
-import meta::protocols::pure::vX_X_X::externalFormat::serde::serialization::*;
-
-function meta::external::store::deephaven::protocol::vX_X_X::deephavenStoreExtension(type: String[1]): meta::pure::extension::SerializerExtension[1]
-{
-    ^SerializerExtension_vX_X_X(
-        transfers_valueSpecification_transformAny = {inScope: String[*], open: Map<String, List<Any>>[1], m: Multiplicity[1], fe: FunctionExpression[0..1], useAppliedFunction: Boolean[1], extensions: meta::pure::extension::Extension[*] |
-            [
-                s: meta::external::store::deephaven::metamodel::store::DeephavenStore[1] |
-                    ^meta::protocols::pure::vX_X_X::metamodel::valueSpecification::raw::PackageableElementPtr(
-                        _type = 'packageableElementPtr',
-                        fullPath = $s->elementToPath()
-                    )
-            ]
-        },
-
-        transfers_store_transformStore2 = {extensions: meta::pure::extension::Extension[*] |
-            [
-                s: meta::external::store::deephaven::metamodel::store::DeephavenStore[1] |
-                    ^meta::external::store::deephaven::protocol::vX_X_X::store::DeephavenStore(
-                        name = $s.name->toOne(),
-                        package = $s.package->map(p | $p->elementToPath()),
-                        tables = $s.tables->map(i |
-                            ^meta::external::store::deephaven::protocol::vX_X_X::store::Table(
-                                name = $i.name,
-                                columns = $i.columns->map(c |
-                                    ^meta::external::store::deephaven::protocol::vX_X_X::store::Column(
-                                        name = $c.name,
-                                        type = meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformType($c.type)
-                                    )
-                                )
-                            )
-                        )
-                    )
-            ]
-        },
-
-        invocation_execution_transformContext = [
-            e: meta::external::store::deephaven::metamodel::executionPlan::context::DeephavenExecutionContext[1] |
-                ^meta::external::store::deephaven::protocol::vX_X_X::executionPlan::context::DeephavenExecutionContext()
-        ],
-
-        transfers_store_transformConnection2 = {extensions: Extension[*] | [
-            conn: DeephavenConnection[1] |
-                $conn->meta::external::store::deephaven::protocol::vX_X_X::runtime::transformConnection($extensions)
-        ]},
-
-        transfers_executionPlan_transformNode = {extensions: Extension[*] |
-            [
-                dhNode: DeephavenExecutionNode[1] |
-                    ^meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenExecutionNode(
-                        _type = 'DeephavenExecutionNode',
-                        query = ^meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenQuery(
-                            source = meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformSource($dhNode.query.source)
-                        ),
-                        resultType = $dhNode.resultType->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::executionPlan::transformResultType($extensions),
-                        connection = $dhNode.connection->meta::external::store::deephaven::protocol::vX_X_X::runtime::transformConnection($extensions)
-                    )
-            ]
-        }
-    );
-}
-
-function meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformSource(table: Table[0..1]): meta::external::store::deephaven::protocol::vX_X_X::store::Table[0..1]
-{
-    if ($table->isEmpty(),
-        | [],
-        | ^meta::external::store::deephaven::protocol::vX_X_X::store::Table(
-            name = $table->toOne().name,
-            columns = $table->toOne().columns->map(c |
-                ^meta::external::store::deephaven::protocol::vX_X_X::store::Column(
-                    name = $c.name,
-                    type = meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformType($c.type)
-                )
-            )
-        )
-    );
-}
-
-function meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformType(dhType: meta::external::store::deephaven::metamodel::type::Type[1]): meta::external::store::deephaven::protocol::vX_X_X::type::Type[1]
-{
-    $dhType->match([
-        t: meta::external::store::deephaven::metamodel::type::BooleanType[1] | ^meta::external::store::deephaven::protocol::vX_X_X::type::BooleanType(),
-        t: meta::external::store::deephaven::metamodel::type::ByteType[1]   | ^meta::external::store::deephaven::protocol::vX_X_X::type::ByteType(),
-        t: meta::external::store::deephaven::metamodel::type::CharType[1]   | ^meta::external::store::deephaven::protocol::vX_X_X::type::CharType(),
-        t: meta::external::store::deephaven::metamodel::type::ShortType[1]  | ^meta::external::store::deephaven::protocol::vX_X_X::type::ShortType(),
-        t: meta::external::store::deephaven::metamodel::type::IntType[1]    | ^meta::external::store::deephaven::protocol::vX_X_X::type::IntType(),
-        t: meta::external::store::deephaven::metamodel::type::LongType[1]   | ^meta::external::store::deephaven::protocol::vX_X_X::type::LongType(),
-        t: meta::external::store::deephaven::metamodel::type::FloatType[1]  | ^meta::external::store::deephaven::protocol::vX_X_X::type::FloatType(),
-        t: meta::external::store::deephaven::metamodel::type::DoubleType[1] | ^meta::external::store::deephaven::protocol::vX_X_X::type::DoubleType(),
-        t: meta::external::store::deephaven::metamodel::type::StringType[1] | ^meta::external::store::deephaven::protocol::vX_X_X::type::StringType(),
-        t: meta::external::store::deephaven::metamodel::type::TimeType[1]   | ^meta::external::store::deephaven::protocol::vX_X_X::type::TimeType(),
-        t: meta::external::store::deephaven::metamodel::type::CustomType[1] | ^meta::external::store::deephaven::protocol::vX_X_X::type::CustomType(
-            componentType = meta::external::store::deephaven::protocol::vX_X_X::executionPlan::transformType($t.componentType)
-        )
-    ]);
-}
-
-function meta::external::store::deephaven::protocol::vX_X_X::runtime::transformConnection(conn: DeephavenConnection[1], extensions: Extension[*]): meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection[1]
-{
-    ^meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection(
-        _type = 'deephavenConnection',
-        element = $conn.element,
-        sourceSpec = ^meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenSourceSpecification(
-            url = '%s://%s:%d%s'->format([$conn.sourceSpec.url.scheme->defaultIfEmpty(URLScheme.http)->toOne(), $conn.sourceSpec.url.host, $conn.sourceSpec.url.port, $conn.sourceSpec.url.path])
-        ),
-        authSpec = $conn.authSpec->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::authentication::transformAuthenticationSpecification($extensions)
-    )
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1];
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::BooleanType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'boolean';
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::ByteType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'byte';
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::CharType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'char';
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::ShortType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'short';
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::IntType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'int';
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::LongType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'long';
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::FloatType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'float';
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::DoubleType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'double';
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::StringType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'string';
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::TimeType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'time';
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::type::CustomType extends meta::external::store::deephaven::protocol::vX_X_X::type::Type
-{
-    _type: String[1] = 'custom';
-    componentType: meta::external::store::deephaven::protocol::vX_X_X::type::Type[1];
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::store::DeephavenStore extends meta::protocols::pure::vX_X_X::metamodel::store::Store
-{
-    _type: String[1] = 'deephavenStore';
-    tables: meta::external::store::deephaven::protocol::vX_X_X::store::Table[1..*];
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::store::Table
-{
-    name: String[1];
-    columns: meta::external::store::deephaven::protocol::vX_X_X::store::Column[1..*];
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::store::Column
-{
-    _type: String[1] = 'column';
-    name: String[1];
-    type: meta::external::store::deephaven::protocol::vX_X_X::type::Type[1];
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection extends meta::protocols::pure::vX_X_X::metamodel::runtime::Connection
-{
-    _type: String[1] = 'deephavenConnection';
-    element: String[1];
-    sourceSpec: meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenSourceSpecification[1];
-    authSpec: meta::protocols::pure::vX_X_X::metamodel::runtime::connection::authentication::AuthenticationSpecification[1];
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenSourceSpecification
-{
-    url: String[1];
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenExecutionNode extends meta::protocols::pure::vX_X_X::metamodel::executionPlan::ExecutionNode
-{
-    _type: String[1] = 'deephavenExecutionNode';
-    query: meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenQuery[1];
-    connection: meta::external::store::deephaven::protocol::vX_X_X::runtime::DeephavenConnection[1];
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenQuery
-{
-    _type: String[1] = 'deephavenQuery';
-    source: meta::external::store::deephaven::protocol::vX_X_X::store::Table[0..1];
-}
-
-Class meta::external::store::deephaven::protocol::vX_X_X::executionPlan::context::DeephavenExecutionContext extends meta::protocols::pure::vX_X_X::metamodel::ExecutionContext
-{
-    _type: String[1] = 'deephavenExecutionContext';
-}
+Execution error at (resource:/core_external_execution/execution.pure line:37 column:32), "com.fasterxml.jackson.databind.exc.InvalidTypeIdException: Missing type id when trying to resolve subtype of [simple type, class org.finos.legend.engine.protocol.deephaven.metamodel.type.Type]: missing type id property '_type' (for POJO property 'type')
+ at [Source: (String)"{"serializer":{"name":"pure","version":"vX_X_X"},"rootExecutionNode":{"query":{"_type":"deephavenQuery","source":{"name":"nds_desktops","columns":[{"_type":"column","name":"Desktop_ID","type":{}},{"_type":"column","name":"City_Name","type":{}},{"_type":"column","name":"Desktop_Name","type":{}}]}},"connection":{"authSpec":{"_type":"PSK"},"sourceSpec":{"url":"http:\/\/localhost:10000\/"},"_type":"deephavenConnection","element":""},"_type":"DeephavenExecutionNode","resultType":{"tdsColumns":[{"name"[truncated 13920 chars]; line: 1, column: 14420] (through reference chain: org.finos.legend.engine.protocol.pure.v1.model.executionPlan.SingleExecutionPlan["rootExecutionNode"]->org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode["query"]->org.finos.legend.engine.protocol.deephaven.metamodel.DeephavenQuery["source"]->org.finos.legend.engine.protocol.deephaven.metamodel.store.Table["columns"]->java.util.ArrayList[0]->org.finos.legend.engine.protocol.deephaven.metamodel.store.Column["type"])"
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:877)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.lambda$execute$c1ef40cd$1(FunctionExpressionExecutor.java:74)
+	at org.eclipse.collections.impl.block.procedure.CollectProcedure.value(CollectProcedure.java:37)
+	at org.eclipse.collections.impl.list.immutable.ImmutableDoubletonList.each(ImmutableDoubletonList.java:68)
+	at org.eclipse.collections.impl.AbstractRichIterable.forEach(AbstractRichIterable.java:581)
+	at org.eclipse.collections.impl.list.immutable.AbstractImmutableList.collect(AbstractImmutableList.java:302)
+	at org.eclipse.collections.impl.list.immutable.AbstractImmutableList.collect(AbstractImmutableList.java:103)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:71)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.start(FunctionExecutionInterpreted.java:610)
+	at org.finos.legend.engine.ide.api.execution.go.GoRun.run(GoRun.java:67)
+	at org.finos.legend.engine.ide.session.PureSession.saveFilesAndExecute(PureSession.java:178)
+	at org.finos.legend.engine.ide.api.execution.go.ExecuteGo.lambda$executeGo$0(ExecuteGo.java:45)
+	at org.glassfish.jersey.message.internal.StreamingOutputProvider.writeTo(StreamingOutputProvider.java:78)
+	at org.glassfish.jersey.message.internal.StreamingOutputProvider.writeTo(StreamingOutputProvider.java:60)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor$TerminalWriterInterceptor.invokeWriteTo(WriterInterceptorExecutor.java:265)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor$TerminalWriterInterceptor.aroundWriteTo(WriterInterceptorExecutor.java:250)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at io.dropwizard.jersey.errors.EofExceptionWriterInterceptor.aroundWriteTo(EofExceptionWriterInterceptor.java:39)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor.aroundWriteTo(JsonWithPaddingInterceptor.java:106)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor.aroundWriteTo(MappableExceptionWrapperInterceptor.java:86)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at org.glassfish.jersey.message.internal.MessageBodyFactory.writeTo(MessageBodyFactory.java:1130)
+	at org.glassfish.jersey.server.ServerRuntime$Responder.writeResponse(ServerRuntime.java:711)
+	at org.glassfish.jersey.server.ServerRuntime$Responder.processResponse(ServerRuntime.java:444)
+	at org.glassfish.jersey.server.ServerRuntime$Responder.process(ServerRuntime.java:434)
+	at org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:329)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:315)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:297)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:267)
+	at org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)
+	at org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)
+	at org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)
+	at org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)
+	at org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)
+	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)
+	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)
+	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)
+	at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:799)
+	at org.eclipse.jetty.servlet.ServletHandler$ChainEnd.doFilter(ServletHandler.java:1631)
+	at io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:35)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
+	at io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:45)
+	at io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:39)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
+	at org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:319)
+	at org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:273)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
+	at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:548)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)
+	at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1434)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:188)
+	at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:501)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:186)
+	at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1349)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:313)
+	at io.dropwizard.jetty.ContextRoutingHandler.handle(ContextRoutingHandler.java:37)
+	at org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:713)
+	at io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:67)
+	at org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:179)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at org.eclipse.jetty.server.Server.handle(Server.java:516)
+	at org.eclipse.jetty.server.HttpChannel.lambda$handle$1(HttpChannel.java:400)
+	at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:645)
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:392)
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:277)
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:311)
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:105)
+	at org.eclipse.jetty.io.ChannelEndPoint$1.run(ChannelEndPoint.java:104)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.runTask(EatWhatYouKill.java:338)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.doProduce(EatWhatYouKill.java:315)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.tryProduce(EatWhatYouKill.java:173)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.run(EatWhatYouKill.java:131)
+	at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:409)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:883)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1034)
+	at java.base/java.lang.Thread.run(Thread.java:834)
+Caused by: java.lang.RuntimeException: com.fasterxml.jackson.databind.exc.InvalidTypeIdException: Missing type id when trying to resolve subtype of [simple type, class org.finos.legend.engine.protocol.deephaven.metamodel.type.Type]: missing type id property '_type' (for POJO property 'type')
+ at [Source: (String)"{"serializer":{"name":"pure","version":"vX_X_X"},"rootExecutionNode":{"query":{"_type":"deephavenQuery","source":{"name":"nds_desktops","columns":[{"_type":"column","name":"Desktop_ID","type":{}},{"_type":"column","name":"City_Name","type":{}},{"_type":"column","name":"Desktop_Name","type":{}}]}},"connection":{"authSpec":{"_type":"PSK"},"sourceSpec":{"url":"http:\/\/localhost:10000\/"},"_type":"deephavenConnection","element":""},"_type":"DeephavenExecutionNode","resultType":{"tdsColumns":[{"name"[truncated 13920 chars]; line: 1, column: 14420] (through reference chain: org.finos.legend.engine.protocol.pure.v1.model.executionPlan.SingleExecutionPlan["rootExecutionNode"]->org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode["query"]->org.finos.legend.engine.protocol.deephaven.metamodel.DeephavenQuery["source"]->org.finos.legend.engine.protocol.deephaven.metamodel.store.Table["columns"]->java.util.ArrayList[0]->org.finos.legend.engine.protocol.deephaven.metamodel.store.Column["type"])
+	at org.finos.legend.engine.plan.execution.PlanExecutor.readExecutionPlan(PlanExecutor.java:409)
+	at org.finos.legend.engine.plan.execution.PlanExecutor$ExecuteArgsBuilder.withPlanAsString(PlanExecutor.java:711)
+	at org.finos.legend.engine.pure.runtime.execution.shared.LegendExecute.doExecute(LegendExecute.java:48)
+	at org.finos.legend.engine.pure.runtime.execution.interpreted.natives.LegendExecute.execute(LegendExecute.java:63)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:771)
+	... 92 more
+Caused by: com.fasterxml.jackson.databind.exc.InvalidTypeIdException: Missing type id when trying to resolve subtype of [simple type, class org.finos.legend.engine.protocol.deephaven.metamodel.type.Type]: missing type id property '_type' (for POJO property 'type')
+ at [Source: (String)"{"serializer":{"name":"pure","version":"vX_X_X"},"rootExecutionNode":{"query":{"_type":"deephavenQuery","source":{"name":"nds_desktops","columns":[{"_type":"column","name":"Desktop_ID","type":{}},{"_type":"column","name":"City_Name","type":{}},{"_type":"column","name":"Desktop_Name","type":{}}]}},"connection":{"authSpec":{"_type":"PSK"},"sourceSpec":{"url":"http:\/\/localhost:10000\/"},"_type":"deephavenConnection","element":""},"_type":"DeephavenExecutionNode","resultType":{"tdsColumns":[{"name"[truncated 13920 chars]; line: 1, column: 14420] (through reference chain: org.finos.legend.engine.protocol.pure.v1.model.executionPlan.SingleExecutionPlan["rootExecutionNode"]->org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode["query"]->org.finos.legend.engine.protocol.deephaven.metamodel.DeephavenQuery["source"]->org.finos.legend.engine.protocol.deephaven.metamodel.store.Table["columns"]->java.util.ArrayList[0]->org.finos.legend.engine.protocol.deephaven.metamodel.store.Column["type"])
+	at com.fasterxml.jackson.databind.exc.InvalidTypeIdException.from(InvalidTypeIdException.java:43)
+	at com.fasterxml.jackson.databind.DeserializationContext.missingTypeIdException(DeserializationContext.java:1771)
+	at com.fasterxml.jackson.databind.DeserializationContext.handleMissingTypeId(DeserializationContext.java:1300)
+	at com.fasterxml.jackson.databind.jsontype.impl.TypeDeserializerBase._handleMissingTypeId(TypeDeserializerBase.java:299)
+	at com.fasterxml.jackson.databind.jsontype.impl.AsPropertyTypeDeserializer._deserializeTypedUsingDefaultImpl(AsPropertyTypeDeserializer.java:164)
+	at com.fasterxml.jackson.databind.jsontype.impl.AsPropertyTypeDeserializer.deserializeTypedFromObject(AsPropertyTypeDeserializer.java:105)
+	at com.fasterxml.jackson.databind.deser.AbstractDeserializer.deserializeWithType(AbstractDeserializer.java:254)
+	at com.fasterxml.jackson.databind.deser.impl.FieldProperty.deserializeAndSet(FieldProperty.java:147)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.vanillaDeserialize(BeanDeserializer.java:288)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeOther(BeanDeserializer.java:189)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:161)
+	at com.fasterxml.jackson.databind.jsontype.impl.AsPropertyTypeDeserializer._deserializeTypedForId(AsPropertyTypeDeserializer.java:130)
+	at com.fasterxml.jackson.databind.jsontype.impl.AsPropertyTypeDeserializer.deserializeTypedFromObject(AsPropertyTypeDeserializer.java:97)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializerBase.deserializeWithType(BeanDeserializerBase.java:1183)
+	at com.fasterxml.jackson.databind.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:288)
+	at com.fasterxml.jackson.databind.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:245)
+	at com.fasterxml.jackson.databind.deser.std.CollectionDeserializer.deserialize(CollectionDeserializer.java:27)
+	at com.fasterxml.jackson.databind.deser.impl.FieldProperty.deserializeAndSet(FieldProperty.java:138)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.vanillaDeserialize(BeanDeserializer.java:288)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:151)
+	at com.fasterxml.jackson.databind.deser.impl.FieldProperty.deserializeAndSet(FieldProperty.java:138)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.vanillaDeserialize(BeanDeserializer.java:288)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeOther(BeanDeserializer.java:189)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:161)
+	at com.fasterxml.jackson.databind.jsontype.impl.AsPropertyTypeDeserializer._deserializeTypedForId(AsPropertyTypeDeserializer.java:130)
+	at com.fasterxml.jackson.databind.jsontype.impl.AsPropertyTypeDeserializer.deserializeTypedFromObject(AsPropertyTypeDeserializer.java:97)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializerBase.deserializeWithType(BeanDeserializerBase.java:1183)
+	at com.fasterxml.jackson.databind.deser.impl.FieldProperty.deserializeAndSet(FieldProperty.java:147)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.vanillaDeserialize(BeanDeserializer.java:288)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeOther(BeanDeserializer.java:189)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:161)
+	at com.fasterxml.jackson.databind.jsontype.impl.AsPropertyTypeDeserializer._deserializeTypedForId(AsPropertyTypeDeserializer.java:130)
+	at com.fasterxml.jackson.databind.jsontype.impl.AsPropertyTypeDeserializer.deserializeTypedFromObject(AsPropertyTypeDeserializer.java:97)
+	at com.fasterxml.jackson.databind.deser.AbstractDeserializer.deserializeWithType(AbstractDeserializer.java:254)
+	at com.fasterxml.jackson.databind.deser.impl.FieldProperty.deserializeAndSet(FieldProperty.java:147)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.vanillaDeserialize(BeanDeserializer.java:288)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer._deserializeOther(BeanDeserializer.java:189)
+	at com.fasterxml.jackson.databind.deser.BeanDeserializer.deserialize(BeanDeserializer.java:161)
+	at com.fasterxml.jackson.databind.jsontype.impl.AsPropertyTypeDeserializer._deserializeTypedUsingDefaultImpl(AsPropertyTypeDeserializer.java:178)
+	at com.fasterxml.jackson.databind.jsontype.impl.AsPropertyTypeDeserializer.deserializeTypedFromObject(AsPropertyTypeDeserializer.java:105)
+	at com.fasterxml.jackson.databind.deser.AbstractDeserializer.deserializeWithType(AbstractDeserializer.java:254)
+	at com.fasterxml.jackson.databind.deser.impl.TypeWrappedDeserializer.deserialize(TypeWrappedDeserializer.java:68)
+	at com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:4218)
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3214)
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3182)
+	at org.finos.legend.engine.plan.execution.PlanExecutor.readExecutionPlan(PlanExecutor.java:405)
+	... 96 more
