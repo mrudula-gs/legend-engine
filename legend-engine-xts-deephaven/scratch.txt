@@ -1,8 +1,8 @@
 ###Pure
 import meta::external::store::deephaven::executionTest::utils::*;
-import meta::external::store::deephaven::executionTest::TestStore;
-import meta::external::store::deephaven::executionTest::TestRuntime;
 import meta::pure::test::*;
+import meta::legend::*;
+import meta::pure::executionPlan::*;
 import meta::pure::functions::string::*;
 
 function meta::external::store::deephaven::executionTest::testQueryOnStore(): Boolean[1]
@@ -10,22 +10,29 @@ function meta::external::store::deephaven::executionTest::testQueryOnStore(): Bo
     let imageTag = 'dockerhub.site.com:8413/deephaven/server:latest';
     let url = startDeephaven($imageTag);
     
-    // Pre-step: Load sample data (not tested directly)
+    // Pre-step: Load sample data
     let sampleData = '[{"DesktopName": "Alpha", "CityName": "Dallas"}, {"DesktopName": "Beta", "CityName": "New York"}]';
     loadStaticTable($imageTag, 'nds_desktops', $sampleData);
     
-    // Query: Select DesktopName where CityName = 'Dallas'
-    let queryResult = #>{meta::external::store::deephaven::executionTest::TestStore.nds_desktops}#
-        ->filter(t | $t.CityName == 'Dallas')
-        ->select(t | $t.DesktopName)
-        ->from(meta::external::store::deephaven::executionTest::TestRuntime)
-        ->toJSONString();
+    // Parse the sample file and extract the query function
+    let semiGrammar = '/core_deephaven_execution_test/deepHavenSample.txt'->readFile()->toOne();
+    let elements = meta::legend::compileLegendGrammar($semiGrammar);
+    let func = $elements
+        ->filter(e | $e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == 'meta::external::store::deephaven::executionTest::basicSelect')
+        ->at(0)
+        ->cast(@FunctionDefinition<Any>);
+    
+    // Execute the query
+    let vars = []->cast(@Pair<String, List<Any>>);
+    let extensions = meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions();
+    let context = ^meta::pure::runtime::ExecutionContext();
+    let resultJson = meta::legend::execute($func, $vars, $context, $extensions);
     
     stopDeephaven($imageTag);
     
-    // Assert result matches expected JSON
-    let expected = '[{"DesktopName": "Alpha"}]';
-    assertEquals($expected, $queryResult, 'Query result mismatch');
+    // Assert result
+    let expected = '[{"DesktopName": "Alpha", "CityName": "Dallas"}, {"DesktopName": "Beta", "CityName": "New York"}]';
+    assertEquals($expected, $resultJson, 'Query result mismatch');
     true;
 }
 
