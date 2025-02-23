@@ -4,39 +4,96 @@ import meta::pure::test::*;
 import meta::legend::*;
 import meta::pure::executionPlan::*;
 import meta::pure::functions::string::*;
+import meta::pure::metamodel::testable::*;
 
-function meta::external::store::deephaven::executionTest::testQueryOnStore(): Boolean[1]
+Class meta::external::store::deephaven::executionTest::TestConfig
 {
-    let imageTag = 'dockerhub.site.com:8413/deephaven/server:latest';
+    tag: String[1];
+    runtime: meta::core::runtime::Runtime[1];
+}
+
+function meta::external::store::deephaven::executionTest::getCompiledTestConfig(tag: String[1], deephavenHost: String[1], deephavenPort: Integer[1], sampleFileLoc: String[1]): TestConfig[1]
+{
+    let imageTag = $tag;
     let url = startDeephaven($imageTag);
     
-    // Pre-step: Load sample data
+    // Load sample data as a pre-step
     let sampleData = '[{"DesktopName": "Alpha", "CityName": "Dallas"}, {"DesktopName": "Beta", "CityName": "New York"}]';
     loadStaticTable($imageTag, 'nds_desktops', $sampleData);
     
-    // Parse the sample file and extract the query function
-    let semiGrammar = '/core_deephaven_execution_test/deepHavenSample.txt'->readFile()->toOne();
-    let elements = meta::legend::compileLegendGrammar($semiGrammar);
-    let func = $elements
-        ->filter(e | $e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == 'meta::external::store::deephaven::executionTest::basicSelect')
+    let tokenizedFile = readFile($sampleFileLoc)->toOne();
+    let detokenizedFile = $tokenizedFile
+        ->replace('serverUrl: # URL { \'http://localhost:10000/\' }#;', 'serverUrl: # URL { \'' + $deephavenHost + ':' + $deephavenPort->toString() + '/\' }#;');
+    
+    let compiled = meta::legend::compileLegendGrammar($detokenizedFile);
+    let compiledRuntime = $compiled
+        ->filter(e | $e->instanceOf(meta::core::runtime::PackageableRuntime))
         ->at(0)
-        ->cast(@FunctionDefinition<Any>);
+        ->cast(@meta::core::runtime::PackageableRuntime)
+        .runtimeValue->cast(@meta::core::runtime::Runtime);
     
-    // Execute the query
-    let vars = []->cast(@Pair<String, List<Any>>);
-    let extensions = meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions();
-    let context = ^meta::pure::runtime::ExecutionContext();
-    let resultJson = meta::legend::execute($func, $vars, $context, $extensions);
-    
-    stopDeephaven($imageTag);
-    
-    // Assert result
-    let expected = '[{"DesktopName": "Alpha", "CityName": "Dallas"}, {"DesktopName": "Beta", "CityName": "New York"}]';
-    assertEquals($expected, $resultJson, 'Query result mismatch');
-    true;
+    ^TestConfig(tag = $tag, runtime = $compiledRuntime);
 }
 
-function meta::external::store::deephaven::executionTest::runTests(): Boolean[1]
+function meta::external::store::deephaven::executionTest::collectTest(tag: String[1]): PureTestCollection[1]
 {
-    testQueryOnStore();
+    // Stop any existing instance
+    stopDeephaven($tag);
+    
+    let config = getCompiledTestConfig($tag, 'localhost', 10000, '/core_deephaven_execution_test/deepHavenSample.txt');
+    meta::pure::test::collectParameterizedTests(
+        meta::external::store::deephaven::executionTest::testCase,
+        $tag,
+        $config,
+        [],
+        []
+    );
+}
+
+function meta::external::store::deephaven::executionTest::executeAndAssert(f: FunctionDefinition<Any>[1], expectedResult: String[1], config: TestConfig[1]): Boolean[1]
+{
+    let extensions = meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions();
+    let context = ^meta::pure::runtime::ExecutionContext();
+    let resultJson = meta::legend::execute($f, [], $context, $extensions);
+    assertEquals($expectedResult, $resultJson);
+}
+
+// Test Cases
+Class meta::external::store::deephaven::executionTest::testCase
+{
+    function <<paramTest.Test>> testSelectAll(config: TestConfig[1]): Boolean[1]
+    {
+        let compiled = meta::legend::compileLegendGrammar(readFile('/core_deephaven_execution_test/deepHavenSample.txt')->toOne());
+        let func = $compiled
+            ->filter(e | $e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == 'meta::external::store::deephaven::executionTest::testSelectCity')
+            ->at(0)
+            ->cast(@FunctionDefinition<Any>);
+        
+        let expected = '[{"DesktopName": "Alpha", "CityName": "Dallas"}, {"DesktopName": "Beta", "CityName": "New York"}]';
+        executeAndAssert($func, $expected, $config);
+    }
+
+    function <<paramTest.Test>> testFilterCityDallas(config: TestConfig[1]): Boolean[1]
+    {
+        let compiled = meta::legend::compileLegendGrammar(readFile('/core_deephaven_execution_test/deepHavenSample.txt')->toOne());
+        let func = $compiled
+            ->filter(e | $e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == 'meta::external::store::deephaven::executionTest::testFilterCityDallas')
+            ->at(0)
+            ->cast(@FunctionDefinition<Any>);
+        
+        let expected = '[{"DesktopName": "Alpha", "CityName": "Dallas"}]';
+        executeAndAssert($func, $expected, $config);
+    }
+
+    function <<paramTest.AfterPackage>> cleanupTestSuite(config: TestConfig[1]): Boolean[1]
+    {
+        println('Cleanup for tag: ' + $config.tag);
+        stopDeephaven($config.tag);
+        true;
+    }
+}
+
+function <<test.TestCollection>> meta::external::store::deephaven::executionTest::testDeephavenLatest(): PureTestCollection[1]
+{
+    collectTest('dockerhub.site.com:8413/deephaven/server:latest');
 }
