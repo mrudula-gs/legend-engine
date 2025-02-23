@@ -1,4 +1,4 @@
-import meta::pure::runtime::*;
+###Pure
 import meta::pure::runtime::*;
 import meta::pure::test::*;
 import meta::external::store::deephaven::executionTest::*;
@@ -57,37 +57,36 @@ function meta::external::store::deephaven::executionTest::executeAndAssert(f: Fu
 }
 
 // Test Cases
+function <<paramTest.Test>> meta::external::store::deephaven::executionTest::testCase::testSelectAll(config: TestConfig[1]): Boolean[1]
+{
+    let compiled = meta::legend::compileLegendGrammar(readFile('/core_deephaven_execution_test/deepHavenSample.txt')->toOne());
+    let func = $compiled
+        ->filter(e | $e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == 'meta::external::store::deephaven::executionTest::testSelectCity')
+        ->at(0)
+        ->cast(@FunctionDefinition<Any>);
+    
+    let expected = '[{"DesktopName": "Alpha", "CityName": "Dallas"}, {"DesktopName": "Beta", "CityName": "New York"}]';
+    executeAndAssert($func, $expected, $config);
+}
 
-    function <<paramTest.Test>> testSelectAll(config: TestConfig[1]): Boolean[1]
-    {
-        let compiled = meta::legend::compileLegendGrammar(readFile('/pure_ide/deepHavenSample.txt')->toOne());
-        let func = $compiled
-            ->filter(e | $e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == 'meta::external::store::deephaven::executionTest::testSelectCity')
-            ->at(0)
-            ->cast(@FunctionDefinition<Any>);
-        
-        let expected = '[{"DesktopName": "Alpha", "CityName": "Dallas"}, {"DesktopName": "Beta", "CityName": "New York"}]';
-        executeAndAssert($func, $expected, $config);
-    }
+function <<paramTest.Test>> meta::external::store::deephaven::executionTest::testCase::testFilterCityDallas(config: TestConfig[1]): Boolean[1]
+{
+    let compiled = meta::legend::compileLegendGrammar(readFile('/core_deephaven_execution_test/deepHavenSample.txt')->toOne());
+    let func = $compiled
+        ->filter(e | $e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == 'meta::external::store::deephaven::executionTest::testFilterCityDallas')
+        ->at(0)
+        ->cast(@FunctionDefinition<Any>);
+    
+    let expected = '[{"DesktopName": "Alpha", "CityName": "Dallas"}]';
+    executeAndAssert($func, $expected, $config);
+}
 
-    function <<paramTest.Test>> testFilterCityDallas(config: TestConfig[1]): Boolean[1]
-    {
-        let compiled = meta::legend::compileLegendGrammar(readFile('/pure_ide/deepHavenSample.txt')->toOne());
-        let func = $compiled
-            ->filter(e | $e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == 'meta::external::store::deephaven::executionTest::testFilterCityDallas')
-            ->at(0)
-            ->cast(@FunctionDefinition<Any>);
-        
-        let expected = '[{"DesktopName": "Alpha", "CityName": "Dallas"}]';
-        executeAndAssert($func, $expected, $config);
-    }
-
-    function <<paramTest.AfterPackage>> cleanupTestSuite(config: TestConfig[1]): Boolean[1]
-    {
-        println('Cleanup for tag: ' + $config.tag);
-        stopDeephaven($config.tag);
-        true;
-    }
+function <<paramTest.AfterPackage>> meta::external::store::deephaven::executionTest::testCase::cleanupTestSuite(config: TestConfig[1]): Boolean[1]
+{
+    println('Cleanup for tag: ' + $config.tag);
+    stopDeephaven($config.tag);
+    true;
+}
 
 function <<test.TestCollection>> meta::external::store::deephaven::executionTest::testDeephavenLatest(): PureTestCollection[1]
 {
