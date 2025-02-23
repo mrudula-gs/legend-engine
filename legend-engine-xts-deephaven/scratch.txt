@@ -1,85 +1,35 @@
 ###Pure
-import meta::pure::extension::*;
-import meta::pure::functions::string::tests::joinStrings1::*;
-import meta::pure::test::org::*;
-import meta::external::store::deephaven::metamodel::executionPlan::*;
-import meta::pure::graphFetch::execution::*;
-import meta::external::store::model::*;
-import meta::core::runtime::*;
-import meta::external::store::elasticsearch::executionTest::test::*;
-import meta::external::store::elasticsearch::executionTest::test::v7::*;
-import meta::external::store::elasticsearch::v7::extension::*;
-import meta::legend::*;
-import meta::external::store::deephaven::extension::*;
-import meta::external::store::elasticsearch::executionTest::testCase::tds::*;
-import meta::pure::store::*;
-import meta::pure::mapping::*;
-import meta::relational::metamodel::execute::*;
-import meta::relational::mapping::*;
-import meta::protocols::pure::vX_X_X::metamodel::*;
+import meta::external::store::deephaven::executionTest::utils::*;
+import meta::external::store::deephaven::executionTest::TestStore;
+import meta::external::store::deephaven::executionTest::TestRuntime;
+import meta::pure::test::*;
+import meta::pure::functions::string::*;
 
-function runDeepHavenTest(funcString: String[1], expectedQuery: String[1], expectedResult: String[1]):Any[*]
+function meta::external::store::deephaven::executionTest::testQueryOnStore(): Boolean[1]
 {
-  let semiGrammar = '/pure_ide/deepHavenSample.txt'->readFile()->toOne();
-  let elements = meta::legend::compileLegendGrammar($semiGrammar);
-  let func = $elements->filter(e|$e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == $funcString)->at(0)->cast(@FunctionDefinition<Any>);
-  let vars = []->cast(@Pair<String, List<Any>>);
-  let extensions = meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions(); //deephavenExtension();
- 
-  // println('---------------------- extensions -------------------');
-  // println($extensions);
-  // fail();
-  
-  let context = ^meta::pure::runtime::ExecutionContext();
-
-  let rawPlan = meta::pure::executionPlan::executionPlan($func, $context, $extensions);
-  // println('---------------------- $rawPlan -------------------');
-  // println($rawPlan);
-  let planBindToJava = $rawPlan->meta::pure::executionPlan::platformBinding::localBinding::bindTestPlanToPlatformLocallyWithClasspathExtensions('LegendJava');
-  println('---------------------- $planBindToJava -------------------');
-  println($planBindToJava.globalImplementationSupport);
-  println($planBindToJava.rootExecutionNode.implementation);
-  //fail();
-
-  let plan = $planBindToJava->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::executionPlan::transformPlan($extensions);
-  let planAsJson = $plan->meta::json::toJSON(1000, meta::json::config(false, false, true, true));
-  println('---------------------- planAsJson -------------------');
-  println($planAsJson);
-  // fail();
-  // let dhQuery = $plan.rootExecutionNode->cast(@meta::external::store::deephaven::protocol::vX_X_X::executionPlan::DeephavenExecutionNode).generatedJava.code; 
-  // assertEquals($expectedQuery, $dhQuery);
-
-  let resultJson = meta::legend::execute( $func, $vars, $context, $extensions);
-  assertEquals($expectedResult, $resultJson);
+    let imageTag = 'dockerhub.site.com:8413/deephaven/server:latest';
+    let url = startDeephaven($imageTag);
+    
+    // Pre-step: Load sample data (not tested directly)
+    let sampleData = '[{"DesktopName": "Alpha", "CityName": "Dallas"}, {"DesktopName": "Beta", "CityName": "New York"}]';
+    loadStaticTable($imageTag, 'nds_desktops', $sampleData);
+    
+    // Query: Select DesktopName where CityName = 'Dallas'
+    let queryResult = #>{meta::external::store::deephaven::executionTest::TestStore.nds_desktops}#
+        ->filter(t | $t.CityName == 'Dallas')
+        ->select(t | $t.DesktopName)
+        ->from(meta::external::store::deephaven::executionTest::TestRuntime)
+        ->toJSONString();
+    
+    stopDeephaven($imageTag);
+    
+    // Assert result matches expected JSON
+    let expected = '[{"DesktopName": "Alpha"}]';
+    assertEquals($expected, $queryResult, 'Query result mismatch');
+    true;
 }
 
-function runSelectTests(): Any[*]
+function meta::external::store::deephaven::executionTest::runTests(): Boolean[1]
 {
-  // #>{test::DeephavenStore.nds_desktops}#->select()->from(test::DeephavenRuntime)
-  runDeepHavenTest('test::basicSelect', 'TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").select("Desktop_ID", "City_Name", "Desktop_Name")', '{"builder": {"_type":"streamBuilder"}, "activities": [], "objects" : [{"Desktop_ID":1,"City_Name":"Dallas","Desktop_Name":"Alpha"},{"Desktop_ID":2,"City_Name":"New York","Desktop_Name":"Beta"},{"Desktop_ID":3,"City_Name":"San Francisco","Desktop_Name":"Gamma"},{"Desktop_ID":4,"City_Name":"Chicago","Desktop_Name":"Delta"},{"Desktop_ID":5,"City_Name":"Seattle","Desktop_Name":"Epsilon"}]}');
+    testQueryOnStore();
 }
-
-function runWhereTests(): Any[*]
-{
-
-  // #>{test::DeephavenStore.nds_desktops}#->filter(c | $c.City_Name == 'Dallas')->from(test::DeephavenRuntime)
-  runDeepHavenTest('test::basicWhere', 'TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name == `Dallas`")', 
-  '{"builder": {"_type":"streamBuilder"}, "activities": [], "objects" : [{"Desktop_ID":1,"City_Name":"Dallas","Desktop_Name":"Alpha"}]}');
-}
-
-function runWhereAndSelectTests(): Any[*]
-{
-
-  // #>{test::DeephavenStore.nds_desktops}#->filter(c | $c.City_Name == 'Dallas')->select(~[Desktop_Name])->from(test::DeephavenRuntime)
-  runDeepHavenTest('test::basicWhereWithSelect', 'TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops").where("City_Name == `Dallas`").select("Desktop_Name")', 
-  '{"builder": {"_type":"streamBuilder"}, "activities": [{"_type":"DeephavenExecutionActivity","serverUrl":"http://localhost:10000/","tableName":"e\\u0001\\u0000\\u0000\\u0000"}], "objects" : []}');
-}
-
-function go():Any[*]
-{
-  println('go');
-  // runSelectTests();
-  // runWhereTests();
-  // runWhereAndSelectTests();
-
-}  
