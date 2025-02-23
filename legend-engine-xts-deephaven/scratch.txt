@@ -1,10 +1,8 @@
-###Pure
-import meta::external::store::deephaven::executionTest::utils::*;
+import meta::pure::runtime::*;
+import meta::pure::runtime::*;
 import meta::pure::test::*;
-import meta::legend::*;
-import meta::pure::executionPlan::*;
-import meta::pure::functions::string::*;
-import meta::pure::metamodel::testable::*;
+import meta::external::store::deephaven::executionTest::*;
+import meta::external::store::deephaven::executionTest::utils::*;
 
 Class meta::external::store::deephaven::executionTest::TestConfig
 {
@@ -27,9 +25,9 @@ function meta::external::store::deephaven::executionTest::getCompiledTestConfig(
     
     let compiled = meta::legend::compileLegendGrammar($detokenizedFile);
     let compiledRuntime = $compiled
-        ->filter(e | $e->instanceOf(meta::core::runtime::PackageableRuntime))
+        ->filter(e | $e->instanceOf(meta::pure::runtime::PackageableRuntime))
         ->at(0)
-        ->cast(@meta::core::runtime::PackageableRuntime)
+        ->cast(@meta::pure::runtime::PackageableRuntime)
         .runtimeValue->cast(@meta::core::runtime::Runtime);
     
     ^TestConfig(tag = $tag, runtime = $compiledRuntime);
@@ -59,11 +57,10 @@ function meta::external::store::deephaven::executionTest::executeAndAssert(f: Fu
 }
 
 // Test Cases
-Class meta::external::store::deephaven::executionTest::testCase
-{
+
     function <<paramTest.Test>> testSelectAll(config: TestConfig[1]): Boolean[1]
     {
-        let compiled = meta::legend::compileLegendGrammar(readFile('/core_deephaven_execution_test/deepHavenSample.txt')->toOne());
+        let compiled = meta::legend::compileLegendGrammar(readFile('/pure_ide/deepHavenSample.txt')->toOne());
         let func = $compiled
             ->filter(e | $e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == 'meta::external::store::deephaven::executionTest::testSelectCity')
             ->at(0)
@@ -75,7 +72,7 @@ Class meta::external::store::deephaven::executionTest::testCase
 
     function <<paramTest.Test>> testFilterCityDallas(config: TestConfig[1]): Boolean[1]
     {
-        let compiled = meta::legend::compileLegendGrammar(readFile('/core_deephaven_execution_test/deepHavenSample.txt')->toOne());
+        let compiled = meta::legend::compileLegendGrammar(readFile('/pure_ide/deepHavenSample.txt')->toOne());
         let func = $compiled
             ->filter(e | $e->instanceOf(ConcreteFunctionDefinition) && $e->cast(@ConcreteFunctionDefinition<Any>).functionName == 'meta::external::store::deephaven::executionTest::testFilterCityDallas')
             ->at(0)
@@ -91,7 +88,6 @@ Class meta::external::store::deephaven::executionTest::testCase
         stopDeephaven($config.tag);
         true;
     }
-}
 
 function <<test.TestCollection>> meta::external::store::deephaven::executionTest::testDeephavenLatest(): PureTestCollection[1]
 {
