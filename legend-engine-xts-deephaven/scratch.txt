@@ -1,107 +1,110 @@
-package org.finos.legend.engine.plan.execution.stores.deephaven.test.compiled;
+package org.finos.legend.engine.plan.execution.stores.deephaven.test.shared;
 
-import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.list.ListIterable;
-import org.finos.legend.pure.m4.coreinstance.CoreInstance;
-import org.finos.legend.pure.runtime.java.compiled.extension.BaseCompiledExtension;
-import org.finos.legend.pure.runtime.java.compiled.extension.CompiledExtension;
-import org.finos.legend.pure.runtime.java.compiled.generation.ProcessorContext;
-import org.finos.legend.pure.runtime.java.compiled.generation.processors.natives.AbstractNative;
+import org.eclipse.collections.api.factory.Maps;
+import org.finos.legend.engine.plan.execution.stores.deephaven.test.DeephavenTestContainer;
+import org.finos.legend.pure.generated.Root_meta_pure_functions_io_http_URL;
+import org.finos.legend.pure.generated.Root_meta_pure_functions_io_http_URL_Impl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
 
-public class DeephavenTestCompiledExtension extends BaseCompiledExtension
+import java.util.Map;
+import java.util.Optional;
+
+public class DeephavenCommands
 {
-    public DeephavenTestCompiledExtension()
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenCommands.class);
+    private static final int DEEPHAVEN_PORT = 10000;
+    private static final Map<String, GenericContainer<?>> CONTAINERS = Maps.mutable.empty();
+
+    /**
+     * Starts a Deephaven container for the given image tag and returns its URL with PSK.
+     */
+    public static Root_meta_pure_functions_io_http_URL startDeephaven(String imageTag)
     {
-        super("core_deephaven_execution_test",
-                () -> Lists.fixedSize.with(
-                    new DeephavenStartCommand(),
-                    new DeephavenStopCommand(),
-                    new DeephavenAuthenticateCommand(),
-                    new DeephavenLoadStaticTableCommand(),
-                    new DeephavenGetPskCommand()
-                ),
-                Lists.fixedSize.with(),
-                Lists.fixedSize.empty(),
-                Lists.fixedSize.empty());
+        LOGGER.debug("Starting Deephaven docker image: {}", imageTag);
+
+        GenericContainer<?> container = CONTAINERS.computeIfAbsent(imageTag, tag -> {
+            if (!DeephavenTestContainer.startDeephaven()) {
+                throw new RuntimeException("Failed to start Deephaven container for image: " + imageTag);
+            }
+            return DeephavenTestContainer.deephavenContainer; // Assumes public static field
+        });
+
+        String psk = DeephavenTestContainer.getPsk();
+        if (psk == null) {
+            throw new RuntimeException("PSK not available after starting Deephaven for image: " + imageTag);
+        }
+
+        Root_meta_pure_functions_io_http_URL_Impl url = new Root_meta_pure_functions_io_http_URL_Impl("deephavenUrl");
+        url._host(container.getHost());
+        url._port(container.getMappedPort(DEEPHAVEN_PORT));
+        url._path("/?psk=" + psk);
+
+        LOGGER.info("Deephaven started for {} at {}:{} with PSK: {}", imageTag, container.getHost(), container.getMappedPort(DEEPHAVEN_PORT), psk);
+        return url;
     }
 
-    public static CompiledExtension extension()
+    /**
+     * Stops the Deephaven container for the given image tag.
+     */
+    public static void stopDeephaven(String imageTag)
     {
-        return new DeephavenTestCompiledExtension();
+        LOGGER.debug("Stopping Deephaven docker image: {}", imageTag);
+        Optional.ofNullable(CONTAINERS.remove(imageTag)).ifPresent(container -> {
+            if (DeephavenTestContainer.stopDeephaven()) {
+                LOGGER.info("Deephaven stopped for image: {}", imageTag);
+            } else {
+                LOGGER.warn("Failed to stop Deephaven for image: {}", imageTag);
+            }
+        });
     }
 
-    // Native command to start Deephaven
-    private static class DeephavenStartCommand extends AbstractNative
+    /**
+     * Authenticates a PSK against the running Deephaven instance for the given image tag.
+     */
+    public static Boolean authenticate(String imageTag, String psk)
     {
-        public DeephavenStartCommand()
-        {
-            super("meta::external::store::deephaven::executionTest::utils::startDeephaven_String_1__URL_1");
+        LOGGER.debug("Authenticating Deephaven for image: {}", imageTag);
+        GenericContainer<?> container = CONTAINERS.get(imageTag);
+        if (container == null || !container.isRunning()) {
+            LOGGER.error("Deephaven container not running for image: {}", imageTag);
+            return false;
         }
-
-        @Override
-        public String build(CoreInstance topLevelElement, CoreInstance functionExpression, ListIterable<String> transformedParams, ProcessorContext processorContext)
-        {
-            return DeephavenCommands.class.getCanonicalName() + ".startDeephaven(" + transformedParams.makeString(", ") + ")";
-        }
+        Boolean result = DeephavenTestContainer.authenticate(psk);
+        LOGGER.debug("Authentication result for PSK '{}': {}", psk, result);
+        return result;
     }
 
-    // Native command to stop Deephaven
-    private static class DeephavenStopCommand extends AbstractNative
+    /**
+     * Loads a static table into Deephaven for the given image tag.
+     */
+    public static Boolean loadStaticTable(String imageTag, String tableName, String jsonData)
     {
-        public DeephavenStopCommand()
-        {
-            super("meta::external::store::deephaven::executionTest::utils::stopDeephaven_String_1__Nil_0");
+        LOGGER.debug("Loading static table '{}' for Deephaven image: {}", tableName, imageTag);
+        GenericContainer<?> container = CONTAINERS.get(imageTag);
+        if (container == null || !container.isRunning()) {
+            LOGGER.error("Deephaven container not running for image: {}", imageTag);
+            return false;
         }
-
-        @Override
-        public String build(CoreInstance topLevelElement, CoreInstance functionExpression, ListIterable<String> transformedParams, ProcessorContext processorContext)
-        {
-            return DeephavenCommands.class.getCanonicalName() + ".stopDeephaven(" + transformedParams.makeString(", ") + ")";
-        }
+        Boolean result = DeephavenTestContainer.loadStaticTable(tableName, jsonData);
+        LOGGER.debug("Table load result for '{}': {}", tableName, result);
+        return result;
     }
 
-    // Native command to authenticate with PSK
-    private static class DeephavenAuthenticateCommand extends AbstractNative
+    /**
+     * Retrieves the PSK for the Deephaven instance running with the given image tag.
+     */
+    public static String getPsk(String imageTag)
     {
-        public DeephavenAuthenticateCommand()
-        {
-            super("meta::external::store::deephaven::executionTest::utils::authenticate_String_1__String_1__Boolean_1");
+        LOGGER.debug("Retrieving PSK for Deephaven image: {}", imageTag);
+        GenericContainer<?> container = CONTAINERS.get(imageTag);
+        if (container == null || !container.isRunning()) {
+            LOGGER.error("Deephaven container not running for image: {}", imageTag);
+            return null;
         }
-
-        @Override
-        public String build(CoreInstance topLevelElement, CoreInstance functionExpression, ListIterable<String> transformedParams, ProcessorContext processorContext)
-        {
-            return DeephavenCommands.class.getCanonicalName() + ".authenticate(" + transformedParams.makeString(", ") + ")";
-        }
-    }
-
-    // Native command to load a static table
-    private static class DeephavenLoadStaticTableCommand extends AbstractNative
-    {
-        public DeephavenLoadStaticTableCommand()
-        {
-            super("meta::external::store::deephaven::executionTest::utils::loadStaticTable_String_1__String_1__String_1__Boolean_1");
-        }
-
-        @Override
-        public String build(CoreInstance topLevelElement, CoreInstance functionExpression, ListIterable<String> transformedParams, ProcessorContext processorContext)
-        {
-            return DeephavenCommands.class.getCanonicalName() + ".loadStaticTable(" + transformedParams.makeString(", ") + ")";
-        }
-    }
-
-    // Native command to get the PSK
-    private static class DeephavenGetPskCommand extends AbstractNative
-    {
-        public DeephavenGetPskCommand()
-        {
-            super("meta::external::store::deephaven::executionTest::utils::getPsk_String_1__String_$0_1$");
-        }
-
-        @Override
-        public String build(CoreInstance topLevelElement, CoreInstance functionExpression, ListIterable<String> transformedParams, ProcessorContext processorContext)
-        {
-            return DeephavenCommands.class.getCanonicalName() + ".getPsk(" + transformedParams.makeString(", ") + ")";
-        }
+        String psk = DeephavenTestContainer.getPsk();
+        LOGGER.debug("PSK retrieved: {}", psk);
+        return psk;
     }
 }
