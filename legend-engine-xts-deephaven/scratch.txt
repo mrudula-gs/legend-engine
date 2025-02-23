@@ -35,13 +35,13 @@ public class DeephavenTestCompiledExtension extends BaseCompiledExtension
     {
         public DeephavenStartCommand()
         {
-            super("org::finos::legend::engine::test::deephaven::startDeephaven__Boolean_1");
+            super("meta::external::store::deephaven::executionTest::utils::startDeephaven_String_1__URL_1");
         }
 
         @Override
         public String build(CoreInstance topLevelElement, CoreInstance functionExpression, ListIterable<String> transformedParams, ProcessorContext processorContext)
         {
-            return DeephavenCommands.class.getCanonicalName() + ".startDeephaven()";
+            return DeephavenCommands.class.getCanonicalName() + ".startDeephaven(" + transformedParams.makeString(", ") + ")";
         }
     }
 
@@ -50,13 +50,13 @@ public class DeephavenTestCompiledExtension extends BaseCompiledExtension
     {
         public DeephavenStopCommand()
         {
-            super("org::finos::legend::engine::test::deephaven::stopDeephaven__Boolean_1");
+            super("meta::external::store::deephaven::executionTest::utils::stopDeephaven_String_1__Nil_0");
         }
 
         @Override
         public String build(CoreInstance topLevelElement, CoreInstance functionExpression, ListIterable<String> transformedParams, ProcessorContext processorContext)
         {
-            return DeephavenCommands.class.getCanonicalName() + ".stopDeephaven()";
+            return DeephavenCommands.class.getCanonicalName() + ".stopDeephaven(" + transformedParams.makeString(", ") + ")";
         }
     }
 
@@ -65,7 +65,7 @@ public class DeephavenTestCompiledExtension extends BaseCompiledExtension
     {
         public DeephavenAuthenticateCommand()
         {
-            super("org::finos::legend::engine::test::deephaven::authenticate_String_1__Boolean_1");
+            super("meta::external::store::deephaven::executionTest::utils::authenticate_String_1__String_1__Boolean_1");
         }
 
         @Override
@@ -80,7 +80,7 @@ public class DeephavenTestCompiledExtension extends BaseCompiledExtension
     {
         public DeephavenLoadStaticTableCommand()
         {
-            super("org::finos::legend::engine::test::deephaven::loadStaticTable_String_1__String_1__Boolean_1");
+            super("meta::external::store::deephaven::executionTest::utils::loadStaticTable_String_1__String_1__String_1__Boolean_1");
         }
 
         @Override
@@ -95,13 +95,13 @@ public class DeephavenTestCompiledExtension extends BaseCompiledExtension
     {
         public DeephavenGetPskCommand()
         {
-            super("org::finos::legend::engine::test::deephaven::getPsk__String_$0_1$");
+            super("meta::external::store::deephaven::executionTest::utils::getPsk_String_1__String_$0_1$");
         }
 
         @Override
         public String build(CoreInstance topLevelElement, CoreInstance functionExpression, ListIterable<String> transformedParams, ProcessorContext processorContext)
         {
-            return DeephavenCommands.class.getCanonicalName() + ".getPsk()";
+            return DeephavenCommands.class.getCanonicalName() + ".getPsk(" + transformedParams.makeString(", ") + ")";
         }
     }
 }
