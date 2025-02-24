@@ -1,27 +1,58 @@
-package org.finos.legend.engine.plan.execution.stores.deephaven.test.interpreted;
+package org.finos.legend.engine.plan.execution.stores.deephaven.test.shared;
 
-import org.eclipse.collections.impl.factory.Lists;
-import org.eclipse.collections.impl.tuple.Tuples;
-import org.finos.legend.engine.plan.execution.stores.deephaven.test.shared.DeephavenCommands;
-import org.finos.legend.pure.runtime.java.interpreted.extension.BaseInterpretedExtension;
-import org.finos.legend.pure.runtime.java.interpreted.extension.InterpretedExtension;
+import org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenTestContainer;
+import org.finos.legend.pure.generated.Root_meta_pure_functions_io_http_URL;
+import org.finos.legend.pure.generated.Root_meta_pure_functions_io_http_URL_Impl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class DeephavenTestInterpretedExtension extends BaseInterpretedExtension {
+public class DeephavenCommands {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenCommands.class);
+    private static final DeephavenTestContainer CONTAINER = new DeephavenTestContainer();
+    private static final int DEEPHAVEN_PORT = 10000;
+    private static boolean isRunning = false;
+
     public static final String START_SERVER_FUNCTION = "startDeephaven_String_1__URL_1_";
     public static final String STOP_SERVER_FUNCTION = "stopDeephaven_String_1__Boolean_1_";
     public static final String LOAD_STATIC_TABLE_FUNCTION = "loadStaticTable_String_1__String_1__String_1__Boolean_1_";
     public static final String GET_PSK_FUNCTION = "getPsk_String_1__String_1_";
 
-    public DeephavenTestInterpretedExtension() {
-        super(Lists.mutable.with(
-            Tuples.pair(START_SERVER_FUNCTION, DeephavenStartCommand::new),
-            Tuples.pair(STOP_SERVER_FUNCTION, DeephavenStopCommand::new),
-            Tuples.pair(LOAD_STATIC_TABLE_FUNCTION, DeephavenLoadStaticTableCommand::new),
-            Tuples.pair(GET_PSK_FUNCTION, DeephavenGetPskCommand::new)
-        ));
+    public static Root_meta_pure_functions_io_http_URL startServer(String imageTag) {
+        LOGGER.debug("Starting Deephaven with imageTag: " + imageTag);
+
+        if (!isRunning) {
+            CONTAINER.run(imageTag);
+            isRunning = true;
+        }
+
+        Root_meta_pure_functions_io_http_URL_Impl url = new Root_meta_pure_functions_io_http_URL_Impl("deephavenUrl");
+        url._host(CONTAINER.getContainer().getHost());
+        url._port(CONTAINER.getContainer().getMappedPort(DEEPHAVEN_PORT));
+        url._path("/");
+
+        return url;
     }
 
-    public static InterpretedExtension extension() {
-        return new DeephavenTestInterpretedExtension();
+    public static void stopServer(String imageTag) {
+        LOGGER.debug("Stopping Deephaven with imageTag: " + imageTag);
+
+        if (isRunning) {
+            CONTAINER.stop();
+            isRunning = false;
+        }
+    }
+
+    public static boolean loadStaticTable(String imageTag, String tableName, String jsonData) {
+        LOGGER.debug("Loading static table: " + tableName + " with data: " + jsonData);
+        if (!isRunning) {
+            throw new IllegalStateException("Deephaven container not running for imageTag: " + imageTag);
+        }
+        // TODO: Implement HTTP POST to Deephaven API
+        return true; // Stub for now
+    }
+
+    public static String getPsk(String imageTag) {
+        LOGGER.debug("Getting PSK for imageTag: " + imageTag);
+        return "dummy-psk"; // Stub
     }
 }
