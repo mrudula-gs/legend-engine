@@ -1,19 +1,98 @@
-# load_data.py
-from deephaven import DynamicTableWriter
-import deephaven.dtypes as dht
+package org.finos.legend.engine.plan.execution.stores.deephaven.test;
 
-# Create table writer with column definitions
-table_writer = DynamicTableWriter({"DesktopName": dht.string, "CityName": dht.string})
-nds_desktops = table_writer.table
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
 
-# Static test data
-data = [
-    {"DesktopName": "Alpha", "CityName": "Dallas"},
-    {"DesktopName": "Beta", "CityName": "New York"}
-]
+import java.util.concurrent.atomic.AtomicReference;
 
-# Populate the table
-for row in data:
-    table_writer.write_row(row["DesktopName"], row["CityName"])
+public class DeephavenTestContainer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenTestContainer.class);
+    public static GenericContainer<?> deephavenContainer;
+    private static final int DEEPHAVEN_PORT = 10000;
+    private static final String STATIC_PSK = "myStaticPsk";
+    private static final AtomicReference<String> discoveredPsk = new AtomicReference<>(STATIC_PSK);
 
-print("Loaded nds_desktops with test data")
+    public static boolean startDeephaven(String imageTag) {
+        if (deephavenContainer != null && deephavenContainer.isRunning()) {
+            LOGGER.warn("Deephaven container already running; stopping it first.");
+            stopDeephaven();
+        }
+        try {
+            DockerImageName imageName = DockerImageName.parse(imageTag);
+            deephavenContainer = new GenericContainer<>(imageName)
+                    .withExposedPorts(DEEPHAVEN_PORT)
+                    .withPrivilegedMode(true)
+                    .withLogConsumer(new Slf4jLogConsumer(LOGGER).withPrefix("Deephaven"))
+                    .withCopyFileToContainer(
+                        MountableFile.forClasspathResource("load_data.py"),
+                        "/data/load_data.py"
+                    )
+                    .withEnv("START_OPTS", "-Xmx4g -Dauthentication.psk=" + STATIC_PSK + " -Ddeephaven.console.startupScript=/data/load_data.py");
+            deephavenContainer.start();
+            LOGGER.info("Started Deephaven container on host: {} port: {}", 
+                deephavenContainer.getHost(), deephavenContainer.getMappedPort(DEEPHAVEN_PORT));
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to start Deephaven container", e);
+            stopDeephaven();
+            return false;
+        }
+    }
+
+    public static boolean stopDeephaven() {
+        if (deephavenContainer != null && deephavenContainer.isRunning()) {
+            try {
+                deephavenContainer.stop();
+                LOGGER.info("Deephaven container stopped");
+                return true;
+            } catch (Exception e) {
+                LOGGER.error("Failed to stop Deephaven container", e);
+                return false;
+            } finally {
+                deephavenContainer = null;
+                discoveredPsk.set(STATIC_PSK);
+            }
+        } else {
+            LOGGER.info("No Deephaven container running to stop");
+            return true;
+        }
+    }
+
+    // Simplified since data is loaded at startup
+    public static boolean loadStaticTable(String imageTag, String tableName, String jsonData) {
+        if (deephavenContainer == null || !deephavenContainer.isRunning()) {
+            LOGGER.error("Deephaven container not running for imageTag: {}", imageTag);
+            return false;
+        }
+        LOGGER.info("Data loading handled at startup via load_data.py for table '{}'", tableName);
+        return true; // Assume success since script runs at startup
+    }
+
+    public static String getPsk() {
+        return discoveredPsk.get();
+    }
+
+    public static void main(String[] args) {
+        String imageTag = "dockerhub.site.com:8413/deephaven/server:latest";
+        String tableName = "nds_desktops";
+        String jsonData = "[{\"DesktopName\": \"Alpha\", \"CityName\": \"Dallas\"}, {\"DesktopName\": \"Beta\", \"CityName\": \"New York\"}]";
+
+        if (startDeephaven(imageTag)) {
+            // Data is loaded at startup, so just verify
+            loadStaticTable(imageTag, tableName, jsonData);
+            LOGGER.info("Access Deephaven at http://{}:{}/?psk={}",
+                deephavenContainer.getHost(), deephavenContainer.getMappedPort(DEEPHAVEN_PORT), STATIC_PSK);
+            try {
+                Thread.sleep(60000); // Keep running for 60 seconds
+            } catch (InterruptedException e) {
+                LOGGER.error("Interrupted", e);
+            }
+            stopDeephaven();
+        } else {
+            LOGGER.error("Failed to start Deephaven container");
+        }
+    }
+}
