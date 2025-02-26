@@ -1,150 +1,97 @@
-package org.finos.legend.engine.plan.execution.stores.deephaven.test;
+/opt/jdk-11-latest/bin/java -javaagent:/opt/intellij/lib/idea_rt.jar=34215:/opt/intellij/bin -Dfile.encoding=UTF-8 -classpath /local/data/scratch/projects/legend-engine/legend-engine-xts-deephaven/legend-engine-xt-deephaven-executionPlan-test/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-xts-deephaven/legend-engine-xt-deephaven-javaPlatformBinding-pure/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-base/legend-engine-core-language-pure/legend-engine-language-pure-compiler/target/classes:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-dsl-store-grammar/5.33.0/legend-pure-m2-dsl-store-grammar-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-precisePrimitives-pure/target/classes:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-extension-compiled-dsl-mapping/5.33.0/legend-pure-runtime-java-extension-compiled-dsl-mapping-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-xts-deephaven/legend-engine-xt-deephaven-pure/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-xts-java/legend-engine-xt-javaGeneration-pure/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-xts-authentication/legend-engine-xt-authentication-pure/target/classes:/local/data/scratch/.m2/repository/junit/junit/4.13.1/junit-4.13.1.jar:/local/data/scratch/.m2/repository/org/testcontainers/testcontainers/1.18.3/testcontainers-1.18.3.jar:/local/data/scratch/.m2/repository/org/apache/commons/commons-compress/1.21/commons-compress-1.21.jar:/local/data/scratch/.m2/repository/org/rnorth/duct-tape/duct-tape/1.0.8/duct-tape-1.0.8.jar:/local/data/scratch/.m2/repository/org/jetbrains/annotations/17.0.0/annotations-17.0.0.jar:/local/data/scratch/.m2/repository/com/github/docker-java/docker-java-transport-zerodep/3.3.0/docker-java-transport-zerodep-3.3.0.jar:/local/data/scratch/.m2/repository/com/github/docker-java/docker-java-transport/3.3.0/docker-java-transport-3.3.0.jar:/local/data/scratch/.m2/repository/net/java/dev/jna/jna/5.12.1/jna-5.12.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-qst/0.36.1/deephaven-qst-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-qst-type/0.36.1/deephaven-qst-type-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-table-api/0.36.1/deephaven-table-api-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-query-constants/0.36.1/deephaven-engine-query-constants-0.36.1.jar:/local/data/scratch/.m2/repository/com/github/docker-java/docker-java-api/3.3.0/docker-java-api-3.3.0.jar:/local/data/scratch/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.10.5/jackson-annotations-2.10.5.jar:/local/data/scratch/.m2/repository/org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m3-core/5.33.0/legend-pure-m3-core-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m3-bootstrap-generator/5.33.0/legend-pure-m3-bootstrap-generator-5.33.0.jar:/local/data/scratch/.m2/repository/org/antlr/antlr4-runtime/4.8-1/antlr4-runtime-4.8-1.jar:/local/data/scratch/.m2/repository/com/googlecode/json-simple/json-simple/1.1.1/json-simple-1.1.1.jar:/local/data/scratch/.m2/repository/commons-codec/commons-codec/1.15/commons-codec-1.15.jar:/local/data/scratch/.m2/repository/org/apache/commons/commons-lang3/3.7/commons-lang3-3.7.jar:/local/data/scratch/.m2/repository/io/prometheus/simpleclient/0.8.1/simpleclient-0.8.1.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-compiled-core/target/classes:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-dsl-store-pure/5.33.0/legend-pure-m2-dsl-store-pure-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-dsl-mapping-pure/5.33.0/legend-pure-m2-dsl-mapping-pure-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-dsl-path-pure/5.33.0/legend-pure-m2-dsl-path-pure-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-dsl-graph-pure/5.33.0/legend-pure-m2-dsl-graph-pure-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-store-relational-pure/5.33.0/legend-pure-m2-store-relational-pure-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-platform-modular-generation/legend-engine-pure-platform-dsl-diagram-java/target/classes:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-dsl-diagram-pure/5.33.0/legend-pure-m2-dsl-diagram-pure-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-platform-modular-generation/legend-engine-pure-platform-store-relational-java/target/classes:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-extension-shared-store-relational/5.33.0/legend-pure-runtime-java-extension-shared-store-relational-5.33.0.jar:/local/data/scratch/.m2/repository/org/apache/tomcat/tomcat-dbcp/10.0.4/tomcat-dbcp-10.0.4.jar:/local/data/scratch/.m2/repository/org/apache/tomcat/tomcat-juli/10.0.4/tomcat-juli-10.0.4.jar:/local/data/scratch/.m2/repository/org/slf4j/jcl-over-slf4j/1.7.25/jcl-over-slf4j-1.7.25.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-platform-modular-generation/legend-engine-pure-platform-dsl-graph-java/target/classes:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-extension-compiled-dsl-store/5.33.0/legend-pure-runtime-java-extension-compiled-dsl-store-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-platform-modular-generation/legend-engine-pure-platform-dsl-tds-java/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-relation/legend-engine-pure-runtime-java-extension-compiled-functions-relation/target/classes:/local/data/scratch/.m2/repository/io/deephaven/deephaven-csv/0.12.0/deephaven-csv-0.12.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-extension-compiled-store-relational/5.33.0/legend-pure-runtime-java-extension-compiled-store-relational-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-extension-compiled-dsl-graph/5.33.0/legend-pure-runtime-java-extension-compiled-dsl-graph-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-extension-compiled-dsl-path/5.33.0/legend-pure-runtime-java-extension-compiled-dsl-path-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-platform-modular-generation/legend-engine-pure-platform-dsl-path-java/target/classes:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-extension-compiled-dsl-tds/5.33.0/legend-pure-runtime-java-extension-compiled-dsl-tds-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-dsl-tds-grammar/5.33.0/legend-pure-m2-dsl-tds-grammar-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-relation/legend-engine-pure-runtime-java-extension-shared-functions-relation/target/classes:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-extension-compiled-dsl-diagram/5.33.0/legend-pure-runtime-java-extension-compiled-dsl-diagram-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-planExecution/legend-engine-pure-runtime-java-extension-compiled-functions-planExecution/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-planExecution/legend-engine-pure-functions-planExecution-pure/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-platform-modular-generation/legend-engine-pure-platform-dsl-store-java/target/classes:/local/data/scratch/.m2/repository/org/eclipse/collections/eclipse-collections-api/10.2.0/eclipse-collections-api-10.2.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m4/5.33.0/legend-pure-m4-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-engine-compiled/5.33.0/legend-pure-runtime-java-engine-compiled-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-engine-shared/5.33.0/legend-pure-runtime-java-engine-shared-5.33.0.jar:/local/data/scratch/.m2/repository/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar:/local/data/scratch/.m2/repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar:/local/data/scratch/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.10.5/jackson-core-2.10.5.jar:/local/data/scratch/.m2/repository/io/github/classgraph/classgraph/4.8.25/classgraph-4.8.25.jar:/local/data/scratch/.m2/repository/io/opentracing/opentracing-api/0.32.0/opentracing-api-0.32.0.jar:/local/data/scratch/.m2/repository/io/opentracing/opentracing-util/0.32.0/opentracing-util-0.32.0.jar:/local/data/scratch/.m2/repository/io/opentracing/opentracing-noop/0.32.0/opentracing-noop-0.32.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-runtime-java-engine-interpreted/5.33.0/legend-pure-runtime-java-engine-interpreted-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-unclassified/legend-engine-pure-runtime-java-extension-shared-functions-unclassified/target/classes:/local/data/scratch/.m2/repository/org/bouncycastle/bcprov-jdk15on/1.67/bcprov-jdk15on-1.67.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-unclassified/legend-engine-pure-runtime-java-extension-compiled-functions-unclassified/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-unclassified/legend-engine-pure-functions-unclassified-pure/target/classes:/local/data/scratch/.m2/repository/org/apache/commons/commons-text/1.10.0/commons-text-1.10.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-platform-modular-generation/legend-engine-pure-platform-java/target/classes:/local/data/scratch/.m2/repository/org/apache/arrow/flight-core/13.0.0/flight-core-13.0.0.jar:/local/data/scratch/.m2/repository/org/apache/arrow/arrow-format/13.0.0/arrow-format-13.0.0.jar:/local/data/scratch/.m2/repository/org/apache/arrow/arrow-memory-netty/13.0.0/arrow-memory-netty-13.0.0.jar:/local/data/scratch/.m2/repository/io/grpc/grpc-core/1.56.0/grpc-core-1.56.0.jar:/local/data/scratch/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:/local/data/scratch/.m2/repository/com/google/android/annotations/4.1.1.4/annotations-4.1.1.4.jar:/local/data/scratch/.m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.23/animal-sniffer-annotations-1.23.jar:/local/data/scratch/.m2/repository/io/perfmark/perfmark-api/0.26.0/perfmark-api-0.26.0.jar:/local/data/scratch/.m2/repository/io/grpc/grpc-context/1.56.0/grpc-context-1.56.0.jar:/local/data/scratch/.m2/repository/io/grpc/grpc-protobuf/1.58.0/grpc-protobuf-1.58.0.jar:/local/data/scratch/.m2/repository/com/google/api/grpc/proto-google-common-protos/2.22.0/proto-google-common-protos-2.22.0.jar:/local/data/scratch/.m2/repository/io/grpc/grpc-protobuf-lite/1.58.0/grpc-protobuf-lite-1.58.0.jar:/local/data/scratch/.m2/repository/io/netty/netty-tcnative-boringssl-static/2.0.61.Final/netty-tcnative-boringssl-static-2.0.61.Final.jar:/local/data/scratch/.m2/repository/io/netty/netty-tcnative-classes/2.0.61.Final/netty-tcnative-classes-2.0.61.Final.jar:/local/data/scratch/.m2/repository/io/netty/netty-tcnative-boringssl-static/2.0.61.Final/netty-tcnative-boringssl-static-2.0.61.Final-linux-x86_64.jar:/local/data/scratch/.m2/repository/io/netty/netty-tcnative-boringssl-static/2.0.61.Final/netty-tcnative-boringssl-static-2.0.61.Final-linux-aarch_64.jar:/local/data/scratch/.m2/repository/io/netty/netty-tcnative-boringssl-static/2.0.61.Final/netty-tcnative-boringssl-static-2.0.61.Final-osx-x86_64.jar:/local/data/scratch/.m2/repository/io/netty/netty-tcnative-boringssl-static/2.0.61.Final/netty-tcnative-boringssl-static-2.0.61.Final-osx-aarch_64.jar:/local/data/scratch/.m2/repository/io/netty/netty-tcnative-boringssl-static/2.0.61.Final/netty-tcnative-boringssl-static-2.0.61.Final-windows-x86_64.jar:/local/data/scratch/.m2/repository/io/netty/netty-buffer/4.1.96.Final/netty-buffer-4.1.96.Final.jar:/local/data/scratch/.m2/repository/io/netty/netty-handler/4.1.96.Final/netty-handler-4.1.96.Final.jar:/local/data/scratch/.m2/repository/io/netty/netty-resolver/4.1.96.Final/netty-resolver-4.1.96.Final.jar:/local/data/scratch/.m2/repository/io/netty/netty-codec/4.1.96.Final/netty-codec-4.1.96.Final.jar:/local/data/scratch/.m2/repository/io/netty/netty-transport/4.1.96.Final/netty-transport-4.1.96.Final.jar:/local/data/scratch/.m2/repository/com/google/guava/guava/30.0-jre/guava-30.0-jre.jar:/local/data/scratch/.m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar:/local/data/scratch/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/local/data/scratch/.m2/repository/org/checkerframework/checker-qual/3.5.0/checker-qual-3.5.0.jar:/local/data/scratch/.m2/repository/com/google/j2objc/j2objc-annotations/1.3/j2objc-annotations-1.3.jar:/local/data/scratch/.m2/repository/io/grpc/grpc-stub/1.56.0/grpc-stub-1.56.0.jar:/local/data/scratch/.m2/repository/io/grpc/grpc-api/1.56.0/grpc-api-1.56.0.jar:/local/data/scratch/.m2/repository/javax/annotation/javax.annotation-api/1.3.2/javax.annotation-api-1.3.2.jar:/local/data/scratch/.m2/repository/org/apache/arrow/arrow-vector/13.0.0/arrow-vector-13.0.0.jar:/local/data/scratch/.m2/repository/io/netty/netty-common/4.1.96.Final/netty-common-4.1.96.Final.jar:/local/data/scratch/.m2/repository/com/google/flatbuffers/flatbuffers-java/1.12.0/flatbuffers-java-1.12.0.jar:/local/data/scratch/.m2/repository/org/apache/arrow/arrow-memory-core/13.0.0/arrow-memory-core-13.0.0.jar:/local/data/scratch/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-uri/0.36.1/deephaven-uri-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-java-client-barrage/0.36.1/deephaven-java-client-barrage-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-java-client-flight/0.36.1/deephaven-java-client-flight-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-proto-backplane-grpc-flight/0.36.1/deephaven-proto-backplane-grpc-flight-0.36.1.jar:/local/data/scratch/.m2/repository/org/apache/arrow/flight-grpc/13.0.0/flight-grpc-13.0.0.jar:/local/data/scratch/.m2/repository/com/google/protobuf/protobuf-java/3.25.3/protobuf-java-3.25.3.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-extensions-barrage/0.36.1/deephaven-extensions-barrage-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-table/0.36.1/deephaven-engine-table-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-TableLogger/0.36.1/deephaven-TableLogger-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-configs/0.36.1/deephaven-configs-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-stringset/0.36.1/deephaven-engine-stringset-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-base/0.36.1/deephaven-engine-base-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-rowset/0.36.1/deephaven-engine-rowset-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-chunk/0.36.1/deephaven-engine-chunk-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-Container/0.36.1/deephaven-Container-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-api/0.36.1/deephaven-engine-api-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-context/0.36.1/deephaven-engine-context-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-authentication/0.36.1/deephaven-authentication-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-time/0.36.1/deephaven-engine-time-0.36.1.jar:/local/data/scratch/.m2/repository/com/google/dagger/dagger/2.51.1/dagger-2.51.1.jar:/local/data/scratch/.m2/repository/javax/inject/javax.inject/1/javax.inject-1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-updategraph/0.36.1/deephaven-engine-updategraph-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-jpy-ext/0.36.1/deephaven-jpy-ext-0.36.1.jar:/local/data/scratch/.m2/repository/org/jpyconsortium/jpy/0.18.0/jpy-0.18.0.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-jpy-config/0.36.1/deephaven-jpy-config-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-hotspot/0.36.1/deephaven-hotspot-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-codec-api/0.36.1/deephaven-codec-api-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-DHProcess/0.36.1/deephaven-DHProcess-0.36.1.jar:/local/data/scratch/.m2/repository/com/github/oshi/oshi-core/5.8.3/oshi-core-5.8.3.jar:/local/data/scratch/.m2/repository/net/java/dev/jna/jna-platform/5.9.0/jna-platform-5.9.0.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-function/0.36.1/deephaven-engine-function-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-vector/0.36.1/deephaven-engine-vector-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-primitive/0.36.1/deephaven-engine-primitive-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-tuple/0.36.1/deephaven-engine-tuple-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-Stats/0.36.1/deephaven-Stats-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-codec-builtin/0.36.1/deephaven-codec-builtin-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-codec-cache/0.36.1/deephaven-codec-cache-0.36.1.jar:/local/data/scratch/.m2/repository/com/github/f4b6a3/uuid-creator/5.2.0/uuid-creator-5.2.0.jar:/local/data/scratch/.m2/repository/com/tdunning/t-digest/3.2/t-digest-3.2.jar:/local/data/scratch/.m2/repository/com/squareup/javapoet/1.13.0/javapoet-1.13.0.jar:/local/data/scratch/.m2/repository/it/unimi/dsi/fastutil/8.5.13/fastutil-8.5.13.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-plugin/0.36.1/deephaven-plugin-0.36.1.jar:/local/data/scratch/.m2/repository/org/codehaus/groovy/groovy/3.0.22/groovy-3.0.22.jar:/local/data/scratch/.m2/repository/org/codehaus/groovy/groovy-json/3.0.22/groovy-json-3.0.22.jar:/local/data/scratch/.m2/repository/com/github/javaparser/javaparser-core/3.23.0/javaparser-core-3.23.0.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-engine-tuplesource/0.36.1/deephaven-engine-tuplesource-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/barrage/barrage-format/0.6.0/barrage-format-0.6.0.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-Base/0.36.1/deephaven-Base-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-clock/0.36.1/deephaven-clock-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/hash/0.1.0/hash-0.1.0.jar:/local/data/scratch/.m2/repository/net/sf/trove4j/trove4j/3.0.3/trove4j-3.0.3.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-Util/0.36.1/deephaven-Util-0.36.1.jar:/local/data/scratch/.m2/repository/org/jdom/jdom2/2.0.6.1/jdom2-2.0.6.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-DataStructures/0.36.1/deephaven-DataStructures-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-Configuration/0.36.1/deephaven-Configuration-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-util-function/0.36.1/deephaven-util-function-0.36.1.jar:/local/data/scratch/.m2/repository/org/hdrhistogram/HdrHistogram/2.1.12/HdrHistogram-2.1.12.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-log-factory/0.36.1/deephaven-log-factory-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-IO/0.36.1/deephaven-IO-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-SevenZip/0.36.1/deephaven-SevenZip-0.36.1.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-base/legend-engine-core-language-pure/legend-engine-protocol-pure/target/classes:/local/data/scratch/.m2/repository/org/mongodb/bson/3.12.8/bson-3.12.8.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-shared/legend-engine-shared-core/target/classes:/local/data/scratch/.m2/repository/javax/ws/rs/javax.ws.rs-api/2.0.1/javax.ws.rs-api-2.0.1.jar:/local/data/scratch/.m2/repository/io/zipkin/reporter2/zipkin-reporter/2.15.0/zipkin-reporter-2.15.0.jar:/local/data/scratch/.m2/repository/io/zipkin/zipkin2/zipkin/2.21.1/zipkin-2.21.1.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-base/legend-engine-core-language-pure/legend-engine-protocol/target/classes:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-dsl-mapping-grammar/5.33.0/legend-pure-m2-dsl-mapping-grammar-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-dsl-path-grammar/5.33.0/legend-pure-m2-dsl-path-grammar-5.33.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/pure/legend-pure-m2-dsl-graph-grammar/5.33.0/legend-pure-m2-dsl-graph-grammar-5.33.0.jar:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-pure/legend-engine-pure-code-functions-relation/legend-engine-pure-functions-relation-pure/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-xts-identity/legend-engine-xt-identity-kerberos/target/classes:/local/data/scratch/projects/legend-engine/legend-engine-xts-identity/legend-engine-xt-identity-pac4j/target/classes:/local/data/scratch/.m2/repository/org/finos/legend/shared/legend-shared-pac4j-kerberos/0.25.7/legend-shared-pac4j-kerberos-0.25.7.jar:/local/data/scratch/.m2/repository/org/pac4j/pac4j-kerberos/3.8.3/pac4j-kerberos-3.8.3.jar:/local/data/scratch/.m2/repository/javax/servlet/javax.servlet-api/3.1.0/javax.servlet-api-3.1.0.jar:/local/data/scratch/.m2/repository/org/finos/legend/shared/legend-shared-pac4j/0.25.7/legend-shared-pac4j-0.25.7.jar:/local/data/scratch/.m2/repository/org/pac4j/dropwizard-pac4j/3.0.0/dropwizard-pac4j-3.0.0.jar:/local/data/scratch/.m2/repository/org/pac4j/pac4j-config/3.0.0/pac4j-config-3.0.0.jar:/local/data/scratch/.m2/repository/com/zaxxer/HikariCP/4.0.3/HikariCP-4.0.3.jar:/local/data/scratch/.m2/repository/org/pac4j/jersey225-pac4j/3.0.0/jersey225-pac4j-3.0.0.jar:/local/data/scratch/.m2/repository/org/pac4j/jax-rs/core/3.0.0/core-3.0.0.jar:/local/data/scratch/.m2/repository/org/pac4j/j2e-pac4j/4.0.0/j2e-pac4j-4.0.0.jar:/local/data/scratch/.m2/repository/org/commonjava/mimeparse/mimeparse/0.1.3.3/mimeparse-0.1.3.3.jar:/local/data/scratch/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.10.5/jackson-dataformat-yaml-2.10.5.jar:/local/data/scratch/.m2/repository/org/yaml/snakeyaml/1.33/snakeyaml-1.33.jar:/local/data/scratch/.m2/repository/org/mongodb/mongo-java-driver/3.12.8/mongo-java-driver-3.12.8.jar:/local/data/scratch/.m2/repository/com/hazelcast/hazelcast/5.3.1/hazelcast-5.3.1.jar:/local/data/scratch/.m2/repository/org/apache/commons/commons-csv/1.5/commons-csv-1.5.jar:/local/data/scratch/.m2/repository/org/pac4j/pac4j-core/3.7.0/pac4j-core-3.7.0.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-java-client-session/0.36.1/deephaven-java-client-session-0.36.1.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-proto-backplane-grpc/0.36.1/deephaven-proto-backplane-grpc-0.36.1.jar:/local/data/scratch/.m2/repository/io/grpc/grpc-services/1.58.0/grpc-services-1.58.0.jar:/local/data/scratch/.m2/repository/io/grpc/grpc-util/1.58.0/grpc-util-1.58.0.jar:/local/data/scratch/.m2/repository/com/google/protobuf/protobuf-java-util/3.24.0/protobuf-java-util-3.24.0.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-ssl-config/0.36.1/deephaven-ssl-config-0.36.1.jar:/local/data/scratch/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jdk8/2.17.0/jackson-datatype-jdk8-2.17.0.jar:/local/data/scratch/.m2/repository/io/grpc/grpc-netty/1.58.0/grpc-netty-1.58.0.jar:/local/data/scratch/.m2/repository/io/netty/netty-codec-http2/4.1.93.Final/netty-codec-http2-4.1.93.Final.jar:/local/data/scratch/.m2/repository/io/netty/netty-codec-http/4.1.96.Final/netty-codec-http-4.1.96.Final.jar:/local/data/scratch/.m2/repository/io/netty/netty-handler-proxy/4.1.93.Final/netty-handler-proxy-4.1.93.Final.jar:/local/data/scratch/.m2/repository/io/netty/netty-codec-socks/4.1.93.Final/netty-codec-socks-4.1.93.Final.jar:/local/data/scratch/.m2/repository/io/netty/netty-transport-native-unix-common/4.1.93.Final/netty-transport-native-unix-common-4.1.93.Final.jar:/local/data/scratch/.m2/repository/io/deephaven/deephaven-ssl-kickstart/0.36.1/deephaven-ssl-kickstart-0.36.1.jar:/local/data/scratch/.m2/repository/io/github/hakky54/sslcontext-kickstart/8.1.1/sslcontext-kickstart-8.1.1.jar:/local/data/scratch/.m2/repository/io/github/hakky54/sslcontext-kickstart-for-netty/8.1.1/sslcontext-kickstart-for-netty-8.1.1.jar:/local/data/scratch/.m2/repository/org/eclipse/collections/eclipse-collections/10.2.0/eclipse-collections-10.2.0.jar org.finos.legend.engine.plan.execution.stores.deephaven.test.DeephavenTestContainer
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+Started Deephaven container on host: deev.dc.com port: 42323
+PSK set to: myStaticPSK
+Startup script set to: /data/load_data.py
+Container logs after startup: 1 compiler directives added
+VM settings:
+    Max. Heap Size: 4.00G
+    Using VM: OpenJDK 64-Bit Server VM
 
-import io.deephaven.client.impl.BarrageSession;
-import io.deephaven.client.impl.BarrageSessionFactoryConfig;
-import io.deephaven.client.impl.ClientConfig;
-import io.deephaven.client.impl.SessionConfig;
-import io.deephaven.qst.table.TicketTable;
-import io.deephaven.uri.DeephavenTarget;
-import org.apache.arrow.flight.FlightStream;
-import org.apache.arrow.memory.RootAllocator;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.utility.MountableFile;
+# Starting io.deephaven.server.jetty.JettyMain
+deephaven.cacheDir=/cache
+deephaven.configDir=/opt/deephaven/config
+deephaven.dataDir=/data
+# io.deephaven.internal.log.LoggerFactoryServiceLoaderImpl: searching for 'io.deephaven.internal.log.LoggerFactory'...
+# io.deephaven.internal.log.LoggerFactoryServiceLoaderImpl: found 'io.deephaven.internal.log.LoggerFactorySlf4j'
+2025-02-26T06:31:42.120Z | main                 |  INFO | i.d.s.jetty.JettyMain     | Starting up io.deephaven.server.jetty.JettyMain...
+2025-02-26T06:31:42.136Z | main                 |  INFO | i.d.c.ParsedProperties    | Loading /opt/deephaven/config/deephaven.prop
+2025-02-26T06:31:42.146Z | main                 |  INFO | i.d.c.ParsedProperties    | Loading dh-defaults.prop
+2025-02-26T06:31:42.157Z | main                 |  INFO | i.d.c.Configuration       | Configuration: configuration file is /opt/deephaven/config/deephaven.prop
+2025-02-26T06:31:42.165Z | main                 |  INFO | i.d.s.jetty.JettyMain     | io.deephaven.server.jetty.JettyMain: starting up
+2025-02-26T06:31:42.285Z | main                 |  INFO | i.d.c.PropertyFile        | io.deephaven.engine.table.impl.perf.UpdatePerformanceTracker: property UpdatePerformanceTracker.reportIntervalMillis = 60000
+2025-02-26T06:31:43.038Z | main                 |  INFO | o.a.a.m.BaseAllocator     | Debug mode disabled. Enable with the VM option -Darrow.memory.debug.allocator=true.
+2025-02-26T06:31:43.039Z | main                 |  INFO | ltAllocationManagerOption | allocation manager type not specified, using netty as the default type
+2025-02-26T06:31:43.040Z | main                 |  INFO | o.a.a.m.CheckAllocator    | Using DefaultAllocationManager at memory-netty-13.0.0.jar!/org/apache/arrow/memory/DefaultAllocationManagerFactory.class
+2025-02-26T06:31:43.125Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Configuring logging...
+# New System.out configured
+# New System.err configured
+2025-02-26T06:31:43.443Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Initializing Script Session...
+2025-02-26T06:31:43.523Z | main                 |  INFO | i.d.e.util.jpy.JpyInit    | Loaded jpy config flags=,programName=/opt/deephaven/venv/bin/python,pythonHome=null,pythonLib=/usr/lib/python3.10/config-3.10-x86_64-linux-gnu/libpython3.10.so,jpyLib=/opt/deephaven/venv/lib/python3.10/site-packages/jpy.cpython-310-x86_64-linux-gnu.so,jdlLib=/opt/deephaven/venv/lib/python3.10/site-packages/jdl.cpython-310-x86_64-linux-gnu.so,extras=
+2025-02-26T06:31:43.524Z | main                 |  INFO | i.d.e.util.jpy.JpyInit    | Starting Python interpreter
+2025-02-26T06:31:43.552Z | main                 |  INFO | i.d.e.util.jpy.JpyInit    | Started Python interpreter
+2025-02-26T06:31:44.701Z | main                 |  INFO | .d.s.p.PluginRegistration | Registering plugins...
+2025-02-26T06:31:44.701Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.hierarchicaltable.HierarchicalTableTypePlugin@5a2bd7c8
+2025-02-26T06:31:44.701Z | main                 |  INFO | .d.s.p.PluginRegistration | Registering object type: HierarchicalTable / io.deephaven.hierarchicaltable.HierarchicalTableTypePlugin@5a2bd7c8
+2025-02-26T06:31:44.702Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.partitionedtable.PartitionedTableTypePlugin@7c1e32c9
+2025-02-26T06:31:44.702Z | main                 |  INFO | .d.s.p.PluginRegistration | Registering object type: PartitionedTable / io.deephaven.partitionedtable.PartitionedTableTypePlugin@7c1e32c9
+2025-02-26T06:31:44.702Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: Figure:io.deephaven.plot.FigureWidget
+2025-02-26T06:31:44.702Z | main                 |  INFO | .d.s.p.PluginRegistration | Registering object type: Figure / Figure:io.deephaven.plot.FigureWidget
+2025-02-26T06:31:44.702Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.server.plugin.js.JsPluginManifestRegistration@20134094
+2025-02-26T06:31:44.702Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.server.plugin.js.JsPluginConfigDirRegistration@282ffbf5
+2025-02-26T06:31:44.703Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.server.plugin.js.JsPluginNpmPackageRegistration@242a209e
+2025-02-26T06:31:44.703Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.server.plugin.python.PythonPluginsRegistration@39c385d6
+2025-02-26T06:31:44.719Z | main                 |  INFO | .d.s.p.PluginRegistration | Registering object type: pandas.DataFrame / <deephaven.pandasplugin.pandas_as_table.PandasDataFrameSerializer object at 0x7fe39a7a71f0>
+2025-02-26T06:31:44.720Z | main                 |  INFO | .d.s.p.PluginRegistration | Registered plugins: objectType=4,js=0
+2025-02-26T06:31:44.720Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Initializing Execution Context for Main Thread...
+2025-02-26T06:31:44.720Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Starting Update Graph...
+2025-02-26T06:31:44.723Z | main                 |  INFO | e.u.i.PeriodicUpdateGraph | PeriodicUpdateGraph starting with 6 notification processing threads
+2025-02-26T06:31:44.744Z | EFAULT.refreshThread |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.perf.UpdatePerformanceTracker
+2025-02-26T06:31:45.078Z | main                 |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.util.QueryPerformanceImpl
+2025-02-26T06:31:45.080Z | main                 |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.util.QueryOperationPerformanceImpl
+2025-02-26T06:31:45.082Z | main                 |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.util.StatsImpl
+2025-02-26T06:31:45.092Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Starting Performance Trackers...
+2025-02-26T06:31:45.094Z | main                 |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.util.ServerStateTracker
+2025-02-26T06:31:45.096Z | main                 |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.util.AsyncErrorImpl
+2025-02-26T06:31:45.096Z | main                 |  INFO | d.s.a.ApplicationInjector | Starting ApplicationState.Factory 'io.deephaven.app.GcApplication@2fde9469'
+2025-02-26T06:31:45.097Z | main                 |  INFO | d.s.a.ApplicationInjector | 	app.id=io.deephaven.app.GcApplication, found 0 exports
+2025-02-26T06:31:45.098Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Initializing Authentication...
+2025-02-26T06:31:45.098Z | main                 |  WARN | .PskAuthenticationHandler | 
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class DeephavenTestContainer {
-    public static GenericContainer<?> deephavenContainer;
-    private static final int DEEPHAVEN_PORT = 10000;
-    private static final String STATIC_PSK = "myStaticPsk";
-    private static final AtomicReference<String> discoveredPsk = new AtomicReference<>(STATIC_PSK);
 
-    public static boolean startDeephaven(String imageTag) {
-        if (deephavenContainer != null && deephavenContainer.isRunning()) {
-            System.out.println("Deephaven container already running; stopping it first.");
-            stopDeephaven();
-        }
-        try {
-            DockerImageName imageName = DockerImageName.parse(imageTag);
-            deephavenContainer = new GenericContainer<>(imageName)
-                    .withExposedPorts(DEEPHAVEN_PORT)
-                    .withPrivilegedMode(true)
-                    .withCopyFileToContainer(
-                        MountableFile.forClasspathResource("load_data.py"),
-                        "/data/load_data.py"
-                    )
-                    .withEnv("START_OPTS", "-Xmx4g -Dauthentication.psk=" + STATIC_PSK + " -Ddeephaven.console.startupScript=/data/load_data.py");
-            deephavenContainer.start();
-            System.out.println("Started Deephaven container on host: " + deephavenContainer.getHost() + 
-                " port: " + deephavenContainer.getMappedPort(DEEPHAVEN_PORT));
-            System.out.println("PSK set to: " + STATIC_PSK);
-            System.out.println("Startup script set to: /data/load_data.py");
 
-            // Wait longer for server and script to initialize
-            Thread.sleep(10000);
-            System.out.println("Container logs after startup: " + deephavenContainer.getLogs());
-            return true;
-        } catch (Exception e) {
-            System.err.println("Failed to start Deephaven container: " + e.getMessage());
-            e.printStackTrace();
-            stopDeephaven();
-            return false;
-        }
-    }
+2025-02-26T06:31:45.098Z | main                 |  WARN | .PskAuthenticationHandler | ================================================================================
+2025-02-26T06:31:45.098Z | main                 |  WARN | .PskAuthenticationHandler | Superuser access through pre-shared key is enabled - use myStaticPSK to connect
+2025-02-26T06:31:45.098Z | main                 |  WARN | .PskAuthenticationHandler | Connect automatically to Web UI with http://localhost:10000/?psk=myStaticPSK
+2025-02-26T06:31:45.098Z | main                 |  WARN | .PskAuthenticationHandler | ================================================================================
+2025-02-26T06:31:45.098Z | main                 |  WARN | .PskAuthenticationHandler | 
 
-    public static boolean stopDeephaven() {
-        if (deephavenContainer != null && deephavenContainer.isRunning()) {
-            try {
-                deephavenContainer.stop();
-                System.out.println("Deephaven container stopped");
-                return true;
-            } catch (Exception e) {
-                System.err.println("Failed to stop Deephaven container: " + e.getMessage());
-                return false;
-            } finally {
-                deephavenContainer = null;
-                discoveredPsk.set(STATIC_PSK);
-            }
-        } else {
-            System.out.println("No Deephaven container running to stop");
-            return true;
-        }
-    }
 
-    public static boolean loadStaticTable(String imageTag, String tableName, String jsonData) {
-        if (deephavenContainer == null || !deephavenContainer.isRunning()) {
-            System.err.println("Deephaven container not running for imageTag: " + imageTag);
-            return false;
-        }
-        System.out.println("Data loading handled at startup for table '" + tableName + "'");
-        return true;
-    }
 
-    public static String getPsk() {
-        return discoveredPsk.get();
-    }
 
-    public static void main(String[] args) {
-        String imageTag = "dockerhub.site.com:8413/deephaven/server:latest";
-        String tableName = "nds_desktops";
-        String jsonData = "[{\"Desktop_ID\": 1, \"Desktop_Name\": \"Alpha\", \"City_Name\": \"Dallas\"}, {\"Desktop_ID\": 2, \"Desktop_Name\": \"Beta\", \"City_Name\": \"New York\"}]";
+2025-02-26T06:31:45.099Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Starting server...
+2025-02-26T06:31:45.100Z | main                 |  INFO | o.e.jetty.server.Server   | jetty-11.0.20; built: 2024-01-29T21:04:22.394Z; git: 922f8dc188f7011e60d0361de585fd4ac4d63064; jvm 21.0.4+7-LTS
+2025-02-26T06:31:45.214Z | main                 |  INFO | andardDescriptorProcessor | NO JSP Support for /, did not find org.eclipse.jetty.jsp.JettyJspServlet
+2025-02-26T06:31:45.270Z | main                 |  INFO | o.e.j.s.h.ContextHandler  | Started o.e.j.w.WebAppContext@681de87f{/,jar:file:/opt/deephaven/server-jetty-0.36.1/lib/deephaven-web-0.36.1.jar!/,AVAILABLE}
+2025-02-26T06:31:45.277Z | main                 |  INFO | o.e.j.s.AbstractConnector | Started ServerConnector@19058533{HTTP/1.1, (http/1.1, h2c)}{0.0.0.0:10000}
+2025-02-26T06:31:45.280Z | main                 |  INFO | o.e.jetty.server.Server   | Started Server@9408857{STARTING}[11.0.20,sto=0] @3682ms
+2025-02-26T06:31:45.280Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Server started on port 10000
+2025-02-26T06:32:00.737Z | EFAULT.refreshThread |  INFO | e.u.i.PeriodicUpdateGraph | Minimal Update Graph Processor cycle times: 25.894ms / 17 cycles = 1.523ms/cycle average), safePointTime=0ms
 
-        if (startDeephaven(imageTag)) {
-            loadStaticTable(imageTag, tableName, jsonData);
-
-            try {
-                ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
-                DeephavenTarget target = DeephavenTarget.builder()
-                        .host(deephavenContainer.getHost())
-                        .port(deephavenContainer.getMappedPort(DEEPHAVEN_PORT))
-                        .isSecure(false)
-                        .build();
-                ClientConfig clientConfig = ClientConfig.builder()
-                        .target(target)
-                        .build();
-                SessionConfig sessionConfig = SessionConfig.builder()
-                        .authenticationTypeAndValue("io.deephaven.authentication.psk.PskAuthenticationHandler " + STATIC_PSK)
-                        .build();
-                RootAllocator bufferAllocator = new RootAllocator();
-                BarrageSessionFactoryConfig.Factory barrageSessionFactory = BarrageSessionFactoryConfig.builder()
-                        .clientConfig(clientConfig)
-                        .allocator(bufferAllocator)
-                        .scheduler(scheduler)
-                        .build()
-                        .factory();
-
-                try (BarrageSession session = barrageSessionFactory.newBarrageSession(sessionConfig)) {
-                    System.out.println("Connected to Deephaven server at " + target.host() + ":" + target.port());
-
-                    TicketTable ticketTable = TicketTable.fromQueryScopeField(tableName);
-                    io.deephaven.client.impl.TableHandle tableHandle = session.session().execute(ticketTable);
-                    try (FlightStream flightStream = session.stream(tableHandle.ticketId())) {
-                        int rowCount = flightStream.getRoot().getRowCount();
-                        System.out.println("Table 'nds_desktops' found with " + rowCount + " rows");
-                        while (flightStream.next()) {
-                            System.out.println("Received data batch from nds_desktops");
-                        }
-                    }
-                    System.out.println("Successfully verified nds_desktops table");
-                }
-            } catch (Exception e) {
-                System.err.println("Failed to verify nds_desktops table: " + e.getMessage());
-                e.printStackTrace();
-            }
-
-            System.out.println("Access Deephaven at http://" + deephavenContainer.getHost() + ":" + 
-                deephavenContainer.getMappedPort(DEEPHAVEN_PORT) + "/?psk=" + STATIC_PSK);
-            try {
-                Thread.sleep(60000);
-            } catch (InterruptedException e) {
-                System.err.println("Interrupted: " + e.getMessage());
-            }
-            stopDeephaven();
-        } else {
-            System.err.println("Failed to start Deephaven container");
-        }
-    }
-}
+Data loading handled at startup via load_data.py for table 'nds_desktops'
+Connected to Deephaven server at deev.dc.com:OptionalInt[42323]
+Failed to verify nds_desktops table: d67ae850-ed91-49ae-b17d-b7654c287a66 cause: NOT_FOUND: Could not resolve 'sourceId: variable 'nds_desktops' not found
+io.deephaven.client.impl.TableHandle$TableHandleException: d67ae850-ed91-49ae-b17d-b7654c287a66 cause: NOT_FOUND: Could not resolve 'sourceId: variable 'nds_desktops' not found
+	at io.deephaven.client.impl.TableHandle.error(TableHandle.java:153)
+	at io.deephaven.client.impl.TableHandle.throwOnError(TableHandle.java:159)
+	at io.deephaven.client.impl.TableServiceImpl.execute(TableServiceImpl.java:49)
+	at io.deephaven.client.impl.TableServiceImpl.execute(TableServiceImpl.java:29)
+	at io.deephaven.client.impl.TableHandleManagerBatch.execute(TableHandleManagerBatch.java:47)
+	at io.deephaven.client.impl.TableHandleManagerDelegate.execute(TableHandleManagerDelegate.java:33)
+	at io.deephaven.client.impl.TableHandleManagerDelegate.execute(TableHandleManagerDelegate.java:33)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.test.DeephavenTestContainer.main(DeephavenTestContainer.java:204)
+Access Deephaven at http://deev.dc.com:42323/?psk=myStaticPSK
+Deephaven container stopped
