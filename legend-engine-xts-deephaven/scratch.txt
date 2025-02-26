@@ -71,7 +71,6 @@ public class DeephavenTestContainer {
             String url = "http://" + host + ":" + port + "/ide/run/json";
             LOGGER.info("Loading data into table '{}' at URL: {}", tableName, url);
 
-            // Python code to create and populate the table
             String pythonCode = "from deephaven import DynamicTableWriter\n" +
                     "import deephaven.dtypes as dht\n" +
                     "table_writer = DynamicTableWriter({\"DesktopName\": dht.string, \"CityName\": dht.string})\n" +
@@ -81,7 +80,6 @@ public class DeephavenTestContainer {
                     "for row in data:\n" +
                     "    table_writer.write_row(row['DesktopName'], row['CityName'])";
 
-            // Send POST request
             URL apiUrl = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) apiUrl.openConnection();
             conn.setRequestMethod("POST");
@@ -110,5 +108,31 @@ public class DeephavenTestContainer {
 
     public static String getPsk() {
         return discoveredPsk.get();
+    }
+
+    public static void main(String[] args) {
+        String imageTag = "dockerhub.site.com:8413/deephaven/server:latest";
+        String tableName = "nds_desktops";
+        String jsonData = "[{\"DesktopName\": \"Alpha\", \"CityName\": \"Dallas\"}, {\"DesktopName\": \"Beta\", \"CityName\": \"New York\"}]";
+
+        // Start the container
+        if (startDeephaven(imageTag)) {
+            // Load the test data
+            if (loadStaticTable(imageTag, tableName, jsonData)) {
+                LOGGER.info("Test data loaded successfully. Access at http://{}:{}/?psk={}",
+                    deephavenContainer.getHost(), deephavenContainer.getMappedPort(DEEPHAVEN_PORT), STATIC_PSK);
+                // Keep container running for manual verification
+                try {
+                    Thread.sleep(60000); // Run for 60 seconds; adjust as needed
+                } catch (InterruptedException e) {
+                    LOGGER.error("Interrupted", e);
+                }
+            } else {
+                LOGGER.error("Failed to load test data");
+            }
+            stopDeephaven();
+        } else {
+            LOGGER.error("Failed to start Deephaven container");
+        }
     }
 }
