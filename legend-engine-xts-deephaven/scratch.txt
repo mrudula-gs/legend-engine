@@ -1,165 +1,421 @@
-Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
-Starting Deephaven container with image: dockerhub.site.com:8413/deephaven/server:latest
-Found Docker environment with Environment variables, system properties and defaults. Resolved dockerHost=unix:/run/user/800410871/podman/podman.sock
-Docker host IP address is deev.dc.com
-Connected to docker: 
-  Server Version: 3.2.3
-  API Version: 1.40
-  Operating System: "rhel"
-  Total Memory: 96407 MB
+{
+  "serializer": {
+    "name": "pure",
+    "version": "vX_X_X"
+  },
+  "rootExecutionNode": {
+    "query": {
+      "_type": "deephavenQuery",
+      "source": {
+        "name": "nds_desktops",
+        "columns": [
+          {
+            "_type": "column",
+            "name": "Desktop_ID",
+            "type": {
+              "_type": "intType"
+            }
+          },
+          {
+            "_type": "column",
+            "name": "City_Name",
+            "type": {
+              "_type": "intType"
+            }
+          },
+          {
+            "_type": "column",
+            "name": "Desktop_Name",
+            "type": {
+              "_type": "intType"
+            }
+          }
+        ]
+      }
+    },
+    "connection": {
+      "sourceSpec": {
+        "url": "http:\/\/deev.dc.com:42295\/"
+      },
+      "authSpec": {
+        "psk": "myStaticPSK",
+        "_type": "PSK"
+      },
+      "_type": "deephavenConnection",
+      "element": ""
+    },
+    "_type": "DeephavenExecutionNode",
+    "resultType": {
+      "tdsColumns": [
+        {
+          "name": "Desktop_ID",
+          "type": "Integer"
+        },
+        {
+          "name": "City_Name",
+          "type": "String"
+        },
+        {
+          "name": "Desktop_Name",
+          "type": "String"
+        }
+      ],
+      "_type": "tds"
+    },
+    "implementation": {
+      "executionClassFullName": "_pure.plan.root.Execute",
+      "_type": "java"
+    }
+  },
+  "globalImplementationSupport": {
+    "classes": [
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "AndOperatorExpression",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface AndOperatorExpression extends LogicalOperatorExpression, FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"AndOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::AndOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "ComparisonOperatorExpression",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface ComparisonOperatorExpression extends FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"ComparisonOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::ComparisonOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "DeephavenOperationElement",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface DeephavenOperationElement extends org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"DeephavenOperationElement\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::DeephavenOperationElement\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "DeephavenQuery",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface DeephavenQuery extends DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"DeephavenQuery\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::DeephavenQuery\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "EqOperatorExpression",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface EqOperatorExpression extends ComparisonOperatorExpression, FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"EqOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::EqOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "FilterExpression",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface FilterExpression extends DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"FilterExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::FilterExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "FilterOperation",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface FilterOperation extends QueryOperation, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"FilterOperation\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::FilterOperation\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "InOperatorExpression",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface InOperatorExpression extends ComparisonOperatorExpression, FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"InOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::InOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "JoinOperation",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface JoinOperation extends QueryOperation, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"JoinOperation\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::JoinOperation\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "LogicalOperatorExpression",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface LogicalOperatorExpression extends FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"LogicalOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::LogicalOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "NotOperatorExpression",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface NotOperatorExpression extends FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"NotOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::NotOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "OrOperatorExpression",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface OrOperatorExpression extends LogicalOperatorExpression, FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"OrOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::OrOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "QueryOperation",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface QueryOperation extends DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"QueryOperation\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::QueryOperation\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "SelectOperation",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface SelectOperation extends QueryOperation, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"SelectOperation\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::SelectOperation\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel",
+        "name": "SortOperation",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface SortOperation extends QueryOperation, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"SortOperation\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::SortOperation\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel.store",
+        "name": "Column",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel.store;\n\nimport _pure.app.meta.external.store.deephaven.metamodel.DeephavenOperationElement;\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface Column extends DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"Column\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::store::Column\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.app.meta.external.store.deephaven.metamodel.store",
+        "name": "Literal",
+        "source": "package _pure.app.meta.external.store.deephaven.metamodel.store;\n\nimport _pure.app.meta.external.store.deephaven.metamodel.DeephavenOperationElement;\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface Literal extends DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"Literal\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::store::Literal\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
+      },
+      {
+        "package": "_pure.plan.root",
+        "name": "Execute",
+        "source": "package _pure.plan.root;\n\nimport io.deephaven.client.impl.BarrageSession;\nimport io.deephaven.client.impl.TableHandle;\nimport io.deephaven.qst.table.TableSpec;\nimport io.deephaven.qst.table.TicketTable;\nimport java.math.*;\nimport java.util.*;\nimport java.util.function.*;\nimport java.util.stream.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.DayOfWeek;\nimport org.finos.legend.engine.plan.dependencies.domain.date.DurationUnit;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\nimport org.finos.legend.engine.plan.dependencies.util.Library;\nimport org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;\n\npublic class Execute implements IDeephavenExecutionNodeSpecifics\n{\n    public TableHandle execute(BarrageSession session)\n    {\n        TableSpec ts = TicketTable.fromQueryScopeField(\"nds_desktops\")\n                                  .select(\"Desktop_ID\", \"City_Name\", \"Desktop_Name\");\n        try\n        {\n            return session.session().execute(ts);\n        }\n        catch (io.deephaven.client.impl.TableHandle.TableHandleException e)\n        {\n            throw new RuntimeException(e);\n        }\n        catch (InterruptedException e)\n        {\n            throw new RuntimeException(e);\n        }\n    }\n}"
+      }
+    ],
+    "_type": "java"
+  }
+}
 
-********************************************************************************
-Ryuk has been disabled. This can cause unexpected behavior in your environment.
-********************************************************************************
-Checking the system...
-?? Docker server version should be at least 1.6.0
-Creating container for image: dockerhub.site.com:8413/deephaven/server:latest
-Failure when attempting to lookup auth config. Please ignore if you don't have images in an authenticated registry. Details: (dockerImageName: dockerhub.site.com:8413/deephaven/server:latest, configFile: /root/.docker/config.json, configEnv: DOCKER_AUTH_CONFIG). Falling back to docker-java default behaviour. Exception message: Status 404: No config supplied. Checked in order: /root/.docker/config.json (file not found), DOCKER_AUTH_CONFIG (not set)
-Container dockerhub.site.com:8413/deephaven/server:latest is starting: d1490267eef13b655bf82bb73f27a5b8ea89a72c5202d93ebe5876d0b37bc1e4
-[Deephaven] STDOUT: 1 compiler directives added
-[Deephaven] STDERR: VM settings:
-[Deephaven] STDERR:     Max. Heap Size: 4.00G
-[Deephaven] STDERR:     Using VM: OpenJDK 64-Bit Server VM
-[Deephaven] STDERR: 
-[Deephaven] STDOUT: # Starting io.deephaven.server.jetty.JettyMain
-[Deephaven] STDOUT: deephaven.cacheDir=/cache
-[Deephaven] STDOUT: deephaven.configDir=/opt/deephaven/config
-[Deephaven] STDOUT: deephaven.dataDir=/data
-[Deephaven] STDOUT: # io.deephaven.internal.log.LoggerFactoryServiceLoaderImpl: searching for 'io.deephaven.internal.log.LoggerFactory'...
-[Deephaven] STDOUT: # io.deephaven.internal.log.LoggerFactoryServiceLoaderImpl: found 'io.deephaven.internal.log.LoggerFactorySlf4j'
-[Deephaven] STDOUT: 2025-02-26T02:46:44.652Z | main                 |  INFO | i.d.s.jetty.JettyMain     | Starting up io.deephaven.server.jetty.JettyMain...
-[Deephaven] STDOUT: 2025-02-26T02:46:44.669Z | main                 |  INFO | i.d.c.ParsedProperties    | Loading /opt/deephaven/config/deephaven.prop
-[Deephaven] STDOUT: 2025-02-26T02:46:44.680Z | main                 |  INFO | i.d.c.ParsedProperties    | Loading dh-defaults.prop
-[Deephaven] STDOUT: 2025-02-26T02:46:44.692Z | main                 |  INFO | i.d.c.Configuration       | Configuration: configuration file is /opt/deephaven/config/deephaven.prop
-[Deephaven] STDOUT: 2025-02-26T02:46:44.700Z | main                 |  INFO | i.d.s.jetty.JettyMain     | io.deephaven.server.jetty.JettyMain: starting up
-[Deephaven] STDOUT: 2025-02-26T02:46:44.816Z | main                 |  INFO | i.d.c.PropertyFile        | io.deephaven.engine.table.impl.perf.UpdatePerformanceTracker: property UpdatePerformanceTracker.reportIntervalMillis = 60000
-[Deephaven] STDOUT: 2025-02-26T02:46:45.642Z | main                 |  INFO | o.a.a.m.BaseAllocator     | Debug mode disabled. Enable with the VM option -Darrow.memory.debug.allocator=true.
-[Deephaven] STDOUT: 2025-02-26T02:46:45.644Z | main                 |  INFO | ltAllocationManagerOption | allocation manager type not specified, using netty as the default type
-[Deephaven] STDOUT: 2025-02-26T02:46:45.645Z | main                 |  INFO | o.a.a.m.CheckAllocator    | Using DefaultAllocationManager at memory-netty-13.0.0.jar!/org/apache/arrow/memory/DefaultAllocationManagerFactory.class
-[Deephaven] STDOUT: 2025-02-26T02:46:45.734Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Configuring logging...
-[Deephaven] STDOUT: # New System.out configured
-[Deephaven] STDERR: # New System.err configured
-[Deephaven] STDOUT: 2025-02-26T02:46:46.065Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Initializing Script Session...
-[Deephaven] STDOUT: 2025-02-26T02:46:46.159Z | main                 |  INFO | i.d.e.util.jpy.JpyInit    | Loaded jpy config flags=,programName=/opt/deephaven/venv/bin/python,pythonHome=null,pythonLib=/usr/lib/python3.10/config-3.10-x86_64-linux-gnu/libpython3.10.so,jpyLib=/opt/deephaven/venv/lib/python3.10/site-packages/jpy.cpython-310-x86_64-linux-gnu.so,jdlLib=/opt/deephaven/venv/lib/python3.10/site-packages/jdl.cpython-310-x86_64-linux-gnu.so,extras=
-[Deephaven] STDOUT: 2025-02-26T02:46:46.160Z | main                 |  INFO | i.d.e.util.jpy.JpyInit    | Starting Python interpreter
-[Deephaven] STDOUT: 2025-02-26T02:46:46.188Z | main                 |  INFO | i.d.e.util.jpy.JpyInit    | Started Python interpreter
-[Deephaven] STDOUT: 2025-02-26T02:46:47.403Z | main                 |  INFO | .d.s.p.PluginRegistration | Registering plugins...
-[Deephaven] STDOUT: 2025-02-26T02:46:47.403Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.partitionedtable.PartitionedTableTypePlugin@3dd818e8
-[Deephaven] STDOUT: 2025-02-26T02:46:47.403Z | main                 |  INFO | .d.s.p.PluginRegistration | Registering object type: PartitionedTable / io.deephaven.partitionedtable.PartitionedTableTypePlugin@3dd818e8
-[Deephaven] STDOUT: 2025-02-26T02:46:47.404Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.hierarchicaltable.HierarchicalTableTypePlugin@7187bac9
-[Deephaven] STDOUT: 2025-02-26T02:46:47.404Z | main                 |  INFO | .d.s.p.PluginRegistration | Registering object type: HierarchicalTable / io.deephaven.hierarchicaltable.HierarchicalTableTypePlugin@7187bac9
-[Deephaven] STDOUT: 2025-02-26T02:46:47.404Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: Figure:io.deephaven.plot.FigureWidget
-[Deephaven] STDOUT: 2025-02-26T02:46:47.404Z | main                 |  INFO | .d.s.p.PluginRegistration | Registering object type: Figure / Figure:io.deephaven.plot.FigureWidget
-[Deephaven] STDOUT: 2025-02-26T02:46:47.404Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.server.plugin.js.JsPluginManifestRegistration@706fe5c6
-[Deephaven] STDOUT: 2025-02-26T02:46:47.404Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.server.plugin.js.JsPluginConfigDirRegistration@55e2fe3c
-[Deephaven] STDOUT: 2025-02-26T02:46:47.405Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.server.plugin.js.JsPluginNpmPackageRegistration@2b8bd798
-[Deephaven] STDOUT: 2025-02-26T02:46:47.405Z | main                 |  INFO | .d.s.p.PluginRegistration | Invoking registration: io.deephaven.server.plugin.python.PythonPluginsRegistration@692e028d
-[Deephaven] STDOUT: 2025-02-26T02:46:47.422Z | main                 |  INFO | .d.s.p.PluginRegistration | Registering object type: pandas.DataFrame / <deephaven.pandasplugin.pandas_as_table.PandasDataFrameSerializer object at 0x7f6752d5f1f0>
-[Deephaven] STDOUT: 2025-02-26T02:46:47.423Z | main                 |  INFO | .d.s.p.PluginRegistration | Registered plugins: objectType=4,js=0
-[Deephaven] STDOUT: 2025-02-26T02:46:47.423Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Initializing Execution Context for Main Thread...
-[Deephaven] STDOUT: 2025-02-26T02:46:47.423Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Starting Update Graph...
-[Deephaven] STDOUT: 2025-02-26T02:46:47.427Z | main                 |  INFO | e.u.i.PeriodicUpdateGraph | PeriodicUpdateGraph starting with 6 notification processing threads
-[Deephaven] STDOUT: 2025-02-26T02:46:47.449Z | EFAULT.refreshThread |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.perf.UpdatePerformanceTracker
-Started Deephaven container on host: deev.dc.com port: 36535 time taken (ms): 5058
-DeephavenUrl: http://deev.dc.com:36535/
-Container dockerhub.site.com:8413/deephaven/server:latest started in PT4.279223S
-[Deephaven] STDOUT: 2025-02-26T02:46:47.726Z | main                 |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.util.QueryPerformanceImpl
-[Deephaven] STDOUT: 2025-02-26T02:46:47.728Z | main                 |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.util.QueryOperationPerformanceImpl
-[Deephaven] STDOUT: 2025-02-26T02:46:47.730Z | main                 |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.util.StatsImpl
-[Deephaven] STDOUT: 2025-02-26T02:46:47.742Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Starting Performance Trackers...
-[Deephaven] STDOUT: 2025-02-26T02:46:47.744Z | main                 |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.util.ServerStateTracker
-[Deephaven] STDOUT: 2025-02-26T02:46:47.746Z | main                 |  INFO | StreamToBlinkTableAdapter | Registering StreamToBlinkTableAdapter-io.deephaven.engine.table.impl.util.AsyncErrorImpl
-[Deephaven] STDOUT: 2025-02-26T02:46:47.747Z | main                 |  INFO | d.s.a.ApplicationInjector | Starting ApplicationState.Factory 'io.deephaven.app.GcApplication@458031da'
-[Deephaven] STDOUT: 2025-02-26T02:46:47.747Z | main                 |  INFO | d.s.a.ApplicationInjector | 	app.id=io.deephaven.app.GcApplication, found 0 exports
-[Deephaven] STDOUT: 2025-02-26T02:46:47.748Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Initializing Authentication...
-[Deephaven] STDOUT: 2025-02-26T02:46:47.749Z | main                 |  WARN | .PskAuthenticationHandler | 
-[Deephaven] STDOUT: 
-[Deephaven] STDOUT: 
-[Deephaven] STDOUT: 
-[Deephaven] STDOUT: 
-[Deephaven] STDOUT: 2025-02-26T02:46:47.749Z | main                 |  WARN | .PskAuthenticationHandler | ================================================================================
-[Deephaven] STDOUT: 2025-02-26T02:46:47.749Z | main                 |  WARN | .PskAuthenticationHandler | Superuser access through pre-shared key is enabled - use myStaticPSK-Ddeephaven.console.startupScript=/data/load_data.py to connect
-[Deephaven] STDOUT: 2025-02-26T02:46:47.750Z | main                 |  WARN | .PskAuthenticationHandler | Connect automatically to Web UI with http://localhost:10000/?psk=myStaticPSK-Ddeephaven.console.startupScript=/data/load_data.py
-[Deephaven] STDOUT: 2025-02-26T02:46:47.750Z | main                 |  WARN | .PskAuthenticationHandler | ================================================================================
-[Deephaven] STDOUT: 2025-02-26T02:46:47.750Z | main                 |  WARN | .PskAuthenticationHandler | 
-[Deephaven] STDOUT: 
-[Deephaven] STDOUT: 
-[Deephaven] STDOUT: 
-[Deephaven] STDOUT: 
-[Deephaven] STDOUT: 2025-02-26T02:46:47.750Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Starting server...
-[Deephaven] STDOUT: 2025-02-26T02:46:47.751Z | main                 |  INFO | o.e.jetty.server.Server   | jetty-11.0.20; built: 2024-01-29T21:04:22.394Z; git: 922f8dc188f7011e60d0361de585fd4ac4d63064; jvm 21.0.4+7-LTS
-[Deephaven] STDOUT: 2025-02-26T02:46:47.897Z | main                 |  INFO | andardDescriptorProcessor | NO JSP Support for /, did not find org.eclipse.jetty.jsp.JettyJspServlet
-[Deephaven] STDOUT: 2025-02-26T02:46:47.965Z | main                 |  INFO | o.e.j.s.h.ContextHandler  | Started o.e.j.w.WebAppContext@2674d4f6{/,jar:file:/opt/deephaven/server-jetty-0.36.1/lib/deephaven-web-0.36.1.jar!/,AVAILABLE}
-[Deephaven] STDOUT: 2025-02-26T02:46:47.977Z | main                 |  INFO | o.e.j.s.AbstractConnector | Started ServerConnector@42210be1{HTTP/1.1, (http/1.1, h2c)}{0.0.0.0:10000}
-[Deephaven] STDOUT: 2025-02-26T02:46:47.980Z | main                 |  INFO | o.e.jetty.server.Server   | Started Server@2f09e6b2{STARTING}[11.0.20,sto=0] @3868ms
-[Deephaven] STDOUT: 2025-02-26T02:46:47.980Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Server started on port 10000
-{"duration":5786.882212,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 21:46:55.118","user":"Anonymous"}
-[Deephaven] STDOUT: 2025-02-26T02:47:00.438Z | EFAULT.refreshThread |  INFO | e.u.i.PeriodicUpdateGraph | Minimal Update Graph Processor cycle times: 25.810ms / 14 cycles = 1.844ms/cycle average), safePointTime=0ms
-{"duration":7187.627648,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 21:47:02.315","user":"Anonymous"}
-{"duration":1.089897,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:02.317","user":"Anonymous"}
-{"duration":10.839471,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:02.333","user":"Anonymous"}
-{"duration":13009.556355,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 21:47:02.333","user":"Anonymous"}
-{"duration":94.61376,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 21:47:02.917","user":"Anonymous"}
-{"duration":12.917434,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 21:47:02.931","user":"Anonymous"}
-{"duration":0.009563,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:02.931","user":"Anonymous"}
-{"duration":0.060542,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:02.931","user":"Anonymous"}
-{"duration":108.564884,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 21:47:02.931","user":"Anonymous"}
-{"duration":96.937398,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 21:47:03.072","user":"Anonymous"}
-{"duration":11.642467,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 21:47:03.084","user":"Anonymous"}
-{"duration":0.01074,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:03.084","user":"Anonymous"}
-{"duration":0.056044,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:03.084","user":"Anonymous"}
-{"duration":109.603975,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 21:47:03.084","user":"Anonymous"}
-{"duration":128.561631,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 21:47:03.307","user":"Anonymous"}
-{"duration":10.585563,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 21:47:03.318","user":"Anonymous"}
-{"duration":0.009466,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:03.319","user":"Anonymous"}
-{"duration":0.055859,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:03.319","user":"Anonymous"}
-{"duration":140.131589,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 21:47:03.319","user":"Anonymous"}
-{"duration":97.133959,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 21:47:03.495","user":"Anonymous"}
-{"duration":10.09401,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 21:47:03.505","user":"Anonymous"}
-{"duration":0.010889,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:03.506","user":"Anonymous"}
-{"duration":0.073901,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:03.506","user":"Anonymous"}
-{"duration":108.244133,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 21:47:03.506","user":"Anonymous"}
-{"duration":98.339864,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 21:47:03.611","user":"Anonymous"}
-{"duration":9.869907,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 21:47:03.621","user":"Anonymous"}
-{"duration":0.010282,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:03.621","user":"Anonymous"}
-{"duration":0.059924,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:03.622","user":"Anonymous"}
-{"duration":109.206654,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 21:47:03.622","user":"Anonymous"}
-{"duration":99.322705,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 21:47:03.777","user":"Anonymous"}
-{"duration":9.84719,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 21:47:03.787","user":"Anonymous"}
-{"duration":0.011174,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:03.787","user":"Anonymous"}
-{"duration":0.074418,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:03.787","user":"Anonymous"}
-{"duration":110.217861,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 21:47:03.787","user":"Anonymous"}
-{"duration":97.50218,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 21:47:04.021","user":"Anonymous"}
-{"duration":9.799515,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 21:47:04.031","user":"Anonymous"}
-{"duration":0.011227,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:04.031","user":"Anonymous"}
-{"duration":0.062179,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:04.031","user":"Anonymous"}
-{"duration":108.314287,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 21:47:04.032","user":"Anonymous"}
-{"duration":138.332036,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 21:47:04.245","user":"Anonymous"}
-{"duration":85.841212,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 21:47:04.331","user":"Anonymous"}
-{"duration":1.114395,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:04.333","user":"Anonymous"}
-{"duration":94.007991,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 21:47:04.532","user":"Anonymous"}
-{"duration":10.175124,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 21:47:04.543","user":"Anonymous"}
-{"duration":0.009266,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:04.543","user":"Anonymous"}
-{"duration":0.058454,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:04.543","user":"Anonymous"}
-{"duration":105.183435,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 21:47:04.543","user":"Anonymous"}
-{"duration":0.538988,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 21:47:04.720","user":"Anonymous"}
-{"duration":613.867222,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 21:47:04.720","user":"Anonymous"}
-{"duration":0.0,"eventType":"URL_FACTORY_REGISTERED","message":"Registered Alloy URL Factory","timeStamp":"2025-02-25 21:47:15.553","user":"Anonymous"}
-{"duration":0.0,"eventType":"JAVA_COMPILATION_START","message":"Compile Plan","timeStamp":"2025-02-25 21:47:15.622","user":"_UNKNOWN_"}
-Successfully read exception data from file:/local/data/scratch/projects/legend-engine/legend-engine-core/legend-engine-core-shared/legend-engine-shared-core/target/classes/ExceptionData.json.
-{"duration":2446.0,"eventType":"JAVA_COMPILATION_STOP","timeStamp":"2025-02-25 21:47:18.068","user":"_UNKNOWN_"}
+
+
+
+
+
+
+
+[Deephaven] STDOUT: 2025-02-26T03:05:57.775Z | main                 |  INFO | andardDescriptorProcessor | NO JSP Support for /, did not find org.eclipse.jetty.jsp.JettyJspServlet
+[Deephaven] STDOUT: 2025-02-26T03:05:57.865Z | main                 |  INFO | o.e.j.s.h.ContextHandler  | Started o.e.j.w.WebAppContext@5a4464c5{/,jar:file:/opt/deephaven/server-jetty-0.36.1/lib/deephaven-web-0.36.1.jar!/,AVAILABLE}
+[Deephaven] STDOUT: 2025-02-26T03:05:57.883Z | main                 |  INFO | o.e.j.s.AbstractConnector | Started ServerConnector@2babf189{HTTP/1.1, (http/1.1, h2c)}{0.0.0.0:10000}
+[Deephaven] STDOUT: 2025-02-26T03:05:57.886Z | main                 |  INFO | o.e.jetty.server.Server   | Started Server@16e1219f{STARTING}[11.0.20,sto=0] @3909ms
+[Deephaven] STDOUT: 2025-02-26T03:05:57.886Z | main                 |  INFO | .d.s.r.DeephavenApiServer | Server started on port 10000
+{"duration":96.115531,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 22:05:58.020","user":"Anonymous"}
+{"duration":19.748224,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 22:05:58.040","user":"Anonymous"}
+{"duration":0.119816,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 22:05:58.040","user":"Anonymous"}
+{"duration":94.845861,"eventType":"GRAPH_START","info":"","timeStamp":"2025-02-25 22:05:58.217","user":"Anonymous"}
+{"duration":10.02391,"eventType":"GRAPH_INITIALIZED","timeStamp":"2025-02-25 22:05:58.227","user":"Anonymous"}
+{"duration":0.010192,"eventType":"GRAPH_PRE_VALIDATION_COMPLETED","timeStamp":"2025-02-25 22:05:58.228","user":"Anonymous"}
+{"duration":0.056496,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 22:05:58.228","user":"Anonymous"}
+{"duration":105.80499,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 22:05:58.228","user":"Anonymous"}
+{"duration":0.072804,"eventType":"GRAPH_POST_VALIDATION_COMPLETED","timeStamp":"2025-02-25 22:05:58.230","user":"Anonymous"}
+{"duration":306.974626,"eventType":"GRAPH_STOP","timeStamp":"2025-02-25 22:05:58.231","user":"Anonymous"}
+{"duration":0.0,"eventType":"JAVA_COMPILATION_START","message":"Compile Plan","timeStamp":"2025-02-25 22:06:07.890","user":"_UNKNOWN_"}
+{"duration":505.0,"eventType":"JAVA_COMPILATION_STOP","timeStamp":"2025-02-25 22:06:08.395","user":"_UNKNOWN_"}
 ----------------- host -------------
 deev.dc.com
 ----------------- port -------------
-36535
+42295
 ----------------- PSK -------------
 myStaticPSK
-Debug mode disabled. Enable with the VM option -Darrow.memory.debug.allocator=true.
-allocation manager type not specified, using netty as the default type
-Using DefaultAllocationManager at memory-netty/13.0.0/arrow-memory-netty-13.0.0.jar!/org/apache/arrow/memory/DefaultAllocationManagerFactory.class
 ----------------- DH Taregt -------------
-deev.dc.com:OptionalInt[36535]
-Execution error at (resource:/core_external_execution/execution.pure line:37 column:32), "Error executing Deephaven Query"
+deev.dc.com:OptionalInt[42295]
+*~*~*~ Previous channel ManagedChannelImpl{logId=1, target=dh+plain://deev.dc.com:37873} was not shutdown properly!!! ~*~*~*
+    Make sure to call shutdown()/shutdownNow() and wait until awaitTermination() returns true.
+java.lang.RuntimeException: ManagedChannel allocation site
+	at io.grpc.internal.ManagedChannelOrphanWrapper$ManagedChannelReference.<init>(ManagedChannelOrphanWrapper.java:102)
+	at io.grpc.internal.ManagedChannelOrphanWrapper.<init>(ManagedChannelOrphanWrapper.java:60)
+	at io.grpc.internal.ManagedChannelOrphanWrapper.<init>(ManagedChannelOrphanWrapper.java:51)
+	at io.grpc.internal.ManagedChannelImplBuilder.build(ManagedChannelImplBuilder.java:631)
+	at io.grpc.internal.AbstractManagedChannelImplBuilder.build(AbstractManagedChannelImplBuilder.java:297)
+	at io.deephaven.client.impl.ChannelHelper.channel(ChannelHelper.java:42)
+	at io.deephaven.client.impl.ClientChannelFactoryDefaulter.create(ClientChannelFactoryDefaulter.java:59)
+	at io.deephaven.client.impl.SessionFactoryConfig.factory(SessionFactoryConfig.java:88)
+	at io.deephaven.client.impl.BarrageSessionFactoryConfig.factory(BarrageSessionFactoryConfig.java:102)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession.<init>(DeephavenSession.java:63)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSessionPSKProvider.createDeephavenSession(DeephavenSessionPSKProvider.java:64)
+	at java.base/java.util.Optional.map(Optional.java:265)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSessionPSKProvider.provide(DeephavenSessionPSKProvider.java:39)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.lambda$createDeephavenSession$0(DeephavenExecutionNodeExecutor.java:174)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)
+	at java.base/java.util.AbstractList$RandomAccessSpliterator.tryAdvance(AbstractList.java:706)
+	at java.base/java.util.stream.ReferencePipeline.forEachWithCancel(ReferencePipeline.java:127)
+	at java.base/java.util.stream.AbstractPipeline.copyIntoWithCancel(AbstractPipeline.java:502)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:488)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)
+	at java.base/java.util.stream.FindOps$FindOp.evaluateSequential(FindOps.java:150)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.findAny(ReferencePipeline.java:548)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.createDeephavenSession(DeephavenExecutionNodeExecutor.java:177)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.executeDeephavenNode(DeephavenExecutionNodeExecutor.java:83)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.visit(DeephavenExecutionNodeExecutor.java:71)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.visit(DeephavenExecutionNodeExecutor.java:53)
+	at org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode.accept(ExecutionNode.java:76)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.DeephavenExecutionExtension.lambda$getExtraNodeExecutors$9d7202ba$1(DeephavenExecutionExtension.java:46)
+	at org.finos.legend.engine.plan.execution.nodes.ExecutionNodeExecutor.lambda$visit$0(ExecutionNodeExecutor.java:173)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)
+	at java.base/java.util.Spliterators$ArraySpliterator.tryAdvance(Spliterators.java:958)
+	at java.base/java.util.stream.ReferencePipeline.forEachWithCancel(ReferencePipeline.java:127)
+	at java.base/java.util.stream.AbstractPipeline.copyIntoWithCancel(AbstractPipeline.java:502)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:488)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)
+	at java.base/java.util.stream.FindOps$FindOp.evaluateSequential(FindOps.java:150)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.findFirst(ReferencePipeline.java:543)
+	at org.finos.legend.engine.plan.execution.nodes.ExecutionNodeExecutor.visit(ExecutionNodeExecutor.java:173)
+	at org.finos.legend.engine.plan.execution.nodes.ExecutionNodeExecutor.visit(ExecutionNodeExecutor.java:108)
+	at org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode.accept(ExecutionNode.java:76)
+	at org.finos.legend.engine.plan.execution.PlanExecutor.executeWithArgs(PlanExecutor.java:293)
+	at org.finos.legend.engine.pure.runtime.execution.shared.LegendExecute.doExecute(LegendExecute.java:54)
+	at org.finos.legend.engine.pure.runtime.execution.interpreted.natives.LegendExecute.execute(LegendExecute.java:63)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:771)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.lambda$execute$c1ef40cd$1(FunctionExpressionExecutor.java:74)
+	at org.eclipse.collections.impl.block.procedure.CollectProcedure.value(CollectProcedure.java:37)
+	at org.eclipse.collections.impl.list.immutable.ImmutableDoubletonList.each(ImmutableDoubletonList.java:68)
+	at org.eclipse.collections.impl.AbstractRichIterable.forEach(AbstractRichIterable.java:581)
+	at org.eclipse.collections.impl.list.immutable.AbstractImmutableList.collect(AbstractImmutableList.java:302)
+	at org.eclipse.collections.impl.list.immutable.AbstractImmutableList.collect(AbstractImmutableList.java:103)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:71)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.lambda$execute$c1ef40cd$1(FunctionExpressionExecutor.java:74)
+	at org.eclipse.collections.impl.block.procedure.CollectProcedure.value(CollectProcedure.java:37)
+	at org.eclipse.collections.impl.list.immutable.ImmutableDoubletonList.each(ImmutableDoubletonList.java:68)
+	at org.eclipse.collections.impl.AbstractRichIterable.forEach(AbstractRichIterable.java:581)
+	at org.eclipse.collections.impl.list.immutable.AbstractImmutableList.collect(AbstractImmutableList.java:302)
+	at org.eclipse.collections.impl.list.immutable.AbstractImmutableList.collect(AbstractImmutableList.java:103)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:71)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
+	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.start(FunctionExecutionInterpreted.java:610)
+	at org.finos.legend.engine.ide.api.execution.go.GoRun.run(GoRun.java:67)
+	at org.finos.legend.engine.ide.session.PureSession.saveFilesAndExecute(PureSession.java:178)
+	at org.finos.legend.engine.ide.api.execution.go.ExecuteGo.lambda$executeGo$0(ExecuteGo.java:45)
+	at org.glassfish.jersey.message.internal.StreamingOutputProvider.writeTo(StreamingOutputProvider.java:78)
+	at org.glassfish.jersey.message.internal.StreamingOutputProvider.writeTo(StreamingOutputProvider.java:60)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor$TerminalWriterInterceptor.invokeWriteTo(WriterInterceptorExecutor.java:265)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor$TerminalWriterInterceptor.aroundWriteTo(WriterInterceptorExecutor.java:250)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at io.dropwizard.jersey.errors.EofExceptionWriterInterceptor.aroundWriteTo(EofExceptionWriterInterceptor.java:39)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor.aroundWriteTo(JsonWithPaddingInterceptor.java:106)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor.aroundWriteTo(MappableExceptionWrapperInterceptor.java:86)
+	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
+	at org.glassfish.jersey.message.internal.MessageBodyFactory.writeTo(MessageBodyFactory.java:1130)
+	at org.glassfish.jersey.server.ServerRuntime$Responder.writeResponse(ServerRuntime.java:711)
+	at org.glassfish.jersey.server.ServerRuntime$Responder.processResponse(ServerRuntime.java:444)
+	at org.glassfish.jersey.server.ServerRuntime$Responder.process(ServerRuntime.java:434)
+	at org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:329)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)
+	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:315)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:297)
+	at org.glassfish.jersey.internal.Errors.process(Errors.java:267)
+	at org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)
+	at org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)
+	at org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)
+	at org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)
+	at org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)
+	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)
+	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)
+	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)
+	at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:799)
+	at org.eclipse.jetty.servlet.ServletHandler$ChainEnd.doFilter(ServletHandler.java:1631)
+	at io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:35)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
+	at io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:45)
+	at io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:39)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
+	at org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:319)
+	at org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:273)
+	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
+	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
+	at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:548)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)
+	at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1434)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:188)
+	at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:501)
+	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:186)
+	at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1349)
+	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:313)
+	at io.dropwizard.jetty.ContextRoutingHandler.handle(ContextRoutingHandler.java:37)
+	at org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:713)
+	at io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:67)
+	at org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:179)
+	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
+	at org.eclipse.jetty.server.Server.handle(Server.java:516)
+	at org.eclipse.jetty.server.HttpChannel.lambda$handle$1(HttpChannel.java:400)
+	at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:645)
+	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:392)
+	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:277)
+	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:311)
+	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:105)
+	at org.eclipse.jetty.io.ChannelEndPoint$1.run(ChannelEndPoint.java:104)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.runTask(EatWhatYouKill.java:338)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.doProduce(EatWhatYouKill.java:315)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.tryProduce(EatWhatYouKill.java:173)
+	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.run(EatWhatYouKill.java:131)
+	at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:409)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:883)
+	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1034)
+	at java.base/java.lang.Thread.run(Thread.java:834)
+[Deephaven] STDOUT: 2025-02-26T03:06:08.702Z | qtp1491676195-58     | ERROR | i.d.s.s.SessionService    | io.grpc.StatusRuntimeException: NOT_FOUND: Could not resolve 'sourceId: variable 'nds_desktops' not found
+[Deephaven] STDOUT: 	at io.grpc.Status.asRuntimeException(Status.java:537)
+[Deephaven] STDOUT: 	at io.grpc.protobuf.StatusProto.toStatusRuntimeException(StatusProto.java:52)
+[Deephaven] STDOUT: 	at io.deephaven.proto.util.Exceptions.statusRuntimeException(Exceptions.java:14)
+[Deephaven] STDOUT: 	at io.deephaven.server.console.ScopeTicketResolver.newNotFoundSRE(ScopeTicketResolver.java:280)
+[Deephaven] STDOUT: 	at io.deephaven.server.console.ScopeTicketResolver.resolve(ScopeTicketResolver.java:112)
+[Deephaven] STDOUT: 	at io.deephaven.server.console.ScopeTicketResolver.resolve(ScopeTicketResolver.java:90)
+[Deephaven] STDOUT: 	at io.deephaven.server.session.TicketRouter.resolve(TicketRouter.java:73)
+[Deephaven] STDOUT: 	at io.deephaven.server.session.TicketRouter.resolve(TicketRouter.java:106)
+[Deephaven] STDOUT: 	at io.deephaven.server.table.ops.TableServiceGrpcImpl.resolveBatchReference(TableServiceGrpcImpl.java:693)
+[Deephaven] STDOUT: 	at io.deephaven.server.table.ops.TableServiceGrpcImpl$BatchExportBuilder.lambda$resolveDependencies$0(TableServiceGrpcImpl.java:750)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+[Deephaven] STDOUT: 	at java.base/java.util.Collections$2.tryAdvance(Collections.java:5073)
+[Deephaven] STDOUT: 	at java.base/java.util.Collections$2.forEachRemaining(Collections.java:5081)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+[Deephaven] STDOUT: 	at io.deephaven.server.table.ops.TableServiceGrpcImpl$BatchExportBuilder.resolveDependencies(TableServiceGrpcImpl.java:751)
+[Deephaven] STDOUT: 	at io.deephaven.server.table.ops.TableServiceGrpcImpl.lambda$batch$2(TableServiceGrpcImpl.java:506)
+[Deephaven] STDOUT: 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+[Deephaven] STDOUT: 	at io.deephaven.server.table.ops.TableServiceGrpcImpl.batch(TableServiceGrpcImpl.java:506)
+[Deephaven] STDOUT: 	at io.deephaven.proto.backplane.grpc.TableServiceGrpc$MethodHandlers.invoke(TableServiceGrpc.java:3721)
+[Deephaven] STDOUT: 	at io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)
+[Deephaven] STDOUT: 	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+[Deephaven] STDOUT: 	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+[Deephaven] STDOUT: 	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+[Deephaven] STDOUT: 	at io.deephaven.server.session.SessionServiceGrpcImpl$SessionServiceCallListener.lambda$onHalfClose$1(SessionServiceGrpcImpl.java:437)
+[Deephaven] STDOUT: 	at io.deephaven.server.session.SessionServiceGrpcImpl.rpcWrapper(SessionServiceGrpcImpl.java:481)
+[Deephaven] STDOUT: 	at io.deephaven.server.session.SessionServiceGrpcImpl$SessionServiceCallListener.onHalfClose(SessionServiceGrpcImpl.java:437)
+[Deephaven] STDOUT: 	at io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:351)
+[Deephaven] STDOUT: 	at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:860)
+[Deephaven] STDOUT: 	at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)
+[Deephaven] STDOUT: 	at io.grpc.internal.SerializeReentrantCallsDirectExecutor.execute(SerializeReentrantCallsDirectExecutor.java:49)
+[Deephaven] STDOUT: 	at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener.halfClosed(ServerImpl.java:868)
+[Deephaven] STDOUT: 	at io.grpc.internal.AbstractServerStream$TransportState.deframerClosed(AbstractServerStream.java:238)
+[Deephaven] STDOUT: 	at io.grpc.internal.MessageDeframer.close(MessageDeframer.java:234)
+[Deephaven] STDOUT: 	at io.grpc.internal.MessageDeframer.closeWhenComplete(MessageDeframer.java:192)
+[Deephaven] STDOUT: 	at io.grpc.internal.AbstractStream$TransportState.closeDeframer(AbstractStream.java:201)
+[Deephaven] STDOUT: 	at io.grpc.internal.AbstractServerStream$TransportState.inboundDataReceived(AbstractServerStream.java:265)
+[Deephaven] STDOUT: 	at io.grpc.servlet.jakarta.ServletAdapter$GrpcReadListener.lambda$onAllDataRead$1(ServletAdapter.java:337)
+[Deephaven] STDOUT: 	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
+[Deephaven] STDOUT: 	at com.google.common.util.concurrent.DirectExecutor.execute(DirectExecutor.java:31)
+[Deephaven] STDOUT: 	at io.grpc.internal.SerializingExecutor.schedule(SerializingExecutor.java:102)
+[Deephaven] STDOUT: 	at io.grpc.internal.SerializingExecutor.execute(SerializingExecutor.java:95)
+[Deephaven] STDOUT: 	at io.grpc.servlet.jakarta.ServletServerStream$ServletTransportState.runOnTransportThread(ServletServerStream.java:144)
+[Deephaven] STDOUT: 	at io.grpc.servlet.jakarta.ServletAdapter$GrpcReadListener.onAllDataRead(ServletAdapter.java:336)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.server.HttpInput.run(HttpInput.java:411)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.server.handler.ContextHandler.handle(ContextHandler.java:1466)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:587)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.server.HttpChannel.run(HttpChannel.java:461)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:421)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:390)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:277)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.produce(AdaptiveExecutionStrategy.java:193)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.http2.HTTP2Connection.produce(HTTP2Connection.java:208)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.http2.HTTP2Connection.onFillable(HTTP2Connection.java:155)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.http2.HTTP2Connection$FillableCallback.succeeded(HTTP2Connection.java:450)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:421)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:390)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:277)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.run(AdaptiveExecutionStrategy.java:199)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149)
+[Deephaven] STDOUT: 	at java.base/java.lang.Thread.run(Thread.java:1583)
+[Deephaven] STDOUT: 
+Execution error at (resource:/core_deephaven_execution_test/deephaven_execution_tests.pure line:87 column:32), "Error executing Deephaven Query"
 	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:877)
 	at org.finos.legend.pure.runtime.java.interpreted.FunctionExpressionExecutor.execute(FunctionExpressionExecutor.java:85)
 	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:786)
@@ -284,28 +540,93 @@ Caused by: org.finos.legend.engine.shared.core.operational.errorManagement.Engin
 	at org.finos.legend.engine.pure.runtime.execution.interpreted.natives.LegendExecute.execute(LegendExecute.java:63)
 	at org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted.executeFunction(FunctionExecutionInterpreted.java:771)
 	... 99 more
-Caused by: io.grpc.StatusRuntimeException: UNAUTHENTICATED: Authentication details invalid
-	at io.deephaven.client.impl.Authentication.toRuntimeException(Authentication.java:257)
-	at io.deephaven.client.impl.Authentication.throwOnError(Authentication.java:196)
-	at io.deephaven.client.impl.SessionImpl.create(SessionImpl.java:79)
-	at io.deephaven.client.impl.SessionImpl.create(SessionImpl.java:75)
-	at io.deephaven.client.impl.SessionFactoryConfig$Factory.sessionImpl(SessionFactoryConfig.java:129)
-	at io.deephaven.client.impl.SessionFactoryConfig$Factory.newSession(SessionFactoryConfig.java:116)
-	at io.deephaven.client.impl.BarrageSessionFactoryConfig$Factory.newBarrageSession(BarrageSessionFactoryConfig.java:126)
-	at org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession.<init>(DeephavenSession.java:65)
-	at org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSessionPSKProvider.createDeephavenSession(DeephavenSessionPSKProvider.java:64)
-	at java.base/java.util.Optional.map(Optional.java:265)
-	at org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSessionPSKProvider.provide(DeephavenSessionPSKProvider.java:39)
-	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.lambda$createDeephavenSession$0(DeephavenExecutionNodeExecutor.java:174)
-	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)
-	at java.base/java.util.AbstractList$RandomAccessSpliterator.tryAdvance(AbstractList.java:706)
-	at java.base/java.util.stream.ReferencePipeline.forEachWithCancel(ReferencePipeline.java:127)
-	at java.base/java.util.stream.AbstractPipeline.copyIntoWithCancel(AbstractPipeline.java:502)
-	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:488)
-	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)
-	at java.base/java.util.stream.FindOps$FindOp.evaluateSequential(FindOps.java:150)
-	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
-	at java.base/java.util.stream.ReferencePipeline.findAny(ReferencePipeline.java:548)
-	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.createDeephavenSession(DeephavenExecutionNodeExecutor.java:177)
-	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.executeDeephavenNode(DeephavenExecutionNodeExecutor.java:83)
+Caused by: java.lang.RuntimeException: io.deephaven.client.impl.TableHandle$TableHandleException: 8b71c55d-f41b-4fbc-9485-40710b393214 cause: NOT_FOUND: Could not resolve 'sourceId: variable 'nds_desktops' not found
+	at _pure.plan.root.Execute.execute(Execute.java:29)
+	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.executeDeephavenNode(DeephavenExecutionNodeExecutor.java:87)
 	... 120 more
+Caused by: io.deephaven.client.impl.TableHandle$TableHandleException: 8b71c55d-f41b-4fbc-9485-40710b393214 cause: NOT_FOUND: Could not resolve 'sourceId: variable 'nds_desktops' not found
+	at io.deephaven.client.impl.TableHandle.error(TableHandle.java:153)
+	at io.deephaven.client.impl.TableHandle.throwOnError(TableHandle.java:159)
+	at io.deephaven.client.impl.TableServiceImpl.execute(TableServiceImpl.java:49)
+	at io.deephaven.client.impl.TableServiceImpl.execute(TableServiceImpl.java:29)
+	at io.deephaven.client.impl.TableHandleManagerBatch.execute(TableHandleManagerBatch.java:47)
+	at io.deephaven.client.impl.TableHandleManagerDelegate.execute(TableHandleManagerDelegate.java:33)
+	at io.deephaven.client.impl.TableHandleManagerDelegate.execute(TableHandleManagerDelegate.java:33)
+	at _pure.plan.root.Execute.execute(Execute.java:25)
+	... 121 more
+[Deephaven] STDOUT: 2025-02-26T03:06:08.706Z | qtp1491676195-58     | ERROR | i.d.s.s.SessionService    | io.grpc.StatusRuntimeException: NOT_FOUND: Could not resolve 'sourceId: variable 'nds_desktops' not found
+[Deephaven] STDOUT: 	at io.grpc.Status.asRuntimeException(Status.java:537)
+[Deephaven] STDOUT: 	at io.grpc.protobuf.StatusProto.toStatusRuntimeException(StatusProto.java:52)
+[Deephaven] STDOUT: 	at io.deephaven.proto.util.Exceptions.statusRuntimeException(Exceptions.java:14)
+[Deephaven] STDOUT: 	at io.deephaven.server.console.ScopeTicketResolver.newNotFoundSRE(ScopeTicketResolver.java:280)
+[Deephaven] STDOUT: 	at io.deephaven.server.console.ScopeTicketResolver.resolve(ScopeTicketResolver.java:112)
+[Deephaven] STDOUT: 	at io.deephaven.server.console.ScopeTicketResolver.resolve(ScopeTicketResolver.java:90)
+[Deephaven] STDOUT: 	at io.deephaven.server.session.TicketRouter.resolve(TicketRouter.java:73)
+[Deephaven] STDOUT: 	at io.deephaven.server.session.TicketRouter.resolve(TicketRouter.java:106)
+[Deephaven] STDOUT: 	at io.deephaven.server.table.ops.TableServiceGrpcImpl.resolveBatchReference(TableServiceGrpcImpl.java:693)
+[Deephaven] STDOUT: 	at io.deephaven.server.table.ops.TableServiceGrpcImpl$BatchExportBuilder.lambda$resolveDependencies$0(TableServiceGrpcImpl.java:750)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:197)
+[Deephaven] STDOUT: 	at java.base/java.util.Collections$2.tryAdvance(Collections.java:5073)
+[Deephaven] STDOUT: 	at java.base/java.util.Collections$2.forEachRemaining(Collections.java:5081)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:921)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+[Deephaven] STDOUT: 	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:682)
+[Deephaven] STDOUT: 	at io.deephaven.server.table.ops.TableServiceGrpcImpl$BatchExportBuilder.resolveDependencies(TableServiceGrpcImpl.java:751)
+[Deephaven] STDOUT: 	at io.deephaven.server.table.ops.TableServiceGrpcImpl.lambda$batch$2(TableServiceGrpcImpl.java:506)
+[Deephaven] STDOUT: 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+[Deephaven] STDOUT: 	at io.deephaven.server.table.ops.TableServiceGrpcImpl.batch(TableServiceGrpcImpl.java:506)
+[Deephaven] STDOUT: 	at io.deephaven.proto.backplane.grpc.TableServiceGrpc$MethodHandlers.invoke(TableServiceGrpc.java:3721)
+[Deephaven] STDOUT: 	at io.grpc.stub.ServerCalls$UnaryServerCallHandler$UnaryServerCallListener.onHalfClose(ServerCalls.java:182)
+[Deephaven] STDOUT: 	at io.grpc.PartialForwardingServerCallListener.onHalfClose(PartialForwardingServerCallListener.java:35)
+[Deephaven] STDOUT: 	at io.grpc.ForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:23)
+[Deephaven] STDOUT: 	at io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40)
+[Deephaven] STDOUT: 	at io.deephaven.server.session.SessionServiceGrpcImpl$SessionServiceCallListener.lambda$onHalfClose$1(SessionServiceGrpcImpl.java:437)
+[Deephaven] STDOUT: 	at io.deephaven.server.session.SessionServiceGrpcImpl.rpcWrapper(SessionServiceGrpcImpl.java:481)
+[Deephaven] STDOUT: 	at io.deephaven.server.session.SessionServiceGrpcImpl$SessionServiceCallListener.onHalfClose(SessionServiceGrpcImpl.java:437)
+[Deephaven] STDOUT: 	at io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:351)
+[Deephaven] STDOUT: 	at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:860)
+[Deephaven] STDOUT: 	at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)
+[Deephaven] STDOUT: 	at io.grpc.internal.SerializeReentrantCallsDirectExecutor.execute(SerializeReentrantCallsDirectExecutor.java:49)
+[Deephaven] STDOUT: 	at io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener.halfClosed(ServerImpl.java:868)
+[Deephaven] STDOUT: 	at io.grpc.internal.AbstractServerStream$TransportState.deframerClosed(AbstractServerStream.java:238)
+[Deephaven] STDOUT: 	at io.grpc.internal.MessageDeframer.close(MessageDeframer.java:234)
+[Deephaven] STDOUT: 	at io.grpc.internal.MessageDeframer.closeWhenComplete(MessageDeframer.java:192)
+[Deephaven] STDOUT: 	at io.grpc.internal.AbstractStream$TransportState.closeDeframer(AbstractStream.java:201)
+[Deephaven] STDOUT: 	at io.grpc.internal.AbstractServerStream$TransportState.inboundDataReceived(AbstractServerStream.java:265)
+[Deephaven] STDOUT: 	at io.grpc.servlet.jakarta.ServletAdapter$GrpcReadListener.lambda$onAllDataRead$1(ServletAdapter.java:337)
+[Deephaven] STDOUT: 	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
+[Deephaven] STDOUT: 	at com.google.common.util.concurrent.DirectExecutor.execute(DirectExecutor.java:31)
+[Deephaven] STDOUT: 	at io.grpc.internal.SerializingExecutor.schedule(SerializingExecutor.java:102)
+[Deephaven] STDOUT: 	at io.grpc.internal.SerializingExecutor.execute(SerializingExecutor.java:95)
+[Deephaven] STDOUT: 	at io.grpc.servlet.jakarta.ServletServerStream$ServletTransportState.runOnTransportThread(ServletServerStream.java:144)
+[Deephaven] STDOUT: 	at io.grpc.servlet.jakarta.ServletAdapter$GrpcReadListener.onAllDataRead(ServletAdapter.java:336)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.server.HttpInput.run(HttpInput.java:411)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.server.handler.ContextHandler.handle(ContextHandler.java:1466)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:587)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.server.HttpChannel.run(HttpChannel.java:461)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:421)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:390)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:277)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.produce(AdaptiveExecutionStrategy.java:193)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.http2.HTTP2Connection.produce(HTTP2Connection.java:208)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.http2.HTTP2Connection.onFillable(HTTP2Connection.java:155)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.http2.HTTP2Connection$FillableCallback.succeeded(HTTP2Connection.java:450)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:100)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.io.SelectableChannelEndPoint$1.run(SelectableChannelEndPoint.java:53)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.runTask(AdaptiveExecutionStrategy.java:421)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.consumeTask(AdaptiveExecutionStrategy.java:390)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.tryProduce(AdaptiveExecutionStrategy.java:277)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.strategy.AdaptiveExecutionStrategy.run(AdaptiveExecutionStrategy.java:199)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:411)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:969)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.doRunJob(QueuedThreadPool.java:1194)
+[Deephaven] STDOUT: 	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1149)
+[Deephaven] STDOUT: 	at java.base/java.lang.Thread.run(Thread.java:1583)
+[Deephaven] STDOUT: 
+[Deephaven] STDOUT: 2025-02-26T03:06:09.243Z | EFAULT.refreshThread |  INFO | e.u.i.PeriodicUpdateGraph | Minimal Update Graph Processor cycle times: 26.941ms / 13 cycles = 2.072ms/cycle average), safePointTime=0ms
+[Deephaven] STDOUT: 2025-02-26T03:06:43.260Z | EFAULT.refreshThread |  INFO | e.u.i.PeriodicUpdateGraph | Minimal Update Graph Processor cycle times: 25.298ms / 34 cycles = 0.744ms/cycle average), safePointTime=0ms
+[Deephaven] STDOUT: 2025-02-26T03:06:57.621Z | rStateTracker.Driver |  INFO | i.d.e.t.i.u.RuntimeMemory | Jvm Heap: 55,601,272 Free / 161,480,704 Total (4,294,967,296 Max)
+[Deephaven] STDOUT: 2025-02-26T03:07:24.285Z | EFAULT.refreshThread |  INFO | e.u.i.PeriodicUpdateGraph | Minimal Update Graph Processor cycle times: 25.111ms / 41 cycles = 0.612ms/cycle average), safePointTime=0ms
+[Deephaven] STDOUT: 2025-02-26T03:07:57.622Z | rStateTracker.Driver |  INFO | i.d.e.t.i.u.RuntimeMemory | Jvm Heap: 52,059,000 Free / 161,480,704 Total (4,294,967,296 Max)
