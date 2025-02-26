@@ -1,9 +1,114 @@
-Caused by: java.lang.RuntimeException: io.deephaven.client.impl.TableHandle$TableHandleException: f54c9774-13f6-4cb1-baa6-5c5836b1b7ec cause: NOT_FOUND: Could not resolve 'sourceId: variable 'nds_desktops' not found
-	at _pure.plan.root.Execute.execute(Execute.java:29)
-	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.executeDeephavenNode(DeephavenExecutionNodeExecutor.java:87)
-	... 120 more
-Caused by: io.deephaven.client.impl.TableHandle$TableHandleException: f54c9774-13f6-4cb1-baa6-5c5836b1b7ec cause: NOT_FOUND: Could not resolve 'sourceId: variable 'nds_desktops' not found
-	at io.deephaven.client.impl.TableHandle.error(TableHandle.java:153)
-	at io.deephaven.client.impl.TableHandle.throwOnError(TableHandle.java:159)
-	at io.deephaven.client.impl.TableServiceImpl.execute(TableServiceImpl.java:49)
-	at io.deephaven.client.impl.TableServiceImpl.execute(TableServiceImpl.java:29)
+package org.finos.legend.engine.plan.execution.stores.deephaven.test;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
+
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicReference;
+
+public class DeephavenTestContainer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenTestContainer.class);
+    public static GenericContainer<?> deephavenContainer;
+    private static final int DEEPHAVEN_PORT = 10000;
+    private static final String STATIC_PSK = "myStaticPsk";
+    private static final AtomicReference<String> discoveredPsk = new AtomicReference<>(STATIC_PSK);
+
+    public static boolean startDeephaven(String imageTag) {
+        if (deephavenContainer != null && deephavenContainer.isRunning()) {
+            LOGGER.warn("Deephaven container already running; stopping it first.");
+            stopDeephaven();
+        }
+        try {
+            DockerImageName imageName = DockerImageName.parse(imageTag);
+            deephavenContainer = new GenericContainer<>(imageName)
+                    .withExposedPorts(DEEPHAVEN_PORT)
+                    .withPrivilegedMode(true)
+                    .withLogConsumer(new Slf4jLogConsumer(LOGGER).withPrefix("Deephaven"))
+                    .withEnv("START_OPTS", "-Xmx4g -Dauthentication.psk=" + STATIC_PSK);
+            deephavenContainer.start();
+            LOGGER.info("Started Deephaven container on host: {} port: {}", 
+                deephavenContainer.getHost(), deephavenContainer.getMappedPort(DEEPHAVEN_PORT));
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to start Deephaven container", e);
+            stopDeephaven();
+            return false;
+        }
+    }
+
+    public static boolean stopDeephaven() {
+        if (deephavenContainer != null && deephavenContainer.isRunning()) {
+            try {
+                deephavenContainer.stop();
+                LOGGER.info("Deephaven container stopped");
+                return true;
+            } catch (Exception e) {
+                LOGGER.error("Failed to stop Deephaven container", e);
+                return false;
+            } finally {
+                deephavenContainer = null;
+                discoveredPsk.set(STATIC_PSK);
+            }
+        } else {
+            LOGGER.info("No Deephaven container running to stop");
+            return true;
+        }
+    }
+
+    public static boolean loadStaticTable(String imageTag, String tableName, String jsonData) {
+        if (deephavenContainer == null || !deephavenContainer.isRunning()) {
+            LOGGER.error("Deephaven container not running for imageTag: {}", imageTag);
+            return false;
+        }
+        try {
+            String host = deephavenContainer.getHost();
+            int port = deephavenContainer.getMappedPort(DEEPHAVEN_PORT);
+            String url = "http://" + host + ":" + port + "/ide/run/json";
+            LOGGER.info("Loading data into table '{}' at URL: {}", tableName, url);
+
+            // Python code to create and populate the table
+            String pythonCode = "from deephaven import DynamicTableWriter\n" +
+                    "import deephaven.dtypes as dht\n" +
+                    "table_writer = DynamicTableWriter({\"DesktopName\": dht.string, \"CityName\": dht.string})\n" +
+                    tableName + " = table_writer.table\n" +
+                    "import json\n" +
+                    "data = json.loads('" + jsonData.replace("'", "\\'") + "')\n" +
+                    "for row in data:\n" +
+                    "    table_writer.write_row(row['DesktopName'], row['CityName'])";
+
+            // Send POST request
+            URL apiUrl = new URL(url);
+            HttpURLConnection conn = (HttpURLConnection) apiUrl.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            String jsonPayload = "{\"type\": \"python\", \"code\": \"" + pythonCode.replace("\n", "\\n") + "\"}";
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200) {
+                LOGGER.info("Successfully loaded table '{}' with data: {}", tableName, jsonData);
+                return true;
+            } else {
+                LOGGER.error("Failed to load table '{}'. Response code: {}", tableName, responseCode);
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error loading table '{}': {}", tableName, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    public static String getPsk() {
+        return discoveredPsk.get();
+    }
+}
