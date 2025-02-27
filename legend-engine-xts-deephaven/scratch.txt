@@ -1,157 +1,219 @@
-{
-  "serializer": {
-    "name": "pure",
-    "version": "vX_X_X"
-  },
-  "rootExecutionNode": {
-    "query": {
-      "_type": "deephavenQuery",
-      "source": {
-        "name": "nds_desktops",
-        "columns": [
-          {
-            "_type": "column",
-            "name": "Desktop_ID",
-            "type": {
-              "_type": "intType"
-            }
-          },
-          {
-            "_type": "column",
-            "name": "City_Name",
-            "type": {
-              "_type": "intType"
-            }
-          },
-          {
-            "_type": "column",
-            "name": "Desktop_Name",
-            "type": {
-              "_type": "intType"
-            }
-          }
-        ]
-      }
-    },
-    "connection": {
-      "sourceSpec": {
-        "url": "http:\/\/alloy-development-d183850-019-Americas.dc.gs.com:10000\/"
-      },
-      "authSpec": {
-        "psk": "15jso3dd2urlk",
-        "_type": "PSK"
-      },
-      "_type": "deephavenConnection",
-      "element": ""
-    },
-    "_type": "DeephavenExecutionNode",
-    "resultType": {
-      "tdsColumns": [
-        {
-          "name": "Desktop_Name",
-          "type": "String"
-        }
-      ],
-      "_type": "tds"
-    },
-    "implementation": {
-      "executionClassFullName": "_pure.plan.root.Execute",
-      "_type": "java"
+package org.finos.legend.engine.plan.execution.stores.deephaven.plugin;
+
+import io.deephaven.client.impl.BarrageSession;
+import io.deephaven.client.impl.TableHandle;
+import org.apache.arrow.flight.FlightStream;
+import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.VectorSchemaRoot;
+import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
+import org.finos.legend.engine.plan.execution.result.Result;
+import org.finos.legend.engine.plan.execution.result.object.StreamingObjectResult;
+import org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession;
+import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenExecutionActivity;
+import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenStreamingResult;
+import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
+import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenSourceSpecification;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNodeVisitor;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.JavaClass;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.JavaPlatformImplementation;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.authentication.specification.PSKAuthenticationSpecification;
+import org.finos.legend.engine.shared.core.identity.Identity;
+import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
+import org.finos.legend.engine.shared.core.operational.errorManagement.ExceptionCategory;
+import org.finos.legend.engine.shared.javaCompiler.EngineJavaCompiler;
+import org.finos.legend.engine.shared.javaCompiler.StringJavaSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Spliterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Result> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenExecutionNodeExecutor.class);
+    private static final Map<String, Class<?>> CLASS_CACHE = new ConcurrentHashMap<>(); // Cache compiled classes
+
+    private final Identity identity;
+    private final ExecutionState executionState;
+    private final DeephavenStoreState state;
+    private final ExecutionPlan executionPlan;
+
+    public DeephavenExecutionNodeExecutor(Identity identity, ExecutionState executionState, DeephavenStoreState state, ExecutionPlan executionPlan) {
+        this.identity = identity;
+        this.executionState = executionState;
+        this.state = state;
+        this.executionPlan = executionPlan;
     }
-  },
-  "globalImplementationSupport": {
-    "classes": [
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "AndOperatorExpression",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface AndOperatorExpression extends LogicalOperatorExpression, FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"AndOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::AndOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "ComparisonOperatorExpression",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface ComparisonOperatorExpression extends FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"ComparisonOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::ComparisonOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "DeephavenOperationElement",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface DeephavenOperationElement extends org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"DeephavenOperationElement\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::DeephavenOperationElement\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "DeephavenQuery",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface DeephavenQuery extends DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"DeephavenQuery\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::DeephavenQuery\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "EqOperatorExpression",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface EqOperatorExpression extends ComparisonOperatorExpression, FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"EqOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::EqOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "FilterExpression",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface FilterExpression extends DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"FilterExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::FilterExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "FilterOperation",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface FilterOperation extends QueryOperation, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"FilterOperation\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::FilterOperation\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "InOperatorExpression",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface InOperatorExpression extends ComparisonOperatorExpression, FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"InOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::InOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "JoinOperation",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface JoinOperation extends QueryOperation, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"JoinOperation\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::JoinOperation\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "LogicalOperatorExpression",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface LogicalOperatorExpression extends FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"LogicalOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::LogicalOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "NotOperatorExpression",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface NotOperatorExpression extends FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"NotOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::NotOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "OrOperatorExpression",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface OrOperatorExpression extends LogicalOperatorExpression, FilterExpression, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"OrOperatorExpression\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::OrOperatorExpression\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "QueryOperation",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface QueryOperation extends DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"QueryOperation\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::QueryOperation\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "SelectOperation",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface SelectOperation extends QueryOperation, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"SelectOperation\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::SelectOperation\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel",
-        "name": "SortOperation",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel;\n\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface SortOperation extends QueryOperation, DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"SortOperation\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::SortOperation\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel.store",
-        "name": "Column",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel.store;\n\nimport _pure.app.meta.external.store.deephaven.metamodel.DeephavenOperationElement;\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface Column extends DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"Column\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::store::Column\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.app.meta.external.store.deephaven.metamodel.store",
-        "name": "Literal",
-        "source": "package _pure.app.meta.external.store.deephaven.metamodel.store;\n\nimport _pure.app.meta.external.store.deephaven.metamodel.DeephavenOperationElement;\nimport java.math.*;\nimport java.util.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\n\npublic interface Literal extends DeephavenOperationElement, org.finos.legend.engine.plan.dependencies.store.shared.IReferencedObject\n{\n    default String typeName$()\n    {\n        return \"Literal\";\n    }\n\n    default String typePath$()\n    {\n        return \"meta::external::store::deephaven::metamodel::store::Literal\";\n    }\n\n    String getAlloyStoreObjectReference$();\n}"
-      },
-      {
-        "package": "_pure.plan.root",
-        "name": "Execute",
-        "source": "package _pure.plan.root;\n\nimport io.deephaven.client.impl.BarrageSession;\nimport io.deephaven.client.impl.TableHandle;\nimport io.deephaven.qst.table.TableSpec;\nimport io.deephaven.qst.table.TicketTable;\nimport java.math.*;\nimport java.util.*;\nimport java.util.function.*;\nimport java.util.stream.*;\nimport org.finos.legend.engine.plan.dependencies.domain.date.DayOfWeek;\nimport org.finos.legend.engine.plan.dependencies.domain.date.DurationUnit;\nimport org.finos.legend.engine.plan.dependencies.domain.date.PureDate;\nimport org.finos.legend.engine.plan.dependencies.util.Library;\nimport org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;\n\npublic class Execute implements IDeephavenExecutionNodeSpecifics\n{\n    public TableHandle execute(BarrageSession session)\n    {\n        TableSpec ts = io.deephaven.qst.table.TicketTablee.fromQueryScopeField(\"nds_desktops\")\n                                                          .where(\"City_Name == 'Dallas'\")\n                                                          .select(\"Desktop_Name\");\n        try\n        {\n            return session.session().execute(ts);\n        }\n        catch (io.deephaven.client.impl.TableHandle.TableHandleException e)\n        {\n            throw new RuntimeException(e);\n        }\n        catch (InterruptedException e)\n        {\n            throw new RuntimeException(e);\n        }\n    }\n}"
-      }
-    ],
-    "_type": "java"
-  }
+
+    @Override
+    public Result visit(ExecutionNode executionNode) {
+        if (executionNode instanceof DeephavenExecutionNode) {
+            return executeDeephavenNode((DeephavenExecutionNode) executionNode);
+        }
+        throw new IllegalStateException("DEEPHAVEN: Unexpected node type: " + executionNode.getClass().getSimpleName());
+    }
+
+    private Result executeDeephavenNode(DeephavenExecutionNode node) {
+        try {
+            DeephavenSession deephavenSession = createDeephavenSession(node.connection);
+            try (BarrageSession session = deephavenSession.getBarrageSession()) {
+                LOGGER.info("Connected to Deephaven Server for node execution");
+                IDeephavenExecutionNodeSpecifics specifics = compileAndInstantiateSpecifics(node);
+                TableHandle table = specifics.execute(session);
+                return executeQueryAndStreamResults(session, table, node.connection.sourceSpec.url);
+            }
+        } catch (EngineException e) {
+            throw e;
+        } catch (io.deephaven.client.impl.TableHandle.TableHandleException e) {
+            throw new EngineException("Deephaven query execution failed: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new EngineException("Deephaven query interrupted: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
+        } catch (Exception e) {
+            throw new EngineException("Unexpected error executing Deephaven query: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
+        }
+    }
+
+    private IDeephavenExecutionNodeSpecifics compileAndInstantiateSpecifics(DeephavenExecutionNode node) throws Exception {
+        JavaPlatformImplementation impl = (JavaPlatformImplementation) node.implementation;
+        String classFullName = impl.executionClassFullName; // e.g., "_pure.plan.root.Execute"
+        String pkgName = classFullName.substring(0, classFullName.lastIndexOf('.'));
+        String simpleName = classFullName.substring(classFullName.lastIndexOf('.') + 1);
+
+        // Check cache first
+        Class<?> cachedClass = CLASS_CACHE.get(classFullName);
+        if (cachedClass != null) {
+            LOGGER.debug("Using cached class: {}", classFullName);
+            return (IDeephavenExecutionNodeSpecifics) cachedClass.getConstructor().newInstance();
+        }
+
+        // Find the Execute class in globalImplementationSupport
+        JavaClass executeClass = executionPlan.globalImplementationSupport.classes.stream()
+                .filter(cls -> (cls.package + "." + cls.name).equals(classFullName))
+                .findFirst()
+                .orElseThrow(() -> new EngineException("Execute class not found in globalImplementationSupport: " + classFullName, ExceptionCategory.USER_EXECUTION_ERROR));
+
+        String sourceCode = executeClass.source;
+
+        // Compile dynamically
+        LOGGER.debug("Compiling class: {}", classFullName);
+        StringJavaSource javaSource = new StringJavaSource(pkgName, simpleName) {
+            @Override
+            public String getCode() {
+                return sourceCode;
+            }
+
+            @Override
+            public int size() {
+                return sourceCode.length(); // Provide a realistic size
+            }
+        };
+
+        EngineJavaCompiler compiler = new EngineJavaCompiler();
+        compiler.compile(Collections.singletonList(javaSource));
+        Class<?> compiledClass = compiler.getClassLoader().loadClass(classFullName);
+        CLASS_CACHE.put(classFullName, compiledClass); // Cache for reuse
+
+        return (IDeephavenExecutionNodeSpecifics) compiledClass.getConstructor().newInstance();
+    }
+
+    private DeephavenSession createDeephavenSession(DeephavenConnection connection) {
+        if (!(connection.authSpec instanceof PSKAuthenticationSpecification)) {
+            throw new EngineException("Unsupported authentication type: " + connection.authSpec.getClass().getSimpleName(), ExceptionCategory.USER_CREDENTIALS_ERROR);
+        }
+        Optional<DeephavenSession> session = this.state.getProviders().stream()
+                .map(provider -> provider.provide((PSKAuthenticationSpecification) connection.authSpec, connection.sourceSpec))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findAny();
+        return session.orElseThrow(() -> new EngineException("Unable to create a Deephaven Session", ExceptionCategory.USER_CREDENTIALS_ERROR));
+    }
+
+    private Result executeQueryAndStreamResults(BarrageSession session, TableHandle table, URI serverUrl) throws io.deephaven.client.impl.TableHandle.TableHandleException, InterruptedException {
+        FlightStream flightStream = session.stream(table.ticketId());
+        Stream<Map<String, Object>> rowStream = StreamSupport.stream(
+                new DeephavenRowSpliterator(flightStream), false
+        ).onClose(() -> {
+            try {
+                flightStream.close();
+            } catch (Exception e) {
+                LOGGER.warn("Failed to close FlightStream", e);
+            }
+        });
+
+        DeephavenExecutionActivity activity = new DeephavenExecutionActivity(serverUrl);
+        List<org.finos.legend.engine.plan.execution.result.ExecutionActivity> activities = Collections.singletonList(activity);
+
+        DeephavenStreamingResult deephavenResult = new DeephavenStreamingResult(activities);
+        return new StreamingObjectResult<>(rowStream, deephavenResult.getResultBuilder(), deephavenResult);
+    }
+
+    private static class DeephavenRowSpliterator implements Spliterator<Map<String, Object>> {
+        private final FlightStream flightStream;
+        private VectorSchemaRoot root;
+        private List<FieldVector> vectors;
+        private int currentRowIndex;
+        private int batchRowCount;
+
+        DeephavenRowSpliterator(FlightStream flightStream) {
+            this.flightStream = flightStream;
+            this.currentRowIndex = 0;
+            this.batchRowCount = 0;
+        }
+
+        @Override
+        public boolean tryAdvance(java.util.function.Consumer<? super Map<String, Object>> action) {
+            try {
+                while (true) {
+                    if (root == null || currentRowIndex >= batchRowCount) {
+                        if (!flightStream.next()) {
+                            return false;
+                        }
+                        root = flightStream.getRoot();
+                        vectors = root.getFieldVectors();
+                        batchRowCount = root.getRowCount();
+                        currentRowIndex = 0;
+                    }
+                    if (currentRowIndex < batchRowCount) {
+                        Map<String, Object> row = new HashMap<>(vectors.size());
+                        for (FieldVector vector : vectors) {
+                            row.put(vector.getName(), vector.getObject(currentRowIndex));
+                        }
+                        action.accept(row);
+                        currentRowIndex++;
+                        return true;
+                    }
+                }
+            } catch (Exception e) {
+                throw new EngineException("Error streaming Deephaven results: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
+            }
+        }
+
+        @Override
+        public Spliterator<Map<String, Object>> trySplit() {
+            return null;
+        }
+
+        @Override
+        public long estimateSize() {
+            return Long.MAX_VALUE;
+        }
+
+        @Override
+        public int characteristics() {
+            return Spliterator.ORDERED | Spliterator.NONNULL;
+        }
+    }
 }
