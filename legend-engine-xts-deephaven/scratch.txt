@@ -3,46 +3,46 @@ package org.finos.legend.engine.plan.execution.stores.deephaven.plugin;
 import org.apache.arrow.flight.FlightStream;
 import org.apache.arrow.vector.FieldVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.ExecutionNodeJavaPlatformHelper;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
 import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
 import org.finos.legend.engine.plan.execution.result.Result;
+import org.finos.legend.engine.plan.execution.result.builder.stream.StreamBuilder;
 import org.finos.legend.engine.plan.execution.result.object.StreamingObjectResult;
 import org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession;
-import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenExecutionActivity;
 import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenStreamingResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
 import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
+import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenJavaCode;
 import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
-import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenSourceSpecification;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNodeVisitor;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.JavaPlatformImplementation;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.authentication.specification.PSKAuthenticationSpecification;
 import org.finos.legend.engine.shared.core.identity.Identity;
 import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
 import org.finos.legend.engine.shared.core.operational.errorManagement.ExceptionCategory;
+import org.finos.legend.engine.shared.javaCompiler.EngineJavaCompiler;
+import org.finos.legend.engine.shared.javaCompiler.StringJavaSource;
 import io.deephaven.client.impl.BarrageSession;
 import io.deephaven.client.impl.TableHandle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.util.Spliterator;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Result>
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenExecutionNodeExecutor.class);
     private final Identity identity;
     private final ExecutionState executionState;
     private final DeephavenStoreState state;
+
+    private static final String CLASS_TEMPLATE = "package org.finos.legend.engine.generated;\n\n" +
+                                                 "%s\n" +
+                                                 "public class DeephavenGeneratedQuery {\n" +
+                                                 "    public static TableHandle execute(BarrageSession session) throws TableHandle.TableHandleException, InterruptedException {\n" +
+                                                 "        %s;\n" +
+                                                 "        return session.session().execute(ts);\n" +
+                                                 "        }\n" +
+                                                 "}\n";
+    private static final String IMPORT_TEMPLATE = "import %s;";
 
     public DeephavenExecutionNodeExecutor(Identity identity, ExecutionState executionState, DeephavenStoreState state)
     {
@@ -56,174 +56,81 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Resu
     {
         if (executionNode instanceof DeephavenExecutionNode)
         {
-            return executeDeephavenNode((DeephavenExecutionNode) executionNode);
-        }
-        throw new IllegalStateException("DEEPHAVEN: Unexpected node type: " + executionNode.getClass().getSimpleName());
-    }
+            DeephavenExecutionNode deephavenNode = (DeephavenExecutionNode) executionNode;
+            DeephavenJavaCode dhQuery = deephavenNode.generatedJava;
 
-    private Result executeDeephavenNode(DeephavenExecutionNode node)
-    {
-        try
-        {
-//            try (DeephavenSession deephavenSession = createDeephavenSession(node.connection))
-//            {
-//                try (BarrageSession session = deephavenSession.getBarrageSession())
-//                {
-//                    LOGGER.info("Connected to Deephaven Server for node execution");
-//                    IDeephavenExecutionNodeSpecifics specifics = createSpecifics(node);
-//                    TableHandle table = specifics.execute(session);
-//                    return executeQueryAndStreamResults(node, session, table);
-//                }
-//            }
+            String imports = dhQuery.imports.stream().map(imp -> String.format(IMPORT_TEMPLATE, imp)).collect(Collectors.joining("\n"));
+            String sourceCode = String.format(CLASS_TEMPLATE, imports, dhQuery.code);
 
-            DeephavenSession deephavenSession = createDeephavenSession(node.connection);
-            try (BarrageSession session = deephavenSession.getBarrageSession())
-            {
-                LOGGER.info("Connected to Deephaven Server for node execution");
-                IDeephavenExecutionNodeSpecifics specifics = createSpecifics(node);
-                TableHandle table = specifics.execute(session);
-                return executeQueryAndStreamResults(node, session, table);
-            }
-        }
-        catch (EngineException e)
-        {
-            throw e; // Re-throw engine-specific exceptions
-        }
-        catch (io.deephaven.client.impl.TableHandle.TableHandleException e)
-        {
-            throw new EngineException("Deephaven query execution failed: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-        catch (InterruptedException e)
-        {
-            Thread.currentThread().interrupt(); // Restore interrupted status
-            throw new EngineException("Deephaven query interrupted: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-        catch (Exception e)
-        {
-            throw new EngineException("Unexpected error executing Deephaven query: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-    }
+            String pkgName = "org.finos.legend.engine.generated";
+            String className = "DeephavenGeneratedQuery";
 
-    private IDeephavenExecutionNodeSpecifics createSpecifics(DeephavenExecutionNode node) throws ReflectiveOperationException
-    {
-        String specificsClassName = JavaHelper.getExecutionClassFullName((JavaPlatformImplementation) node.implementation);
-        Class<?> specificsClass = ExecutionNodeJavaPlatformHelper.getClassToExecute(node, specificsClassName, executionState, identity);
-        return (IDeephavenExecutionNodeSpecifics) specificsClass.getConstructor().newInstance();
-    }
-
-
-    private DeephavenSession createDeephavenSession(DeephavenConnection connection)
-    {
-        if (!(connection.authSpec instanceof PSKAuthenticationSpecification))
-        {
-            throw new EngineException("Unsupported authentication type: " + connection.authSpec.getClass().getSimpleName(), ExceptionCategory.USER_CREDENTIALS_ERROR);
-        }
-        Optional<DeephavenSession> session = this.state.getProviders().stream()
-                .map(provider -> provider.provide((PSKAuthenticationSpecification) connection.authSpec, connection.sourceSpec))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findAny();
-        return session.orElseThrow(() -> new EngineException("Unable to create a Deephaven Session", ExceptionCategory.USER_CREDENTIALS_ERROR));
-    }
-
-    private Result executeQueryAndStreamResults(DeephavenExecutionNode node, BarrageSession session, TableHandle table) throws io.deephaven.client.impl.TableHandle.TableHandleException, InterruptedException
-    {
-        FlightStream flightStream = session.stream(table.ticketId());
-        Stream<Map<String, Object>> rowStream = StreamSupport.stream(
-                new DeephavenRowSpliterator(flightStream), false
-        ).onClose(() ->
-        {
             try
             {
-                flightStream.close();
-            }
-            catch (Exception e)
-            {
-                LOGGER.warn("Failed to close FlightStream", e);
-            }
-        });
-
-        // Create execution activity
-        DeephavenSourceSpecification sourceSpec = node.connection.sourceSpec;
-        URI serverUrl = sourceSpec.url;
-        String tableName = table.ticketId().toString(); // todo - Adjust if a better name is available
-        DeephavenExecutionActivity activity = new DeephavenExecutionActivity(serverUrl, tableName);
-        List<org.finos.legend.engine.plan.execution.result.ExecutionActivity> activities = Collections.singletonList(activity);
-
-        DeephavenStreamingResult deephavenResult = new DeephavenStreamingResult(activities);
-        return new StreamingObjectResult<>(rowStream,  deephavenResult.getResultBuilder(), deephavenResult); // Pass empty list since we stream directly
-    }
-
-
-
-    private static class DeephavenRowSpliterator implements Spliterator<Map<String, Object>>
-    {
-        private final FlightStream flightStream;
-        private VectorSchemaRoot root;
-        private List<FieldVector> vectors;
-        private int currentRowIndex;
-        private int rowCount;
-
-        DeephavenRowSpliterator(FlightStream flightStream)
-        {
-            this.flightStream = flightStream;
-            this.currentRowIndex = 0;
-            this.rowCount = 0;
-        }
-
-        @Override
-        public boolean tryAdvance(java.util.function.Consumer<? super Map<String, Object>> action)
-        {
-            try
-            {
-                while (true)
+                StringJavaSource javaSource = new StringJavaSource(pkgName, className)
                 {
-                    if (root == null || currentRowIndex >= rowCount)
+                    @Override
+                    public String getCode()
                     {
-                        if (!flightStream.next())
-                        {
-                            return false; // No more data
-                        }
-                        root = flightStream.getRoot();
-                        vectors = root.getFieldVectors();
-                        rowCount = root.getRowCount();
-                        currentRowIndex = 0;
+                        return sourceCode;
                     }
-                    if (currentRowIndex < rowCount)
+
+                    @Override
+                    public int size()
                     {
-                        Map<String, Object> row = new HashMap<>(vectors.size());
-                        for (FieldVector vector : vectors)
-                        {
-                            row.put(vector.getName(), vector.getObject(currentRowIndex));
-                        }
-                        action.accept(row);
-                        currentRowIndex++;
-                        return true;
+                        return 0;
                     }
+                };
+                EngineJavaCompiler compiler = new EngineJavaCompiler();
+                compiler.compile(Collections.singletonList(javaSource));
+                Class<?> queryClass = compiler.getClassLoader().loadClass(pkgName + "." + className);
+
+                DeephavenConnection connection = deephavenNode.connection;
+                DeephavenSession deephavenSession = this.state.getProviders().stream()
+                        .map(x -> x.provide((PSKAuthenticationSpecification) connection.authSpec, connection.sourceSpec))
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .findAny()
+                        .orElseThrow(() -> new EngineException("Unable to create a Deephaven Session", ExceptionCategory.USER_CREDENTIALS_ERROR));
+
+                try (BarrageSession session = deephavenSession.getBarrageSession())
+                {
+                    System.out.println("Connected to Deephaven Server !");
+                    Method executeMethod = queryClass.getMethod("execute", BarrageSession.class);
+                    TableHandle table = (TableHandle) executeMethod.invoke(null, session);
+
+                    List<Map<String, Object>> rows = new ArrayList<>();
+                    try (FlightStream flightStream = session.stream(table.ticketId()))
+                    {
+                        VectorSchemaRoot root = flightStream.getRoot();
+                        while (flightStream.next())
+                        {
+                            for (int i = 0; i < root.getRowCount(); i++)
+                            {
+                                Map<String, Object> row = new HashMap<>();
+                                for (FieldVector vector : root.getFieldVectors())
+                                {
+                                    String columnName = vector.getName();
+                                    Object value = vector.getObject(i);
+                                    row.put(columnName, value);
+                                }
+                                rows.add(row);
+                            }
+                        }
+                        Stream<Map<String, Object>> rowStream = rows.stream();
+                        return new StreamingObjectResult<>(rowStream, new StreamBuilder(), new DeephavenStreamingResult(rows));
+                    }
+                }
+                finally
+                {
+                    deephavenSession.close();
                 }
             }
             catch (Exception e)
             {
-                throw new EngineException("Error streaming Deephaven results: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
+                e.printStackTrace();
             }
         }
-
-        @Override
-        public Spliterator<Map<String, Object>> trySplit()
-        {
-            return null; // Non-parallelizable due to sequential FlightStream
-        }
-
-        @Override
-        public long estimateSize()
-        {
-            return Long.MAX_VALUE; // Unknown size until fully streamed
-        }
-
-        @Override
-        public int characteristics()
-        {
-            return Spliterator.ORDERED | Spliterator.NONNULL;
-        }
+        throw new IllegalStateException("DEEPHAVEN: should not get here");
     }
 }
