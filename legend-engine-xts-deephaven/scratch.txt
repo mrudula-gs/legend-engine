@@ -1,53 +1,23 @@
-private Result executeDeephavenNode(DeephavenExecutionNode node) {
-    try {
-        DeephavenSession deephavenSession = createDeephavenSession(node.connection);
-        try (BarrageSession session = deephavenSession.getBarrageSession()) {
-            LOGGER.info("Connected to Deephaven Server for node execution");
-            IDeephavenExecutionNodeSpecifics specifics = compileAndInstantiateSpecifics(node);
-
-            // Extract TableSpec line from source
-            String classFullName = ((JavaPlatformImplementation) node.implementation).executionClassFullName;
-            JavaClass executeClass = executionPlan.globalImplementationSupport.classes.stream()
-                    .filter(cls -> (cls.package + "." + cls.name).equals(classFullName))
-                    .findFirst()
-                    .orElseThrow(() -> new EngineException("Execute class not found: " + classFullName));
-            String sourceCode = executeClass.source;
-            String tableSpecLine = extractTableSpecLine(sourceCode);
-
-            TableHandle table = specifics.execute(session);
-            return executeQueryAndStreamResults(session, table, node.connection.sourceSpec.url, tableSpecLine);
-        }
-    } catch (Exception e) {
-        throw new EngineException("Error executing Deephaven query: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-    }
-}
-
-private String extractTableSpecLine(String sourceCode) {
-    // Simple regex to find TableSpec assignment (adjust as needed)
-    Pattern pattern = Pattern.compile("TableSpec ts = (.*?);", Pattern.DOTALL);
-    Matcher matcher = pattern.matcher(sourceCode);
-    if (matcher.find()) {
-        String tableSpec = matcher.group(1).trim();
-        LOGGER.debug("Extracted TableSpec: {}", tableSpec);
-        return tableSpec;
-    }
-    LOGGER.warn("Could not extract TableSpec from source: {}", sourceCode);
-    return "unknown_query";
-}
-
-private Result executeQueryAndStreamResults(BarrageSession session, TableHandle table, URI serverUrl, String tableSpecLine) {
-    FlightStream flightStream = session.stream(table.ticketId());
-    Stream<Map<String, Object>> rowStream = StreamSupport.stream(new DeephavenRowSpliterator(flightStream), false)
-            .onClose(() -> {
-                try {
-                    flightStream.close();
-                } catch (Exception e) {
-                    LOGGER.warn("Failed to close FlightStream", e);
-                }
-            });
-
-    DeephavenExecutionActivity activity = new DeephavenExecutionActivity(serverUrl, tableSpecLine);
-    List<org.finos.legend.engine.plan.execution.result.ExecutionActivity> activities = Collections.singletonList(activity);
-    DeephavenStreamingResult deephavenResult = new DeephavenStreamingResult(activities);
-    return new StreamingObjectResult<>(rowStream, deephavenResult.getResultBuilder(), deephavenResult);
-}
+java.lang.NoClassDefFoundError: org/glassfish/jersey/internal/inject/AbstractBinder
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method)
+	at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1021)
+	at java.base/java.security.SecureClassLoader.defineClass(SecureClassLoader.java:174)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.defineClass(BuiltinClassLoader.java:800)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.findClassOnClassPathOrNull(BuiltinClassLoader.java:698)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClassOrNull(BuiltinClassLoader.java:621)
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:579)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:178)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	at org.pac4j.dropwizard.Pac4jBundle.run(Pac4jBundle.java:98)
+	at org.pac4j.dropwizard.Pac4jBundle.run(Pac4jBundle.java:35)
+	at io.dropwizard.setup.Bootstrap.run(Bootstrap.java:200)
+	at io.dropwizard.cli.EnvironmentCommand.run(EnvironmentCommand.java:42)
+	at io.dropwizard.cli.ConfiguredCommand.run(ConfiguredCommand.java:87)
+	at io.dropwizard.cli.Cli.run(Cli.java:78)
+	at io.dropwizard.Application.run(Application.java:93)
+	at org.finos.legend.engine.server.Server.main(Server.java:184)
+Caused by: java.lang.ClassNotFoundException: org.glassfish.jersey.internal.inject.AbstractBinder
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:581)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:178)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:526)
+	... 17 more
