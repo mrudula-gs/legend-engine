@@ -1,223 +1,538 @@
-import meta::pure::functions::io::http::*;
-import meta::protocols::pure::v1_33_0::extension::*;
-import meta::external::store::deephaven::metamodel::*;
-import meta::external::store::deephaven::metamodel::executionPlan::*;
-import meta::external::store::deephaven::metamodel::executionPlan::context::*;
-import meta::external::store::deephaven::metamodel::runtime::*;
-import meta::external::store::deephaven::metamodel::store::*;
-import meta::external::store::deephaven::pureToDeephaven::*;
-import meta::pure::extension::*;
-import meta::pure::mapping::*;
-import meta::pure::metamodel::type::*;
-import meta::protocols::pure::v1_33_0::externalFormat::serde::serialization::*;
-import meta::protocols::pure::v1_33_0::transformation::fromPureGraph::executionPlan::*;
+// Copyright 2025 Goldman Sachs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-function meta::external::store::deephaven::protocol::v1_33_0::deephavenStoreExtension(type: String[1]): meta::pure::extension::SerializerExtension[1]
+package org.finos.legend.engine.plan.execution.stores.deephaven.test;
+
+//import org.bson.Document;
+
+//import io.deephaven.client.impl.BarrageSession;
+//import io.deephaven.client.impl.BarrageSessionFactoryConfig;
+//import io.deephaven.client.impl.SessionConfig;
+//import com.github.dockerjava.api.model.Ulimit;
+//import io.deephaven.client.impl.ClientConfig;
+//import io.deephaven.client.impl.TableHandle;
+//import io.deephaven.qst.table.TicketTable;
+//import io.deephaven.uri.DeephavenTarget;
+//import org.apache.arrow.flight.FlightStream;
+//import org.apache.arrow.memory.RootAllocator;
+import org.junit.Assume;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.DockerClientFactory;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+//import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.output.FrameConsumerResultCallback;
+import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.output.ToStringConsumer;
+import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.junit.Assume.assumeTrue;
+
+public class DeephavenTestContainer
 {
-    ^SerializerExtension_v1_33_0(
-        transfers_valueSpecification_transformAny = {inScope: String[*], open: Map<String, List<Any>>[1], m: Multiplicity[1], fe: FunctionExpression[0..1], useAppliedFunction: Boolean[1], extensions: meta::pure::extension::Extension[*] |
-            [
-                s: meta::external::store::deephaven::metamodel::store::DeephavenStore[1] |
-                    ^meta::protocols::pure::v1_33_0::metamodel::valueSpecification::raw::PackageableElementPtr(
-                        _type = 'packageableElementPtr',
-                        fullPath = $s->elementToPath()
-                    )
-            ]
-        },
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenTestContainer.class);
+    public static GenericContainer<?> deephavenContainer;
+    private static final String REGISTRY = "dockerhub.site.gs.com:8413";
+    private static final String DEEPHAVEN_IMAGE = REGISTRY + "/deephaven/server:latest";
+    private static final int DEEPHAVEN_PORT = 10_000;
+    private static final String STATIC_PSK = "myStaticPSK";
+    private static final AtomicReference<String> discoveredPsk = new AtomicReference<>(STATIC_PSK); // Store PSK from logs
 
-        transfers_store_transformStore2 = {extensions: meta::pure::extension::Extension[*] |
-            [
-                s: meta::external::store::deephaven::metamodel::store::DeephavenStore[1] |
-                    ^meta::external::store::deephaven::protocol::v1_33_0::store::DeephavenStore(
-                        name = $s.name->toOne(),
-                        package = $s.package->map(p | $p->elementToPath()),
-                        tables = $s.tables->map(i |
-                            ^meta::external::store::deephaven::protocol::v1_33_0::store::Table(
-                                name = $i.name,
-                                columns = $i.columns->map(c |
-                                    ^meta::external::store::deephaven::protocol::v1_33_0::store::Column(
-                                        name = $c.name,
-                                        type = meta::external::store::deephaven::protocol::v1_33_0::executionPlan::transformType($c.type)
-                                    )
-                                )
-                            )
-                        )
-                    )
-            ]
-        },
 
-        invocation_execution_transformContext = [
-            e: meta::external::store::deephaven::metamodel::executionPlan::context::DeephavenExecutionContext[1] |
-                ^meta::external::store::deephaven::protocol::v1_33_0::executionPlan::context::DeephavenExecutionContext()
-        ],
-
-        transfers_store_transformConnection2 = {extensions: Extension[*] | [
-            conn: DeephavenConnection[1] |
-                $conn->meta::external::store::deephaven::protocol::v1_33_0::runtime::transformConnection($extensions)
-        ]},
-
-        transfers_executionPlan_transformNode = {mapping:Mapping[1], extensions: Extension[*] |
-            [
-                dhNode: DeephavenExecutionNode[1] |
-                    ^meta::external::store::deephaven::protocol::v1_33_0::executionPlan::DeephavenExecutionNode(
-                        _type = 'deephavenExecutionNode',
-                        query = ^meta::external::store::deephaven::protocol::v1_33_0::executionPlan::DeephavenQuery(
-                            source = meta::external::store::deephaven::protocol::v1_33_0::executionPlan::transformSource($dhNode.query.source)
-                        ),
-                        resultType = $dhNode.resultType->meta::protocols::pure::v1_33_0::transformation::fromPureGraph::executionPlan::transformResultType(^meta::pure::mapping::Mapping(package = meta::pure::executionPlan, name = 'dummy'), $extensions),
-                        connection = $dhNode.connection->meta::external::store::deephaven::protocol::v1_33_0::runtime::transformConnection($extensions)
-                    )
-            ]
+    public static boolean startDeephaven(String imageTag)
+    {
+        if (deephavenContainer != null && deephavenContainer.isRunning())
+        {
+            System.out.println("Deephaven container already running; stopping it first.");
+            stopDeephaven();
         }
-    );
-}
+        try
+        {
+            DockerImageName imageName = DockerImageName.parse(DEEPHAVEN_IMAGE);
+            deephavenContainer = new GenericContainer<>(imageName)
+                    .withExposedPorts(DEEPHAVEN_PORT)
+                    .withPrivilegedMode(true)
+                    .withCopyFileToContainer(
+                            MountableFile.forClasspathResource("load_data.groovy"),
+                            "/data/load_data.groovy"
+                    )
+                    .withEnv("START_OPTS", "-Xmx4g -Dauthentication.psk=" + STATIC_PSK + " -Ddeephaven.console.type=groovy -Ddeephaven.console.startupScript=/data/load_data.groovy");
 
-function meta::external::store::deephaven::protocol::v1_33_0::executionPlan::transformSource(table: Table[0..1]): meta::external::store::deephaven::protocol::v1_33_0::store::Table[0..1]
-{
-    if ($table->isEmpty(),
-        | [],
-        | ^meta::external::store::deephaven::protocol::v1_33_0::store::Table(
-            name = $table->toOne().name,
-            columns = $table->toOne().columns->map(c |
-                ^meta::external::store::deephaven::protocol::v1_33_0::store::Column(
-                    name = $c.name,
-                    type = meta::external::store::deephaven::protocol::v1_33_0::executionPlan::transformType($c.type)
-                )
-            )
-        )
-    );
-}
 
-function meta::external::store::deephaven::protocol::v1_33_0::executionPlan::transformType(dhType: meta::external::store::deephaven::metamodel::type::Type[1]): meta::external::store::deephaven::protocol::v1_33_0::type::Type[1]
-{
-    $dhType->match([
-        t: meta::external::store::deephaven::metamodel::type::BooleanType[1] | ^meta::external::store::deephaven::protocol::v1_33_0::type::BooleanType(),
-        t: meta::external::store::deephaven::metamodel::type::ByteType[1]   | ^meta::external::store::deephaven::protocol::v1_33_0::type::ByteType(),
-        t: meta::external::store::deephaven::metamodel::type::CharType[1]   | ^meta::external::store::deephaven::protocol::v1_33_0::type::CharType(),
-        t: meta::external::store::deephaven::metamodel::type::ShortType[1]  | ^meta::external::store::deephaven::protocol::v1_33_0::type::ShortType(),
-        t: meta::external::store::deephaven::metamodel::type::IntType[1]    | ^meta::external::store::deephaven::protocol::v1_33_0::type::IntType(),
-        t: meta::external::store::deephaven::metamodel::type::LongType[1]   | ^meta::external::store::deephaven::protocol::v1_33_0::type::LongType(),
-        t: meta::external::store::deephaven::metamodel::type::FloatType[1]  | ^meta::external::store::deephaven::protocol::v1_33_0::type::FloatType(),
-        t: meta::external::store::deephaven::metamodel::type::DoubleType[1] | ^meta::external::store::deephaven::protocol::v1_33_0::type::DoubleType(),
-        t: meta::external::store::deephaven::metamodel::type::StringType[1] | ^meta::external::store::deephaven::protocol::v1_33_0::type::StringType(),
-        t: meta::external::store::deephaven::metamodel::type::TimeType[1]   | ^meta::external::store::deephaven::protocol::v1_33_0::type::TimeType(),
-        t: meta::external::store::deephaven::metamodel::type::CustomType[1] | ^meta::external::store::deephaven::protocol::v1_33_0::type::CustomType(
-            componentType = meta::external::store::deephaven::protocol::v1_33_0::executionPlan::transformType($t.componentType)
-        )
-    ]);
-}
+            deephavenContainer.start();
+            System.out.println("Started Deephaven container on host: " + deephavenContainer.getHost() + " port: " + deephavenContainer.getMappedPort(DEEPHAVEN_PORT));
+            System.out.println("PSK set to: " + STATIC_PSK);
+            System.out.println("Startup script set to: /data/load_data.groovy");
 
-function meta::external::store::deephaven::protocol::v1_33_0::runtime::transformConnection(conn: DeephavenConnection[1], extensions: Extension[*]): meta::external::store::deephaven::protocol::v1_33_0::runtime::DeephavenConnection[1]
-{
-  let tmp =  ^meta::external::store::deephaven::protocol::v1_33_0::runtime::DeephavenConnection(
-        _type = 'deephavenConnection',
-        element = '', // todo - anumam - $conn.element
-        sourceSpec = ^meta::external::store::deephaven::protocol::v1_33_0::runtime::DeephavenSourceSpecification(
-            url = '%s://%s:%d%s'->format([$conn.sourceSpec.url.scheme->defaultIfEmpty(URLScheme.http)->toOne(), 
-                                          $conn.sourceSpec.url.host, 
-                                          $conn.sourceSpec.url.port, 
-                                          $conn.sourceSpec.url.path])
-        ),
-        authSpec = $conn.authSpec->meta::protocols::pure::v1_33_0::transformation::fromPureGraph::authentication::transformAuthenticationSpecification($extensions)
-    );
-  println($tmp); //fail();
-  $tmp;
-}
+            // Wait longer for server and script to initialize
+            Thread.sleep(20000);
+            System.out.println("Container logs after startup: " + deephavenContainer.getLogs());
+            return true;
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-    _type: String[1] = 'intType'; // todo - anumam - do for all types
-}
+//            deephavenContainer.start();
+//            System.out.println("Started Deephaven container on host: " + deephavenContainer.getHost() +
+//                    " port: " + deephavenContainer.getMappedPort(DEEPHAVEN_PORT));
+//            System.out.println("PSK set to: " + STATIC_PSK);
+//            System.out.println("Startup script set to: /data/load_data.py");
+//
+//            Thread.sleep(5000); // Wait for server and script to initialize
+//
+//
+//            return true;
+        }
+        catch (Exception e)
+        {
+            System.err.println("Failed to start Deephaven container: " + e.getMessage());
+            e.printStackTrace();
+            stopDeephaven();
+            return false;
+        }
+    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::BooleanType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-}
+    public static boolean stopDeephaven()
+    {
+        if (deephavenContainer != null && deephavenContainer.isRunning())
+        {
+            try
+            {
+                deephavenContainer.stop();
+                System.out.println("Deephaven container stopped");
+                return true;
+            }
+            catch (Exception e)
+            {
+                System.err.println("Failed to stop Deephaven container: " + e.getMessage());
+                return false;
+            }
+            finally
+            {
+                deephavenContainer = null;
+                discoveredPsk.set(STATIC_PSK);
+            }
+        }
+        else
+        {
+            System.out.println("No Deephaven container running to stop");
+            return true;
+        }
+    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::ByteType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-}
+    public static boolean loadStaticTable(String imageTag, String tableName, String jsonData)
+    {
+        if (deephavenContainer == null || !deephavenContainer.isRunning())
+        {
+            System.err.println("Deephaven container not running for imageTag: " + imageTag);
+            return false;
+        }
+        System.out.println("Data loading handled at startup via load_data.groovy for table '" + tableName + "'");
+        return true;
+    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::CharType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-}
+    public static String getPsk()
+    {
+        return discoveredPsk.get();
+    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::ShortType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-}
+//    public static void main(String[] args)
+//    {
+//        String imageTag = "dockerhub.site.gs.com:8413/deephaven/server:latest";
+//        String tableName = "nds_desktops";
+//        String jsonData = "[{\"Desktop_ID\": 1, \"Desktop_Name\": \"Alpha\", \"City_Name\": \"Dallas\"}, {\"Desktop_ID\": 2, \"Desktop_Name\": \"Beta\", \"City_Name\": \"New York\"}]";
+//
+//        if (startDeephaven(imageTag))
+//        {
+//            loadStaticTable(imageTag, tableName, jsonData);
+//
+//            // Test table existence with a Deephaven client session
+//            try
+//            {
+//                ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+//                DeephavenTarget target = DeephavenTarget.builder()
+//                        .host(deephavenContainer.getHost())
+//                        .port(deephavenContainer.getMappedPort(DEEPHAVEN_PORT))
+//                        .isSecure(false)
+//                        .build();
+//                ClientConfig clientConfig = ClientConfig.builder()
+//                        .target(target)
+//                        .build();
+//                SessionConfig sessionConfig = SessionConfig.builder()
+//                        .authenticationTypeAndValue("io.deephaven.authentication.psk.PskAuthenticationHandler " + STATIC_PSK) // Match server PSK
+//                        .build();
+//                RootAllocator bufferAllocator = new RootAllocator();
+//                BarrageSessionFactoryConfig.Factory barrageSessionFactory = BarrageSessionFactoryConfig.builder()
+//                        .clientConfig(clientConfig)
+//                        .allocator(bufferAllocator)
+//                        .scheduler(scheduler)
+//                        .build()
+//                        .factory();
+//
+//                try (BarrageSession session = barrageSessionFactory.newBarrageSession(sessionConfig))
+//                {
+//                    System.out.println("Connected to Deephaven server at " + target.host() + ":" + target.port());
+//
+//                    // Execute a simple query to verify nds_desktops
+//                    TicketTable ticketTable = TicketTable.fromQueryScopeField(tableName);
+//                    TableHandle tableHandle = session.session().execute(ticketTable);
+//                    try (FlightStream flightStream = session.stream(tableHandle.ticketId()))
+//                    {
+////                        int rowCount = flightStream.getRoot().getRowCount();
+//                        System.out.println("Table 'nds_desktops' found with - rows");
+//                        while (flightStream.next())
+//                        {
+//                            System.out.println("Received data batch from nds_desktops");
+//                        }
+//                    }
+//                    System.out.println("Successfully verified nds_desktops table");
+//                }
+//            }
+//            catch (Exception e)
+//            {
+//                System.err.println("Failed to verify nds_desktops table: " + e.getMessage());
+//                e.printStackTrace();
+//            }
+//
+//            System.out.println("Access Deephaven at http://" + deephavenContainer.getHost() + ":" +
+//                    deephavenContainer.getMappedPort(DEEPHAVEN_PORT) + "/?psk=" + STATIC_PSK);
+//            try
+//            {
+//                Thread.sleep(60000);
+//            }
+//            catch (InterruptedException e)
+//            {
+//                System.err.println("Interrupted: " + e.getMessage());
+//            }
+//            stopDeephaven();
+//        }
+//        else
+//        {
+//            System.err.println("Failed to start Deephaven container");
+//        }
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::IntType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-}
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::LongType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-}
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::FloatType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-}
+    public static void main(String[] args) throws InterruptedException
+    {
+//        startDeephaven();
+//        System.out.println("PSK: " + getPsk());
+        stopDeephaven();
+    }
+//
+//    public static void main(String[] args)
+//    {
+//        String imageTag = "dockerhub.site.gs.com:8413/deephaven/server:latest";
+//        String tableName = "nds_desktops";
+//        String jsonData = "[{\"DesktopName\": \"Alpha\", \"CityName\": \"Dallas\"}, {\"DesktopName\": \"Beta\", \"CityName\": \"New York\"}]";
+//
+//        if (startDeephaven())
+//        {
+//            // Data is loaded at startup, so just verify
+//            // loadStaticTable(tableName, jsonData);
+//            LOGGER.info("Access Deephaven at http://{}:{}/?psk={}",
+//                    deephavenContainer.getHost(), deephavenContainer.getMappedPort(DEEPHAVEN_PORT), STATIC_PSK);
+//            try
+//            {
+//                Thread.sleep(60000); // Keep running for 60 seconds
+//            }
+//            catch (InterruptedException e)
+//            {
+//                LOGGER.error("Interrupted", e);
+//            }
+//            stopDeephaven();
+//        }
+//        else
+//        {
+//            LOGGER.error("Failed to start Deephaven container");
+//        }
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::DoubleType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-}
+//    public static boolean startDeephaven() //throws InterruptedException
+//    {
+//        if (deephavenContainer != null && deephavenContainer.isRunning())
+//        {
+//            System.out.println("Deephaven container already running; stopping it first.");
+////            LOGGER.warn("Deephaven container already running; stopping it first.");
+//            stopDeephaven();
+//        }
+//        try
+//        {
+//            DockerImageName imageName = DockerImageName.parse(DEEPHAVEN_IMAGE);
+//            deephavenContainer = new GenericContainer<>(imageName)
+//                    .withExposedPorts(DEEPHAVEN_PORT)
+//                    .withPrivilegedMode(true) // Add --privileged to match working Podman command
+//                    .withLogConsumer(new Slf4jLogConsumer(LOGGER).withPrefix("Deephaven"))
+//                    .withCopyFileToContainer(MountableFile.forClasspathResource("load_data.py"), "/data/load_data.py")
+//                    .withEnv("START_OPTS", "-Xmx4g -Dauthentication.psk=" + STATIC_PSK +
+//                             " -Ddeephaven.console.startupScript=/data/load_data.py");
+//
+//            // Log consumer to capture PSK
+////            deephavenContainer.withLogConsumer(frame ->
+////            {
+////                String log = frame.getUtf8StringWithoutLineEnding();
+////                LOGGER.debug("Container log: {}", log); // Log all lines for debugging
+////                if (log.contains("psk="))
+////                {
+////                    String psk = log.substring(log.indexOf("psk=") + 4).trim();
+////                    if (psk.contains(" "))
+////                    {
+////                        psk = psk.substring(0, psk.indexOf(" "));
+////                    }
+////                    discoveredPsk.set(psk);
+////                    int mappedPort = deephavenContainer.getMappedPort(DEEPHAVEN_PORT);
+////                    System.out.println("Discovered PSK: " + psk + " | Connect URL: http://localhost:" + mappedPort + "/?psk=" + psk);
+////                }
+////            });
+//
+//            long startTime = System.currentTimeMillis();
+//            System.out.println("Starting Deephaven container with image: " + DEEPHAVEN_IMAGE);
+//            deephavenContainer.start();
+//
+////            // Wait for PSK or timeout
+////            int waitSeconds = 120; // 2 minutes
+////            for (int i = 0; i < waitSeconds && discoveredPsk.get() == null; i++)
+////            {
+////                Thread.sleep(1000);
+////            }
+////
+////            if (discoveredPsk.get() == null)
+////            {
+////                String logs = deephavenContainer.getLogs();
+////                System.out.println("PSK not found in logs after " + waitSeconds + " seconds. Full logs:\n" + logs);
+////                throw new RuntimeException("Failed to extract PSK from Deephaven logs");
+////            }
+//
+//            long endTime = System.currentTimeMillis();
+//            System.out.println("Started Deephaven container on host: " + deephavenContainer.getHost() + " port: " + deephavenContainer.getMappedPort(DEEPHAVEN_PORT) + " time taken (ms): " + (endTime - startTime));
+//            return true;
+//        }
+//        catch (Exception e)
+//        {
+//            System.out.println(e);
+//            e.printStackTrace();
+//            LOGGER.error("Failed to start Deephaven container", e);
+//            stopDeephaven();
+//            return false;
+//            //throw e; // Re-throw to see full stack trace
+//        }
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::StringType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-}
+//    public static boolean startDeephaven() //throws InterruptedException
+//    {
+//        if (deephavenContainer != null && deephavenContainer.isRunning())
+//        {
+//            System.out.println("Deephaven container already running; stopping it first.");
+////            LOGGER.warn("Deephaven container already running; stopping it first.");
+//            stopDeephaven();
+//        }
+//        try
+//        {
+//            // Create a shared network for Deephaven adn PostgreSQL
+//            Network network = Network.newNetwork();
+//
+//            // Start PostgreSQL container
+//            postgresContainer = new PostgreSQLContainer<>("postgres:15.1")
+//                    .withNetwork(network)
+//                    .withNetworkAliases("postgres")
+//                    .withDatabaseName("deephaven")
+//                    .withUsername("deephaven")
+//                    .withPassword("password")
+//                    .withInitScript("init-users.sql");
+//            postgresContainer.start();
+//
+//            // Configure deephaven with username/password auth
+//            DockerImageName imageName = DockerImageName.parse(DEEPHAVEN_IMAGE);
+//            deephavenContainer = new GenericContainer<>(imageName)
+//                    .withNetwork(network)
+//                    .withExposedPorts(DEEPHAVEN_PORT)
+//                    .withPrivilegedMode(true) // Add --privileged to match working Podman command
+//                    .withLogConsumer(new Slf4jLogConsumer(LOGGER).withPrefix("Deephaven"))
+//                    .withEnv("START_OPTS", "-Xmx4g " +
+//                            "-DAuthHandlers=io.deephaven.authentication.sql.BasicSqlAuthenticationHandler " +
+//                            "-Dsql.auth.db.url=jdbc:postgresql://postgres:5432/deephaven " +
+//                            "-Dsql.auth.db.user=deephaven" +
+//                            "-Dsql.auth.db.password=password")
+//                    .dependsOn(postgresContainer);
+//
+//            long startTime = System.currentTimeMillis();
+//            System.out.println("Starting Deephaven container with image: " + DEEPHAVEN_IMAGE);
+//            deephavenContainer.start();
+//            long endTime = System.currentTimeMillis();
+//            System.out.println("Started Deephaven container on host: " + deephavenContainer.getHost() + " port: " + deephavenContainer.getMappedPort(DEEPHAVEN_PORT) + " time taken (ms): " + (endTime - startTime));
+//            return true;
+//        }
+//        catch (Exception e)
+//        {
+//            System.out.println(e);
+//            e.printStackTrace();
+//            LOGGER.error("Failed to start Deephaven container", e);
+//            stopDeephaven();
+//            return false;
+//            //throw e; // Re-throw to see full stack trace
+//        }
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::TimeType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-}
+//    public static boolean stopDeephaven()
+//    {
+//        if (deephavenContainer != null && deephavenContainer.isRunning())
+//        {
+//            try
+//            {
+//                deephavenContainer.stop();
+//                System.out.println("Deephaven container stopped");
+//                return true;
+//            }
+//            catch (Exception e)
+//            {
+//                System.out.println("Failed to stop Deephaven container" + e);
+//                return false;
+//            }
+//            finally
+//            {
+//                deephavenContainer = null;
+////                discoveredPsk.set(null);
+//                discoveredPsk.set(STATIC_PSK);
+//            }
+//        }
+//        else
+//        {
+//            System.out.println("No Deephaven container running to stop");
+//            return true;
+//        }
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::type::CustomType extends meta::external::store::deephaven::protocol::v1_33_0::type::Type
-{
-    componentType: meta::external::store::deephaven::protocol::v1_33_0::type::Type[1];
-}
+//    public static boolean stopDeephaven()
+//    {
+//        if (deephavenContainer != null && deephavenContainer.isRunning())
+//        {
+//            try
+//            {
+//                deephavenContainer.stop();
+//                System.out.println("Deephaven container stopped");
+////                return true;
+//            }
+//            catch (Exception e)
+//            {
+//                System.out.println("Failed to stop Deephaven container" + e);
+//                return false;
+//            }
+//        }
+//        if (postgresContainer != null && postgresContainer.isRunning())
+//        {
+//            try
+//            {
+//                postgresContainer.stop();
+//                System.out.println("Deephaven container stopped");
+////                return true;
+//            }
+//            catch (Exception e)
+//            {
+//                System.out.println("Failed to stop Deephaven container" + e);
+//                return false;
+//            }
+//        }
+//        deephavenContainer = null;
+//        postgresContainer = null;
+//        discoveredPsk.set(null);
+//        return true;
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::store::DeephavenStore extends meta::protocols::pure::v1_33_0::metamodel::store::Store
-{
-    _type: String[1] = 'deephavenStore';
-    tables: meta::external::store::deephaven::protocol::v1_33_0::store::Table[1..*];
-}
+//    public static boolean loadStaticTable(String tableName, String jsonData)
+//    {
+//        if (deephavenContainer == null || !deephavenContainer.isRunning())
+//        {
+//            System.out.println("Deephaven container not running; cannot load table");
+//            return false;
+//        }
+//        if (discoveredPsk.get() == null)
+//        {
+//            System.out.println("PSK not discovered; cannot load table");
+//            return false;
+//        }
+//        try
+//        {
+//            String host = deephavenContainer.getHost();
+//            int port = deephavenContainer.getMappedPort(DEEPHAVEN_PORT);
+//            String psk = discoveredPsk.get();
+//            System.out.println("Loading static table '" + tableName + "' with data: " + jsonData);
+//
+//            // TODO: Replace with actual Deephaven API call (e.g., gRPC or REST)
+//            // Example: HttpClient.post("http://" + host + ":" + port + "/table/load?psk=" + psk, new TableRequest(tableName, jsonData));
+//            System.out.println("Stub: Loaded table " + tableName + " with data: " + jsonData);
+//            return true;
+//        }
+//        catch (Exception e)
+//        {
+//            System.out.println("Failed to load static table '" + tableName + "' : " + e);
+//            return false;
+//        }
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::store::Table
-{
-    name: String[1];
-    columns: meta::external::store::deephaven::protocol::v1_33_0::store::Column[1..*];
-}
+//    public static boolean loadStaticTable(String tableName, String jsonData)
+//    {
+//        if (deephavenContainer == null || !deephavenContainer.isRunning())
+//        {
+//            LOGGER.error("Deephaven container not running for imageTag: latest");
+//            return false;
+//        }
+//        LOGGER.info("Data loading handled at startup via load_data.py for table '{}'", tableName);
+//        return true; // Assume success since script runs at startup
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::store::Column
-{
-    _type: String[1] = 'column';
-    name: String[1];
-    type: meta::external::store::deephaven::protocol::v1_33_0::type::Type[1];
-}
+//    public static boolean authenticate(String psk)
+//    {
+//        if (deephavenContainer == null || !deephavenContainer.isRunning())
+//        {
+//            System.out.println("Deephaven container not running; cannot authenticate");
+//            return false;
+//        }
+//        String currentPsk = discoveredPsk.get();
+//        if (currentPsk == null)
+//        {
+//            System.out.println("No PSK discovered yet; cannot authenticate");
+//            return false;
+//        }
+//        boolean isValid = currentPsk.equals(psk);
+////        System.out.println("PSK authentication attempt with '" + psk + "': {}");
+//        LOGGER.info("PSK authentication attempt with '{}': {}", psk, isValid ? "success" : "failure");
+//        return isValid;
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::runtime::DeephavenConnection extends meta::protocols::pure::v1_33_0::metamodel::runtime::Connection
-{
-    // element: String[1]; todo - anumam
-    sourceSpec: meta::external::store::deephaven::protocol::v1_33_0::runtime::DeephavenSourceSpecification[1];
-    authSpec: meta::protocols::pure::v1_33_0::metamodel::runtime::connection::authentication::AuthenticationSpecification[1];
-}
+//    public static String getPsk()
+//    {
+//        return discoveredPsk.get();
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::runtime::DeephavenSourceSpecification
-{
-    url: String[1];
-}
+//    public static String getPsk()
+//    {
+//        return "password";
+//    }
 
-Class meta::external::store::deephaven::protocol::v1_33_0::executionPlan::DeephavenExecutionNode extends meta::protocols::pure::v1_33_0::metamodel::executionPlan::ExecutionNode
-{
-    query: meta::external::store::deephaven::protocol::v1_33_0::executionPlan::DeephavenQuery[1];
-    connection: meta::external::store::deephaven::protocol::v1_33_0::runtime::DeephavenConnection[1];
-}
-
-Class meta::external::store::deephaven::protocol::v1_33_0::executionPlan::DeephavenQuery
-{
-    _type: String[1] = 'deephavenQuery';
-    source: meta::external::store::deephaven::protocol::v1_33_0::store::Table[0..1];
-}
-
-Class meta::external::store::deephaven::protocol::v1_33_0::executionPlan::context::DeephavenExecutionContext extends meta::protocols::pure::v1_33_0::metamodel::ExecutionContext
-{
-    _type: String[1] = 'deephavenExecutionContext';
 }
