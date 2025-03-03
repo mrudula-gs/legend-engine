@@ -1,107 +1,39 @@
 package org.example;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.output.Slf4jLogConsumer;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.utility.DockerImageName;
-import org.testcontainers.utility.MountableFile;
+public class TestDHInvoker {
+    public static void main(String[] args) {
+        TestDH container = new TestDH();
+        boolean started = container.start();
+        if (started) {
+            int runningPort = container.getMappedPort();
+            System.out.println("Running Port: " + runningPort);
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-public class TestDH {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TestDH.class);
-    private static final String IMAGE = "ghcr.io/deephaven/server:latest";
-    private static final int PORT = 10_000;
-    private static final String PSK = "myStaticPSK";
-    private static final String APP_DIR = "/app.d";
-    private static final String START_OPTS = "-Xmx4g -Dauthentication.psk=" + PSK + 
-                                             " -Ddeephaven.application.dir=" + APP_DIR + 
-                                             " -Ddeephaven.console.type=groovy";
-    private static final String SCRIPT_RESOURCE = "script.groovy";
-
-    private GenericContainer<?> container;
-
-    public boolean start() {
-        stop();
-        try {
-            Path tempDir = createTempAppDirectory();
-            container = new GenericContainer<>(DockerImageName.parse(IMAGE))
-                    .withExposedPorts(PORT)
-                    .withCopyFileToContainer(MountableFile.forHostPath(tempDir), APP_DIR)
-                    .withEnv("START_OPTS", START_OPTS)
-                    .withLogConsumer(new Slf4jLogConsumer(LOGGER).withPrefix("Deephaven"))
-                    .waitingFor(Wait.forHttp("/").forPort(PORT).forStatusCode(200)
-                            .withStartupTimeout(java.time.Duration.ofMinutes(2)));
-
-            System.out.println("Starting Deephaven container with image: " + IMAGE);
-            container.start();
-            int mappedPort = container.getMappedPort(PORT);
-            System.out.println("Started Deephaven container on http://localhost:" + mappedPort + "/?psk=" + PSK);
-            return true;
-        } catch (Exception e) {
-            System.err.println("Failed to start Deephaven container: " + e.getMessage());
-            e.printStackTrace();
-            stop();
-            return false;
-        }
-    }
-
-    public boolean stop() {
-        if (container != null && container.isRunning()) {
-            try {
-                container.stop();
-                System.out.println("Deephaven container stopped");
-                return true;
-            } catch (Exception e) {
-                System.err.println("Failed to stop Deephaven container: " + e.getMessage());
-                return false;
-            } finally {
-                container = null;
+            String logs = container.getLogs();
+            if (logs.contains("Hello from Python in Deephaven!") && 
+                logs.contains("Table nds_desktops created with dummy data")) { // Updated message check
+                System.out.println("Python script executed successfully");
+            } else {
+                System.err.println("Python script execution failed. Logs:\n" + logs);
             }
+        } else {
+            System.err.println("Failed to start container");
         }
-        System.out.println("No Deephaven container running to stop");
-        return true;
-    }
-
-    public String getPsk() {
-        return PSK;
-    }
-
-    public int getMappedPort() {
-        if (container != null && container.isRunning()) {
-            return container.getMappedPort(PORT);
-        }
-        throw new IllegalStateException("Container is not running");
-    }
-
-    public boolean isRunning() {
-        return container != null && container.isRunning();
-    }
-
-    private Path createTempAppDirectory() throws IOException {
-        Path tempDir = Files.createTempDirectory("deephaven-app");
-        String appConfig = "type=script\n" +
-                          "scriptType=groovy\n" +
-                          "enabled=true\n" +
-                          "id=test-app\n" +
-                          "name=Test App\n" +
-                          "file_0=./script.groovy";
-        Files.write(tempDir.resolve("test.app"), appConfig.getBytes(StandardCharsets.UTF_8));
-
-        // Load script from resources
-        String scriptContent = new String(
-                TestDH.class.getClassLoader().getResourceAsStream(SCRIPT_RESOURCE).readAllBytes(),
-                StandardCharsets.UTF_8);
-        Files.write(tempDir.resolve("script.groovy"), scriptContent.getBytes(StandardCharsets.UTF_8));
-
-        System.out.println("Created temp directory: " + tempDir.toAbsolutePath());
-        System.out.println("App config: " + Files.readAllLines(tempDir.resolve("test.app")));
-        System.out.println("Script: " + Files.readAllLines(tempDir.resolve("script.groovy")));
-        return tempDir;
+        container.stop();
     }
 }
+
+
+from deephaven import new_table
+from deephaven.column import int_col, string_col
+
+print("Hello from Python in Deephaven!")
+try:
+    # Create a table with dummy data
+    nds_desktops = new_table([
+        int_col("Desktop_ID", [1, 2, 3]),
+        string_col("Desktop_Name", ["Alpha", "Beta", "Gamma"]),
+        string_col("City_Name", ["Dallas", "New York", "Chicago"])
+    ])
+    print("Table nds_desktops created with dummy data")
+except Exception as e:
+    print(f"Error creating table: {e}")
