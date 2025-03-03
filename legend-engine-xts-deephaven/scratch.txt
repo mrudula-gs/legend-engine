@@ -1,39 +1,18 @@
-package org.example;
+package org.finos.legend.engine.protocol.deephaven.metamodel.pure;
 
-public class TestDHInvoker {
-    public static void main(String[] args) {
-        TestDH container = new TestDH();
-        boolean started = container.start();
-        if (started) {
-            int runningPort = container.getMappedPort();
-            System.out.println("Running Port: " + runningPort);
+import org.finos.legend.engine.protocol.deephaven.metamodel.DeephavenQuery;
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNodeVisitor;
 
-            String logs = container.getLogs();
-            if (logs.contains("Hello from Python in Deephaven!") && 
-                logs.contains("Table nds_desktops created with dummy data")) { // Updated message check
-                System.out.println("Python script executed successfully");
-            } else {
-                System.err.println("Python script execution failed. Logs:\n" + logs);
-            }
-        } else {
-            System.err.println("Failed to start container");
-        }
-        container.stop();
+public class DeephavenExecutionNode extends ExecutionNode
+{
+    public DeephavenQuery query;
+    public DeephavenConnection connection;
+
+    @Override
+    public <T> T accept(ExecutionNodeVisitor<T> executionNodeVisitor)
+    {
+        return executionNodeVisitor.visit(this);
     }
 }
-
-
-from deephaven import new_table
-from deephaven.column import int_col, string_col
-
-print("Hello from Python in Deephaven!")
-try:
-    # Create a table with dummy data
-    nds_desktops = new_table([
-        int_col("Desktop_ID", [1, 2, 3]),
-        string_col("Desktop_Name", ["Alpha", "Beta", "Gamma"]),
-        string_col("City_Name", ["Dallas", "New York", "Chicago"])
-    ])
-    print("Table nds_desktops created with dummy data")
-except Exception as e:
-    print(f"Error creating table: {e}")
