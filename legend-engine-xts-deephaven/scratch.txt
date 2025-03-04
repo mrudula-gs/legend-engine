@@ -1,46 +1,281 @@
-package _pure.plan.root;
+package org.finos.legend.engine.plan.execution.stores.deephaven.plugin;
 
+import org.apache.arrow.flight.FlightRuntimeException;
+import org.apache.arrow.flight.FlightStream;
+import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.VectorSchemaRoot;
+import org.finos.legend.engine.plan.execution.nodes.helpers.platform.ExecutionNodeJavaPlatformHelper;
+import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
+import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
+import org.finos.legend.engine.plan.execution.result.Result;
+import org.finos.legend.engine.plan.execution.result.object.StreamingObjectResult;
+import org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession;
+import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenExecutionActivity;
+import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenStreamingResult;
+import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
+//import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
+import org.finos.legend.engine.protocol.deephaven.metamodel.pure.DeephavenExecutionNode;
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
+import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenSourceSpecification;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNodeVisitor;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.JavaPlatformImplementation;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.authentication.specification.AuthenticationSpecification;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.authentication.specification.PSKAuthenticationSpecification;
+import org.finos.legend.engine.shared.core.identity.Identity;
+import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
+import org.finos.legend.engine.shared.core.operational.errorManagement.ExceptionCategory;
 import io.deephaven.client.impl.BarrageSession;
 import io.deephaven.client.impl.TableHandle;
-import io.deephaven.qst.table.TableSpec;
-import io.deephaven.qst.table.TicketTable;
-import java.math.*;
-import java.util.*;
-import java.util.function.*;
-import java.util.stream.*;
-import org.finos.legend.engine.plan.dependencies.domain.date.DayOfWeek;
-import org.finos.legend.engine.plan.dependencies.domain.date.DurationUnit;
-import org.finos.legend.engine.plan.dependencies.domain.date.PureDate;
-import org.finos.legend.engine.plan.dependencies.util.Library;
-import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class Execute implements IDeephavenExecutionNodeSpecifics
+import java.net.URI;
+import java.util.Spliterator;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Result>
 {
-    private final TableSpec tableSpec = TicketTable.fromQueryScopeField("nds_desktops")
-                                                   .select("Desktop_ID", "City_Name", "Desktop_Name");
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenExecutionNodeExecutor.class);
 
-    public void Execute()
+    private final Identity identity;
+    private final ExecutionState executionState;
+    private final DeephavenStoreState state;
+
+    public DeephavenExecutionNodeExecutor(Identity identity, ExecutionState executionState, DeephavenStoreState state)
     {
+        this.identity = identity;
+        this.executionState = executionState;
+        this.state = state;
     }
 
-    public TableHandle execute(BarrageSession session)
+    @Override
+    public Result visit(ExecutionNode executionNode)
     {
+        if (executionNode instanceof DeephavenExecutionNode)
+        {
+            return executeDeephavenNode((DeephavenExecutionNode) executionNode);
+        }
+        throw new IllegalStateException("DEEPHAVEN: Unexpected node type: " + executionNode.getClass().getSimpleName());
+    }
+
+    private Result executeDeephavenNode(DeephavenExecutionNode node)
+    {
+        DeephavenSession deephavenSession = null;
         try
         {
-            return session.session().execute(tableSpec);
+            deephavenSession = createDeephavenSession(node.connection);
+            try (BarrageSession session = deephavenSession.getBarrageSession())
+            {
+                System.out.println("Connected to Deephaven Server at " + node.connection.sourceSpec.url.getHost() + ":" +
+                        node.connection.sourceSpec.url.getPort() + " with PSK for node execution");
+                IDeephavenExecutionNodeSpecifics specifics = createSpecifics(node);
+                TableHandle table = specifics.execute(session);
+                System.out.println("Executing query with TableHandle: " + table.ticketId());
+
+                System.out.println("Starting FlightStream for table: " + table.ticketId());
+                FlightStream flightStream = session.stream(table.ticketId());
+                System.out.println("FlightStream initialized successfully: " + flightStream);
+
+                Stream<Map<String, Object>> rowStream = StreamSupport.stream(new DeephavenRowSpliterator(flightStream), false);
+                // Collect the stream into a list to ensure full consumption and closure
+                System.out.println("Consuming stream to collect results");
+                List<Map<String, Object>> results = rowStream.collect(Collectors.toList());
+                System.out.println("Stream consumed, collected " + results.size() + " rows");
+
+                // Explicitly close FlightStream after consumption
+                flightStream.close();
+                System.out.println("FlightStream closed successfully after consumption");
+
+                // Create a new stream from the collected results for serialization
+                Stream<Map<String, Object>> resultStream = results.stream();
+
+                DeephavenSourceSpecification sourceSpec = node.connection.sourceSpec;
+                URI serverUrl = sourceSpec.url;
+                String tableName = table.ticketId().toString();
+                DeephavenExecutionActivity activity = new DeephavenExecutionActivity(serverUrl, tableName);
+                List<org.finos.legend.engine.plan.execution.result.ExecutionActivity> activities = Collections.singletonList(activity);
+
+                DeephavenStreamingResult deephavenResult = new DeephavenStreamingResult(activities);
+                return new StreamingObjectResult<>(resultStream, deephavenResult.getResultBuilder(), deephavenResult);
+            }
+        }
+        catch (EngineException e)
+        {
+            throw e;
         }
         catch (io.deephaven.client.impl.TableHandle.TableHandleException e)
         {
-            throw new RuntimeException(e);
+            throw new EngineException("Deephaven query execution failed: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
         }
         catch (InterruptedException e)
         {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            throw new EngineException("Deephaven query interrupted: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
+        }
+        catch (Exception e)
+        {
+            throw new EngineException("Unexpected error executing Deephaven query: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
+        }
+        finally
+        {
+            if (deephavenSession != null)
+            {
+                try
+                {
+                    deephavenSession.close();
+                    System.out.println("Deephaven session closed successfully");
+                }
+                catch (Exception e)
+                {
+                    System.err.println("Failed to close DeephavenSession: " + e.getMessage());
+                    throw new EngineException("Failed to close Deephaven session: " + e.getMessage(), e, ExceptionCategory.SERVER_EXECUTION_ERROR);
+                }
+            }
         }
     }
 
-    public TableSpec getTableSpec()
+    private IDeephavenExecutionNodeSpecifics createSpecifics(DeephavenExecutionNode node) throws ReflectiveOperationException
     {
-        return tableSpec;
+        String specificsClassName = JavaHelper.getExecutionClassFullName((JavaPlatformImplementation) node.implementation);
+        Class<?> specificsClass = ExecutionNodeJavaPlatformHelper.getClassToExecute(node, specificsClassName, executionState, identity);
+        return (IDeephavenExecutionNodeSpecifics) specificsClass.getConstructor().newInstance();
+    }
+
+    private DeephavenSession createDeephavenSession(DeephavenConnection connection)
+    {
+        if (!(connection.authSpec instanceof PSKAuthenticationSpecification))
+        {
+            throw new EngineException("Unsupported authentication type: " + connection.authSpec.getClass().getSimpleName(),
+                    ExceptionCategory.USER_CREDENTIALS_ERROR);
+        }
+        PSKAuthenticationSpecification pskSpec = (PSKAuthenticationSpecification) connection.authSpec;
+        if (pskSpec.psk == null || pskSpec.psk.isEmpty())
+        {
+            throw new EngineException("PSK secret is missing or empty for " + connection.sourceSpec.url,
+                    ExceptionCategory.USER_CREDENTIALS_ERROR);
+        }
+        System.out.println("Creating Deephaven session for " + connection.sourceSpec.url + " with PSK: " + pskSpec.psk);
+        Optional<DeephavenSession> session = this.state.getProviders().stream()
+                .map(provider ->
+                {
+                    try
+                    {
+                        Optional<DeephavenSession> providedSession = provider.provide(pskSpec, connection.sourceSpec);
+                        providedSession.ifPresent(s -> System.out.println("Session created successfully for " + connection.sourceSpec.url));
+                        return providedSession;
+                    }
+                    catch (Exception e)
+                    {
+                        System.err.println("Failed to create session with provider: " + e.getMessage());
+                        return Optional.<DeephavenSession>empty();
+                    }
+                })
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst();
+        return session.orElseThrow(() -> new EngineException("Unable to create a Deephaven Session for " +
+                connection.sourceSpec.url,
+                ExceptionCategory.USER_CREDENTIALS_ERROR));
+    }
+
+    private static class DeephavenRowSpliterator implements Spliterator<Map<String, Object>>
+    {
+        private final FlightStream flightStream;
+        private VectorSchemaRoot root;
+        private List<FieldVector> vectors;
+        private int currentRowIndex;
+        private int rowCount;
+
+        DeephavenRowSpliterator(FlightStream flightStream)
+        {
+            this.flightStream = flightStream;
+            this.currentRowIndex = 0;
+            this.rowCount = 0;
+            System.out.println("DeephavenRowSpliterator initialized with FlightStream: " + flightStream);
+        }
+
+
+        @Override
+        public boolean tryAdvance(java.util.function.Consumer<? super Map<String, Object>> action)
+        {
+            try
+            {
+                while (true)
+                {
+                    if (root == null || currentRowIndex >= rowCount)
+                    {
+                        System.out.println("Fetching next FlightStream batch");
+                        if (!flightStream.next())
+                        {
+                            System.out.println("No more data in FlightStream");
+                            return false;
+                        }
+                        root = flightStream.getRoot();
+                        if (root == null)
+                        {
+                            System.err.println("FlightStream returned null root - possible authentication or server issue");
+                            throw new EngineException("FlightStream returned null root, likely due to authentication failure", ExceptionCategory.USER_EXECUTION_ERROR);
+                        }
+                        vectors = root.getFieldVectors();
+                        rowCount = root.getRowCount();
+                        currentRowIndex = 0;
+                        System.out.println("Fetched batch with " + rowCount + " rows");
+                    }
+                    if (currentRowIndex < rowCount)
+                    {
+                        Map<String, Object> row = new HashMap<>(vectors.size());
+                        for (FieldVector vector : vectors)
+                        {
+                            Object value = vector.getObject(currentRowIndex);
+                            row.put(vector.getName(), value);
+                        }
+                        action.accept(row);
+                        currentRowIndex++;
+                        return true;
+                    }
+                }
+            }
+            catch (FlightRuntimeException e)
+            {
+                System.err.println("Flight streaming failed: " + e.getMessage());
+                throw new EngineException("Flight streaming error: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
+            }
+            catch (Exception e)
+            {
+                System.err.println("Streaming error: " + e.getMessage());
+                if (e instanceof NullPointerException)
+                {
+                    throw new EngineException("NullPointerException in streaming, likely authentication header issue: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
+                }
+                throw new EngineException("Error streaming Deephaven results: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
+            }
+        }
+
+        @Override
+        public Spliterator<Map<String, Object>> trySplit()
+        {
+            return null;
+        }
+
+        @Override
+        public long estimateSize()
+        {
+            return Long.MAX_VALUE;
+        }
+
+        @Override
+        public int characteristics()
+        {
+            return Spliterator.ORDERED | Spliterator.NONNULL;
+        }
     }
 }
