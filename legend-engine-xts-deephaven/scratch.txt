@@ -1,7 +1,6 @@
-Compilation error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:124 column:24), "The system can't find a match for the function: j_variable(_:Class[1],_:String[1],_:String[2],_:Code[1])
+Compilation error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:126 column:66), "The system can't find a match for the function: addModifiers(_:Code[1],_:String[2])
 
 These functions, in packages already imported, would match the function call if you changed the parameters.
-  meta::external::language::java::factory::j_variable(Parameter[1]):Code[1]
-  meta::external::language::java::factory::j_variable(Type[1], String[1]):Code[1]
+  meta::external::language::java::factory::addModifiers(Class[1], String[*]):Class[1]
 
 No functions, in packages not imported, match the function name.
