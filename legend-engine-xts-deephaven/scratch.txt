@@ -1,225 +1,301 @@
-package org.finos.legend.engine.plan.execution.stores.deephaven.plugin;
+import meta::external::store::deephaven::metamodel::store::*;
+import meta::external::language::java::metamodel::*;
+import meta::external::store::deephaven::metamodel::*;
+import meta::pure::executionPlan::*;
+import meta::external::language::java::factory::project::*;
+import meta::external::language::java::factory::*;
+import meta::external::language::java::transform::*;
+import meta::pure::executionPlan::platformBinding::legendJava::shared::naming::*;
+import meta::pure::executionPlan::platformBinding::legendJava::shared::constraints::*;
+import meta::external::format::shared::binding::validation::*;
+import meta::pure::executionPlan::platformBinding::typeInfo::*;
+import meta::external::store::deephaven::executionPlan::platformBinding::legendJava::*;
+import meta::external::store::deephaven::metamodel::executionPlan::*;
+import meta::pure::extension::*;
+import meta::pure::executionPlan::platformBinding::legendJava::*;
 
-import org.apache.arrow.flight.FlightRuntimeException;
-import org.apache.arrow.flight.FlightStream;
-import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.VectorSchemaRoot;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.ExecutionNodeJavaPlatformHelper;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
-import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
-import org.finos.legend.engine.plan.execution.result.Result;
-import org.finos.legend.engine.plan.execution.result.object.StreamingObjectResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession;
-import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenExecutionActivity;
-import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenStreamingResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
-import org.finos.legend.engine.protocol.deephaven.metamodel.pure.DeephavenExecutionNode;
-import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
-import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenSourceSpecification;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNodeVisitor;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.JavaPlatformImplementation;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.authentication.specification.PSKAuthenticationSpecification;
-import org.finos.legend.engine.shared.core.identity.Identity;
-import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
-import org.finos.legend.engine.shared.core.operational.errorManagement.ExceptionCategory;
-import io.deephaven.client.impl.BarrageSession;
-import io.deephaven.client.impl.TableHandle;
 
-import java.net.URI;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::DeephavenLegendJavaPlatformBindingDescriptor extends LegendJavaPlatformBindingAdhocExtension
+{
+  enginePlatformDependencies: Function<{Conventions[1]->Conventions[1]}>[*];
+}
 
-public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Result> {
-    private final Identity identity;
-    private final ExecutionState executionState;
-    private final DeephavenStoreState state;
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenStoreLegendJavaPlatformBindingExtension(): LegendJavaPlatformBindingExtension[1]
+{
+   ^LegendJavaPlatformBindingExtension
+   (
+      platformId = legendJavaPlatformBindingId(),
+      id = 'DeephavenStoreLegendJavaPlatformBindingExtension',
 
-    public DeephavenExecutionNodeExecutor(Identity identity, ExecutionState executionState, DeephavenStoreState state) {
-        this.identity = identity;
-        this.executionState = executionState;
-        this.state = state;
-    }
+      supportedExecutionNodes = [meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode],
 
-    @Override
-    public Result visit(ExecutionNode executionNode) {
-        if (executionNode instanceof DeephavenExecutionNode) {
-            return executeDeephavenNode((DeephavenExecutionNode) executionNode);
-        }
-        throw new IllegalStateException("DEEPHAVEN: Unexpected node type: " + executionNode.getClass().getSimpleName());
-    }
+      adhocExtensions = [
+                            ^LegendJavaPlatformDependencyUpdateExtension
+                            (
+                                platformDependencyUpdate = {conventions: Conventions[1], extensions: Extension[*] |
+                                  $extensions->extractLegendJavaAdhocExtensionsOfType(DeephavenLegendJavaPlatformBindingDescriptor)
+                                      ->fold({e, uc |
+                                        $e.enginePlatformDependencies
+                                            ->map(e | $e->eval($uc))->first()->orElse($uc)
+                                      }, extendDeephavenJavaEngineDependencies($conventions))
+                                }
+                            )
+                        ],
 
-    private Result executeDeephavenNode(DeephavenExecutionNode node) {
-        DeephavenSession deephavenSession = null;
-        try {
-            deephavenSession = createDeephavenSession(node.connection);
-            try (BarrageSession session = deephavenSession.getBarrageSession()) {
-                System.out.println("Connected to Deephaven Server at " + node.connection.sourceSpec.url.getHost() + ":" +
-                        node.connection.sourceSpec.url.getPort() + " with PSK for node execution");
-                IDeephavenExecutionNodeSpecifics specifics = createSpecifics(node);
-                TableHandle table = specifics.execute(session);
-                System.out.println("Executing query with TableHandle: " + table.ticketId());
+      updateGenerationContextForNode = {node: ExecutionNode[1], context: GenerationContext[1], path: String[1], extensions: Extension[*], debug: DebugContext[1] |
+         $node->match([
+            d: meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1] | prepareForDeephavenExecutionNode($d, $path, $context, $extensions, $debug),
+            n: ExecutionNode[1] | $context
+         ])
+      },
 
-                System.out.println("Starting FlightStream for table: " + table.ticketId());
-                FlightStream flightStream = session.stream(table.ticketId());
-                System.out.println("FlightStream initialized successfully: " + flightStream);
+      generateLegendJavaCodeForNode = {node: meta::pure::executionPlan::ExecutionNode[1], path: String[1], context: GenerationContext[1], extensions: meta::pure::extension::Extension[*], debug: DebugContext[1] |
+        $node->match([
+            d: meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1]   | $d->meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateForDeephavenExecutionNode($path, $context, $debug),
+            n: meta::pure::executionPlan::ExecutionNode[1]   | ^GeneratedCode()
+         ]);
+      }
+   )
+}
+      
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::prepareForDeephavenExecutionNode(node: meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1], path: String[1], context: GenerationContext[1], extensions: Extension[*], debug: DebugContext[1]): GenerationContext[1]
+{
+  print(if($debug.debug, | $debug.space + '(' + $path + ') prepare DeephavenExecutionNode\n', | ''));
 
-                Stream<Map<String, Object>> rowStream = StreamSupport.stream(new DeephavenRowSpliterator(flightStream), false);
-                // Collect the stream into a list to ensure full consumption and closure
-                System.out.println("Consuming stream to collect results");
-                List<Map<String, Object>> results = rowStream.collect(Collectors.toList());
-                System.out.println("Stream consumed, collected " + results.size() + " rows");
+  let conventions = $context.conventions;
+  let resultType = $node.resultType;
 
-                // Explicitly close FlightStream after consumption
-                flightStream.close();
-                System.out.println("FlightStream closed successfully after consumption");
+  let updatedTypeInfo = $context.typeInfos->addForClass(DeephavenQuery); // TODO anumam - what is this for ?
 
-                // Create a new stream from the collected results for serialization
-                Stream<Map<String, Object>> resultStream = results.stream();
+  let nodeInfo = ^NodeInfo(
+                            path = $path,
+                            returnType = ^SimpleJavaType(
+                                                          pureType = $resultType.genericType.rawType->toOne(),
+                                                          javaType = $conventions->className($resultType.genericType.rawType->toOne())
+                                                          //javaType = $conventions->className(meta::pure::executionPlan::platformBinding::legendJava::PureDate)
+                                                        ),
+                            data = $node
+                          );
 
-                DeephavenSourceSpecification sourceSpec = node.connection.sourceSpec;
-                URI serverUrl = sourceSpec.url;
-                String tableName = table.ticketId().toString();
-                DeephavenExecutionActivity activity = new DeephavenExecutionActivity(serverUrl, tableName);
-                List<org.finos.legend.engine.plan.execution.result.ExecutionActivity> activities = Collections.singletonList(activity);
+   $context->addNodeInfo($nodeInfo)->setTypeInfos($updatedTypeInfo);
+}
 
-                DeephavenStreamingResult deephavenResult = new DeephavenStreamingResult(activities);
-                return new StreamingObjectResult<>(resultStream, deephavenResult.getResultBuilder(), deephavenResult);
-            }
-        } catch (EngineException e) {
-            throw e;
-        } catch (io.deephaven.client.impl.TableHandle.TableHandleException e) {
-            throw new EngineException("Deephaven query execution failed: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new EngineException("Deephaven query interrupted: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        } catch (Exception e) {
-            throw new EngineException("Unexpected error executing Deephaven query: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        } finally {
-            if (deephavenSession != null) {
-                try {
-                    deephavenSession.close();
-                    System.out.println("Deephaven session closed successfully");
-                } catch (Exception e) {
-                    System.err.println("Failed to close DeephavenSession: " + e.getMessage());
-                    throw new EngineException("Failed to close Deephaven session: " + e.getMessage(), e, ExceptionCategory.SERVER_EXECUTION_ERROR);
-                }
-            }
-        }
-    }
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateForDeephavenExecutionNode(node:meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1], path:String[1], context:GenerationContext[1], debug:DebugContext[1]): GeneratedCode[1]
+{
+  print(if($debug.debug, | $debug.space + '(' + $path + ') generate DeephavenExecutionNode\n', | ''));
+  let conventions = $context.conventions;
 
-    private IDeephavenExecutionNodeSpecifics createSpecifics(DeephavenExecutionNode node) throws ReflectiveOperationException {
-        String specificsClassName = JavaHelper.getExecutionClassFullName((JavaPlatformImplementation) node.implementation);
-        Class<?> specificsClass = ExecutionNodeJavaPlatformHelper.getClassToExecute(node, specificsClassName, executionState, identity);
-        return (IDeephavenExecutionNodeSpecifics) specificsClass.getConstructor().newInstance();
-    }
+   let ticketTableClass = javaClass('io.deephaven.qst.table.TicketTable');
+   let tableSpecClass = javaClass('io.deephaven.qst.table.TableSpec');
+   let tableHandleClass = javaClass('io.deephaven.client.impl.TableHandle');
+   let barrageSessionClass = javaClass('io.deephaven.client.impl.BarrageSession');
 
-    private DeephavenSession createDeephavenSession(DeephavenConnection connection) {
-        if (!(connection.authSpec instanceof PSKAuthenticationSpecification)) {
-            throw new EngineException("Unsupported authentication type: " + connection.authSpec.getClass().getSimpleName(),
-                                     ExceptionCategory.USER_CREDENTIALS_ERROR);
-        }
-        PSKAuthenticationSpecification pskSpec = (PSKAuthenticationSpecification) connection.authSpec;
-        if (pskSpec.secret == null || pskSpec.secret.isEmpty()) {
-            throw new EngineException("PSK secret is missing or empty for " + connection.sourceSpec.url,
-                                     ExceptionCategory.USER_CREDENTIALS_ERROR);
-        }
-        System.out.println("Creating Deephaven session for " + connection.sourceSpec.url + " with PSK: " + pskSpec.secret);
-        Optional<DeephavenSession> session = this.state.getProviders().stream()
-                .map(provider -> {
-                    try {
-                        Optional<DeephavenSession> providedSession = provider.provide(pskSpec, connection.sourceSpec);
-                        providedSession.ifPresent(s -> System.out.println("Session created successfully for " + connection.sourceSpec.url));
-                        return providedSession;
-                    } catch (Exception e) {
-                        System.err.println("Failed to create session with provider: " + e.getMessage());
-                        return Optional.<DeephavenSession>empty();
-                    }
-                })
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findFirst();
-        return session.orElseThrow(() -> new EngineException("Unable to create a Deephaven Session for " + 
-                                                             connection.sourceSpec.url, 
-                                                             ExceptionCategory.USER_CREDENTIALS_ERROR));
-    }
+  // Create base execution class
+  let executeClass = $conventions->planNodeClass('public', $path, 'Execute')
+                                 ->usingKnownPackages($conventions->knownPackages())
+                                 ->imports($conventions->standardImports())
+                                 ->imports([
+                                              $ticketTableClass,
+                                              $tableSpecClass,
+                                              $tableHandleClass,
+                                              $barrageSessionClass
+                                           ])
+                                 ->imports([meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics]->map(x | $conventions->className($x)))
+                                 ->implements($conventions->className(IDeephavenExecutionNodeSpecifics));
 
-    private static class DeephavenRowSpliterator implements Spliterator<Map<String, Object>> {
-        private final FlightStream flightStream;
-        private VectorSchemaRoot root;
-        private List<FieldVector> vectors;
-        private int currentRowIndex;
-        private int rowCount;
+   let tableSpecVar = j_variable($tableSpecClass, 'ts');
+   let operationChain = $tableSpecVar->j_declare(generateDeephavenOperationChain($node.query, $tableSpecClass, $context));
 
-        DeephavenRowSpliterator(FlightStream flightStream) {
-            this.flightStream = flightStream;
-            this.currentRowIndex = 0;
-            this.rowCount = 0;
-            System.out.println("DeephavenRowSpliterator initialized with FlightStream: " + flightStream);
-        }
+   let executeMethod = javaMethod(
+                                    ['public'],
+                                    $tableHandleClass,
+                                    'execute',
+                                    [javaParam($barrageSessionClass, 'session')],
+                                    [
+                                      $operationChain,
+                                      j_try(
+                                              [j_return(j_invoke(j_invoke(j_parameter($barrageSessionClass, 'session'), 'session',[]), 'execute', [$tableSpecVar]))],
+                                              j_catch(
+                                                        j_parameter(javaClass('io.deephaven.client.impl.TableHandle.TableHandleException'), 'e'),
+                                                        javaRuntimeException()->j_new(j_parameter(javaClass('io.deephaven.client.impl.TableHandle.TableHandleException'), 'e'))->j_throw()
+                                                     ),
+                                              j_catch(
+                                                        j_parameter(javaInterruptedException(), 'e'),
+                                                        javaRuntimeException()->j_new(j_parameter(javaInterruptedException(), 'e'))->j_throw()
+                                                     )
+                                            )
+                                    ]
+                                 );
+   let executeProject = newProject()->addClasses($executeClass->addMethod($executeMethod));
+   $executeProject->mergeProjects()->generatedCode($executeClass);
+}
 
-        @Override
-        public boolean tryAdvance(java.util.function.Consumer<? super Map<String, Object>> action) {
-            try {
-                while (true) {
-                    if (root == null || currentRowIndex >= rowCount) {
-                        System.out.println("Fetching next FlightStream batch");
-                        if (!flightStream.next()) {
-                            System.out.println("No more data in FlightStream");
-                            return false;
-                        }
-                        root = flightStream.getRoot();
-                        if (root == null) {
-                            System.err.println("FlightStream returned null root - possible authentication or server issue");
-                            throw new EngineException("FlightStream returned null root, likely due to authentication failure", ExceptionCategory.USER_EXECUTION_ERROR);
-                        }
-                        vectors = root.getFieldVectors();
-                        rowCount = root.getRowCount();
-                        currentRowIndex = 0;
-                        System.out.println("Fetched batch with " + rowCount + " rows");
-                    }
-                    if (currentRowIndex < rowCount) {
-                        Map<String, Object> row = new HashMap<>(vectors.size());
-                        for (FieldVector vector : vectors) {
-                            Object value = vector.getObject(currentRowIndex);
-                            row.put(vector.getName(), value);
-                        }
-                        action.accept(row);
-                        currentRowIndex++;
-                        return true;
-                    }
-                }
-            } catch (FlightRuntimeException e) {
-                System.err.println("Flight streaming failed: " + e.getMessage());
-                throw new EngineException("Flight streaming error: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-            } catch (Exception e) {
-                System.err.println("Streaming error: " + e.getMessage());
-                if (e instanceof NullPointerException) {
-                    throw new EngineException("NullPointerException in streaming, likely authentication header issue: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-                }
-                throw new EngineException("Error streaming Deephaven results: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-            }
-        }
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateDeephavenOperationChain(query: DeephavenQuery[1], tableSpecClass: meta::external::language::java::metamodel::Type[1], context: GenerationContext[1]): Code[1]
+{
+  let initial = javaClass('io.deephaven.qst.table.TicketTable')->j_invoke('fromQueryScopeField', [j_string($query.source->toOne().name)]);
 
-        @Override
-        public Spliterator<Map<String, Object>> trySplit() {
-            return null;
-        }
 
-        @Override
-        public long estimateSize() {
-            return Long.MAX_VALUE;
-        }
+  let filterOps = $query.operations->filter(op |$op->instanceOf(FilterOperation));
 
-        @Override
-        public int characteristics() {
-            return Spliterator.ORDERED | Spliterator.NONNULL;
-        }
-    }
+  let withFilters = $filterOps->fold({op, code |
+      $op->match([
+         f: FilterOperation[1] | generateFilterOperation($f, $code, $tableSpecClass)
+      ]);
+   }, $initial);
+
+   if($query.selectQueryExists == true,
+        | $query.operations->filter(op |$op->instanceOf(SelectOperation))->fold({op, code |
+      $op->match([
+         s: SelectOperation[1] | generateSelectOperation($s, $code, $tableSpecClass)
+      ]);
+  //  }, $initial);
+   }, $withFilters),
+        | $withFilters);
+   
+  // let selectOps = $query.operations->filter(op |$op->instanceOf(SelectOperation));
+
+  //  let result = $selectOps->fold({op, code |
+  //     $op->match([
+  //        s: SelectOperation[1] | generateSelectOperation($s, $code, $tableSpecClass)
+  //     ]);
+  // //  }, $initial);
+  //  }, $withFilters);
+
+  //  $result;
+}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateSelectOperation(op: SelectOperation[1], chain: Code[1], tableSpecClass: meta::external::language::java::metamodel::Type[1]): Code[1]
+{
+   let columnNames = $op.columns->map(c | j_string($c.name));
+   $chain->j_invoke('select', $columnNames, $tableSpecClass);
+}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateFilterOperation(op: FilterOperation[1], chain: Code[1], tableSpecClass: meta::external::language::java::metamodel::Type[1]): Code[1]
+{
+   let condition = generateFilterCondition($op.condition);
+  //  $chain->j_invoke('where', [$condition], $tableSpecClass);
+   $chain->j_invoke('where', [j_string($condition)], $tableSpecClass);
+}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateFilterCondition(expr: FilterExpression[1]): String[1]
+{
+   $expr->match([
+      eq: EqOperatorExpression[1] |  println('-------------------- generateFilterCondition EQ -----------------------');
+                                      let op01 = generateOperand($eq.expressions->at(0));
+                                      // println($op01);
+                                      let op02 = generateOperand($eq.expressions->at(1));
+                                      // println($op02);
+                                      // let res0 = j_string($op01 + ' == ' + $op02);
+                                      let res0 = $op01 + ' == ' + $op02;
+                                      println($res0);
+                                      $res0;,
+                                    //  j_string(generateOperand($eq.expressions->at(0), $tableSpecClass) + ' == ' + generateOperand($eq.expressions->at(1), $tableSpecClass));,
+  
+      and: AndOperatorExpression[1] | println('-------------------- generateFilterCondition AND -----------------------');
+                                      let op1 = generateOperand($and.expressions->at(0));
+                                      println($op1); //fail();
+                                      let op2 = generateOperand($and.expressions->at(1));
+                                      // let res = j_string($op1 + ' && ' + $op2);
+                                      let res = $op1 + ' && ' + $op2;
+                                      $res;,
+               
+      not: NotOperatorExpression[1] | let innerExpr = $not.expression;
+                                      // println($innerExpr);
+                                      // fail();
+
+                                      $innerExpr->match([
+                                                          eq1: EqOperatorExpression[1] |  generateOperand($eq1.expressions->at(0)) + ' != ' + generateOperand($eq1.expressions->at(1)),
+                                                                  
+                                                          other: FilterExpression[1] |  '!' + generateFilterCondition($other)
+                                                      
+                                                      ]);,
+               
+      or: OrOperatorExpression[1] |  generateOperand($or.expressions->at(0)) + ' || ' + generateOperand($or.expressions->at(1)),
+               
+      in: InOperatorExpression[1] |  let res2 = generateOperand($in.expressions->at(0)) + ' in ' + generateOperand($in.expressions->at(1));
+                                     println($in.expressions);
+                                     println($res2);
+                                     //fail();
+                                     $res2;
+  
+   ]);
+}
+
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateOperand(op: DeephavenOperationElement[1]): String[1]
+{
+   $op->match([
+      // f: FilterExpression[1] | '(' + generateFilterCondition($f) + ')', // do we need to wrap with () ??
+      f: FilterExpression[1] | generateFilterCondition($f),
+      // c: Column[1] | j_field($tableSpecClass, $c.name),
+      // c: Column[1] | j_invoke($tableSpecClass, 'col', [j_string($c.name)]),
+      c: Column[1] | println('-------------------- generateOperand Column -----------------------'); 
+                     let r1 = $c.name;
+                     println($r1);
+                     $r1;,
+      l: meta::external::store::deephaven::metamodel::store::Literal[1] | println('-------------------- generateOperand Literal -----------------------');
+                                                                          // let r2 = if($l.value->at(0)->instanceOf(String),
+                                                                          //               | '\'' + $l.value->at(0)->toString() + '\'',
+                                                                          //               | $l.value->at(0)->toString());
+                                                                          let r2 = if($l.value->size() > 1,
+                                                                                        | $l.value->map(v | if($v->instanceOf(String), | '\'' + $v->toString() + '\'', | $v->toString()))->joinStrings(', ') ,  // check for ` or '
+                                                                                        | if($l.value->at(0)->instanceOf(String), | '\'' + $l.value->at(0)->toString() + '\'', | $l.value->at(0)->toString()));
+                                                                          println($r2);
+                                                                          $r2;
+   ]);
+}
+
+// function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateOperand(op: DeephavenOperationElement[1], tableSpecField: Code[1], tableSpecClass: meta::external::language::java::metamodel::Type[1]): Code[1]
+// {
+//    $op->match([
+//       f: FilterExpression[1] | generateFilterCondition($f, $tableSpecField, $tableSpecClass),
+//       // c: Column[1] | j_field($tableSpecClass, $c.name),
+//       // c: Column[1] | j_invoke($tableSpecClass, 'col', [j_string($c.name)]),
+//       c: Column[1] | $c.name,
+//       l: meta::external::store::deephaven::metamodel::store::Literal[1] | if($l.value->at(0)->instanceOf(String),
+//                         | j_string($l.value->at(0)->toString()),
+//                         | if($l.value->at(0)->instanceOf(Integer),
+//                             | j_int($l.value->at(0)->toString()),
+//                             | if($l.value->at(0)->instanceOf(Float),
+//                                 | j_float($l.value->at(0)->toString()),
+//                                 | if($l.value->at(0)->instanceOf(Decimal),  
+//                                     | j_bigDecimal($l.value->at(0)->cast(@Decimal)),
+//                                     | j_double($l.value->at(0)->toString())
+//                                 ))))
+//    ]);
+// }
+
+// Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::_IDeephavenExecutionNodeSpecifics {}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions(): Extension[*]
+{
+  // Pulls together store extension + PlatformBinding extensions required for Deephaven, excludes stuff already loaded by core..
+  [
+    meta::external::store::deephaven::extension::deephavenExtension(),
+    meta::pure::executionPlan::platformBinding::platformBindingExtension('PlatformBinding - LegendJava - Deephaven', [
+    meta::pure::executionPlan::platformBinding::legendJava::legendJavaPlatformBinding([
+                                                                                        meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenStoreLegendJavaPlatformBindingExtension()
+                                                                                      ])
+  ])
+  ]
+}
+
+/*
+ * This function should be assigned to the router extension:
+ *
+ *     plan_javaRuntime_enginePlatformDependencies_conventions = meta::external::format::json::executionPlan::platformBinding::legendJava::extendJavaEngineDependencies_Conventions_1__Conventions_1_
+ */
+
+ 
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics {}
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenConnection {}
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenSession {}
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IBarrageSession {}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::extendDeephavenJavaEngineDependencies(conventions:Conventions[1]):Conventions[1]
+{
+  let jIDeephavenExecutionNodeSpecifics = javaClass('public', 'org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics')
+                                          ->addMethod(javaMethod('public', javaClass('io.deephaven.client.impl.TableHandle'), 'execute', [javaParam(javaClass('io.deephaven.client.impl.BarrageSession'), 'session')]));
+
+  $conventions->addProvidedType(meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics, $jIDeephavenExecutionNodeSpecifics);
 }
