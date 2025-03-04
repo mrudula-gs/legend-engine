@@ -1,11 +1,7 @@
-Compilation error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:126 column:24), "The system can't find a match for the function: j_field(_:String[2],_:Class[1],_:String[1],_:Code[1])
+Compilation error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:181 column:42), "The system can't find a match for the function: addField(_:Class[1],_:Code[1],_:String[2])
 
 These functions, in packages already imported, would match the function call if you changed the parameters.
-  meta::external::language::java::factory::j_field(Code[1], Field[1]):Code[1]
-  meta::external::language::java::factory::j_field(Code[1], String[1]):Code[1]
-  meta::external::language::java::factory::j_field(Code[1], String[1], Type[1]):Code[1]
-  meta::external::language::java::factory::j_field(Type[1], Field[1]):Code[1]
-  meta::external::language::java::factory::j_field(Type[1], String[1]):Code[1]
-  meta::external::language::java::factory::j_field(Type[1], String[1], Type[1]):Code[1]
+  meta::external::language::java::factory::addField(Class[1], Field[1]):Class[1]
+  meta::external::language::java::factory::addField(Class[1], Function<{Class[1]->Field[1]}>[1]):Class[1]
 
 No functions, in packages not imported, match the function name.
