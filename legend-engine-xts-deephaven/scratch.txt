@@ -25,8 +25,6 @@ import org.finos.legend.engine.shared.core.operational.errorManagement.EngineExc
 import org.finos.legend.engine.shared.core.operational.errorManagement.ExceptionCategory;
 import io.deephaven.client.impl.BarrageSession;
 import io.deephaven.client.impl.TableHandle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.Collections;
@@ -39,8 +37,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Result> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenExecutionNodeExecutor.class);
-
     private final Identity identity;
     private final ExecutionState executionState;
     private final DeephavenStoreState state;
@@ -61,30 +57,26 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Resu
 
     private Result executeDeephavenNode(DeephavenExecutionNode node) {
         DeephavenSession deephavenSession = null;
-        FlightStream flightStream = null;
         try {
             deephavenSession = createDeephavenSession(node.connection);
-            try (BarrageSession session = deephavenSession.getBarrageBag both session()) {
-                LOGGER.info("Connected to Deephaven Server at {}:{} with PSK for node execution",
-                            node.connection.sourceSpec.url.getHost(),
-                            node.connection.sourceSpec.url.getPort());
+            try (BarrageSession session = deephavenSession.getBarrageSession()) {
+                System.out.println("Connected to Deephaven Server at " + node.connection.sourceSpec.url.getHost() + ":" +
+                        node.connection.sourceSpec.url.getPort() + " with PSK for node execution");
                 IDeephavenExecutionNodeSpecifics specifics = createSpecifics(node);
                 TableHandle table = specifics.execute(session);
-                LOGGER.debug("Executing query with TableHandle: {}", table.ticketId());
+                System.out.println("Executing query with TableHandle: " + table.ticketId());
 
-                LOGGER.debug("Starting FlightStream for table: {}", table.ticketId());
-                flightStream = session.stream(table.ticketId());
-                LOGGER.debug("FlightStream initialized successfully: {}", flightStream);
+                System.out.println("Starting FlightStream for table: " + table.ticketId());
+                FlightStream flightStream = session.stream(table.ticketId());
+                System.out.println("FlightStream initialized successfully: " + flightStream);
 
                 Stream<Map<String, Object>> rowStream = StreamSupport.stream(new DeephavenRowSpliterator(flightStream), false)
                         .onClose(() -> {
                             try {
-                                if (flightStream != null) {
-                                    flightStream.close();
-                                    LOGGER.info("FlightStream closed successfully via onClose");
-                                }
+                                flightStream.close();
+                                System.out.println("FlightStream closed successfully via onClose");
                             } catch (Exception e) {
-                                LOGGER.warn("Failed to close FlightStream via onClose", e);
+                                System.err.println("Failed to close FlightStream via onClose: " + e.getMessage());
                             }
                         });
 
@@ -98,16 +90,9 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Resu
                 StreamingObjectResult result = new StreamingObjectResult<>(rowStream, deephavenResult.getResultBuilder(), deephavenResult);
 
                 // Ensure the stream is fully consumed before closing resources
-                LOGGER.debug("Consuming stream to ensure completion");
-                result.getObjectStream().forEach(row -> LOGGER.trace("Processed row: {}", row));
-                LOGGER.debug("Stream consumption completed");
-
-                // Explicitly close FlightStream before session closure
-                if (flightStream != null) {
-                    flightStream.close();
-                    LOGGER.info("FlightStream closed explicitly before session closure");
-                    flightStream = null; // Nullify to avoid double-close in finally
-                }
+                System.out.println("Consuming stream to ensure completion");
+                result.getObjectStream().forEach(row -> System.out.println("Processed row: " + row));
+                System.out.println("Stream consumption completed");
 
                 return result;
             }
@@ -121,20 +106,12 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Resu
         } catch (Exception e) {
             throw new EngineException("Unexpected error executing Deephaven query: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
         } finally {
-            if (flightStream != null) {
-                try {
-                    flightStream.close();
-                    LOGGER.info("FlightStream closed in finally block");
-                } catch (Exception e) {
-                    LOGGER.warn("Failed to close FlightStream in finally", e);
-                }
-            }
             if (deephavenSession != null) {
                 try {
                     deephavenSession.close();
-                    LOGGER.info("Deephaven session closed successfully");
+                    System.out.println("Deephaven session closed successfully");
                 } catch (Exception e) {
-                    LOGGER.warn("Failed to close DeephavenSession", e);
+                    System.err.println("Failed to close DeephavenSession: " + e.getMessage());
                     throw new EngineException("Failed to close Deephaven session: " + e.getMessage(), e, ExceptionCategory.SERVER_EXECUTION_ERROR);
                 }
             }
@@ -157,15 +134,15 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Resu
             throw new EngineException("PSK secret is missing or empty for " + connection.sourceSpec.url,
                                      ExceptionCategory.USER_CREDENTIALS_ERROR);
         }
-        LOGGER.info("Creating Deephaven session for {} with PSK: {}", connection.sourceSpec.url, pskSpec.secret);
+        System.out.println("Creating Deephaven session for " + connection.sourceSpec.url + " with PSK: " + pskSpec.secret);
         Optional<DeephavenSession> session = this.state.getProviders().stream()
                 .map(provider -> {
                     try {
                         Optional<DeephavenSession> providedSession = provider.provide(pskSpec, connection.sourceSpec);
-                        providedSession.ifPresent(s -> LOGGER.info("Session created successfully for {}", connection.sourceSpec.url));
+                        providedSession.ifPresent(s -> System.out.println("Session created successfully for " + connection.sourceSpec.url));
                         return providedSession;
                     } catch (Exception e) {
-                        LOGGER.warn("Failed to create session with provider: " + e.getMessage());
+                        System.err.println("Failed to create session with provider: " + e.getMessage());
                         return Optional.<DeephavenSession>empty();
                     }
                 })
@@ -188,7 +165,7 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Resu
             this.flightStream = flightStream;
             this.currentRowIndex = 0;
             this.rowCount = 0;
-            LOGGER.debug("DeephavenRowSpliterator initialized with FlightStream: {}", flightStream);
+            System.out.println("DeephavenRowSpliterator initialized with FlightStream: " + flightStream);
         }
 
         @Override
@@ -196,20 +173,20 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Resu
             try {
                 while (true) {
                     if (root == null || currentRowIndex >= rowCount) {
-                        LOGGER.debug("Fetching next FlightStream batch");
+                        System.out.println("Fetching next FlightStream batch");
                         if (!flightStream.next()) {
-                            LOGGER.debug("No more data in FlightStream");
+                            System.out.println("No more data in FlightStream");
                             return false;
                         }
                         root = flightStream.getRoot();
                         if (root == null) {
-                            LOGGER.warn("FlightStream returned null root - possible authentication or server issue");
+                            System.err.println("FlightStream returned null root - possible authentication or server issue");
                             throw new EngineException("FlightStream returned null root, likely due to authentication failure", ExceptionCategory.USER_EXECUTION_ERROR);
                         }
                         vectors = root.getFieldVectors();
                         rowCount = root.getRowCount();
                         currentRowIndex = 0;
-                        LOGGER.debug("Fetched batch with {} rows", rowCount);
+                        System.out.println("Fetched batch with " + rowCount + " rows");
                     }
                     if (currentRowIndex < rowCount) {
                         Map<String, Object> row = new HashMap<>(vectors.size());
@@ -223,10 +200,10 @@ public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Resu
                     }
                 }
             } catch (FlightRuntimeException e) {
-                LOGGER.error("Flight streaming failed: " + e.getMessage(), e);
+                System.err.println("Flight streaming failed: " + e.getMessage());
                 throw new EngineException("Flight streaming error: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
             } catch (Exception e) {
-                LOGGER.error("Streaming error: " + e.getMessage(), e);
+                System.err.println("Streaming error: " + e.getMessage());
                 if (e instanceof NullPointerException) {
                     throw new EngineException("NullPointerException in streaming, likely authentication header issue: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
                 }
