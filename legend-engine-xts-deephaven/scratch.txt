@@ -14,7 +14,6 @@ import meta::external::store::deephaven::metamodel::executionPlan::*;
 import meta::pure::extension::*;
 import meta::pure::executionPlan::platformBinding::legendJava::*;
 
-
 Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::DeephavenLegendJavaPlatformBindingDescriptor extends LegendJavaPlatformBindingAdhocExtension
 {
   enginePlatformDependencies: Function<{Conventions[1]->Conventions[1]}>[*];
@@ -26,9 +25,7 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
    (
       platformId = legendJavaPlatformBindingId(),
       id = 'DeephavenStoreLegendJavaPlatformBindingExtension',
-
       supportedExecutionNodes = [meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode],
-
       adhocExtensions = [
                             ^LegendJavaPlatformDependencyUpdateExtension
                             (
@@ -41,14 +38,12 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
                                 }
                             )
                         ],
-
       updateGenerationContextForNode = {node: ExecutionNode[1], context: GenerationContext[1], path: String[1], extensions: Extension[*], debug: DebugContext[1] |
          $node->match([
             d: meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1] | prepareForDeephavenExecutionNode($d, $path, $context, $extensions, $debug),
             n: ExecutionNode[1] | $context
          ])
       },
-
       generateLegendJavaCodeForNode = {node: meta::pure::executionPlan::ExecutionNode[1], path: String[1], context: GenerationContext[1], extensions: meta::pure::extension::Extension[*], debug: DebugContext[1] |
         $node->match([
             d: meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1]   | $d->meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateForDeephavenExecutionNode($path, $context, $debug),
@@ -57,26 +52,21 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
       }
    )
 }
-      
+
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::prepareForDeephavenExecutionNode(node: meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1], path: String[1], context: GenerationContext[1], extensions: Extension[*], debug: DebugContext[1]): GenerationContext[1]
 {
   print(if($debug.debug, | $debug.space + '(' + $path + ') prepare DeephavenExecutionNode\n', | ''));
-
   let conventions = $context.conventions;
   let resultType = $node.resultType;
-
   let updatedTypeInfo = $context.typeInfos->addForClass(DeephavenQuery); // TODO anumam - what is this for ?
-
   let nodeInfo = ^NodeInfo(
                             path = $path,
                             returnType = ^SimpleJavaType(
                                                           pureType = $resultType.genericType.rawType->toOne(),
                                                           javaType = $conventions->className($resultType.genericType.rawType->toOne())
-                                                          //javaType = $conventions->className(meta::pure::executionPlan::platformBinding::legendJava::PureDate)
                                                         ),
                             data = $node
                           );
-
    $context->addNodeInfo($nodeInfo)->setTypeInfos($updatedTypeInfo);
 }
 
@@ -85,10 +75,10 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
   print(if($debug.debug, | $debug.space + '(' + $path + ') generate DeephavenExecutionNode\n', | ''));
   let conventions = $context.conventions;
 
-   let ticketTableClass = javaClass('io.deephaven.qst.table.TicketTable');
-   let tableSpecClass = javaClass('io.deephaven.qst.table.TableSpec');
-   let tableHandleClass = javaClass('io.deephaven.client.impl.TableHandle');
-   let barrageSessionClass = javaClass('io.deephaven.client.impl.BarrageSession');
+  let ticketTableClass = javaClass('io.deephaven.qst.table.TicketTable');
+  let tableSpecClass = javaClass('io.deephaven.qst.table.TableSpec');
+  let tableHandleClass = javaClass('io.deephaven.client.impl.TableHandle');
+  let barrageSessionClass = javaClass('io.deephaven.client.impl.BarrageSession');
 
   // Create base execution class
   let executeClass = $conventions->planNodeClass('public', $path, 'Execute')
@@ -103,18 +93,17 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
                                  ->imports([meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics]->map(x | $conventions->className($x)))
                                  ->implements($conventions->className(IDeephavenExecutionNodeSpecifics));
 
-   let tableSpecVar = j_variable($tableSpecClass, 'ts');
-   let operationChain = $tableSpecVar->j_declare(generateDeephavenOperationChain($node.query, $tableSpecClass, $context));
+  // Add TableSpec field to store the spec
+  let tableSpecField = j_variable($tableSpecClass, 'tableSpec', ['private', 'final'], generateDeephavenOperationChain($node.query, $tableSpecClass, $context));
 
-   let executeMethod = javaMethod(
+  let executeMethod = javaMethod(
                                     ['public'],
                                     $tableHandleClass,
                                     'execute',
                                     [javaParam($barrageSessionClass, 'session')],
                                     [
-                                      $operationChain,
                                       j_try(
-                                              [j_return(j_invoke(j_invoke(j_parameter($barrageSessionClass, 'session'), 'session',[]), 'execute', [$tableSpecVar]))],
+                                              [j_return(j_invoke(j_invoke(j_parameter($barrageSessionClass, 'session'), 'session',[]), 'execute', [j_fieldReference('this', 'tableSpec')]))],
                                               j_catch(
                                                         j_parameter(javaClass('io.deephaven.client.impl.TableHandle.TableHandleException'), 'e'),
                                                         javaRuntimeException()->j_new(j_parameter(javaClass('io.deephaven.client.impl.TableHandle.TableHandleException'), 'e'))->j_throw()
@@ -126,17 +115,24 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
                                             )
                                     ]
                                  );
-   let executeProject = newProject()->addClasses($executeClass->addMethod($executeMethod));
-   $executeProject->mergeProjects()->generatedCode($executeClass);
+
+  // Add getTableSpec method
+  let getTableSpecMethod = javaMethod(
+                                    ['public'],
+                                    $tableSpecClass,
+                                    'getTableSpec',
+                                    [],
+                                    [j_return(j_fieldReference('this', 'tableSpec'))]
+                                 );
+
+  let executeProject = newProject()->addClasses($executeClass->addField($tableSpecField)->addMethod($executeMethod)->addMethod($getTableSpecMethod));
+  $executeProject->mergeProjects()->generatedCode($executeClass);
 }
 
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateDeephavenOperationChain(query: DeephavenQuery[1], tableSpecClass: meta::external::language::java::metamodel::Type[1], context: GenerationContext[1]): Code[1]
 {
   let initial = javaClass('io.deephaven.qst.table.TicketTable')->j_invoke('fromQueryScopeField', [j_string($query.source->toOne().name)]);
-
-
-  let filterOps = $query.operations->filter(op |$op->instanceOf(FilterOperation));
-
+  let filterOps = $query.operations->filter(op | $op->instanceOf(FilterOperation));
   let withFilters = $filterOps->fold({op, code |
       $op->match([
          f: FilterOperation[1] | generateFilterOperation($f, $code, $tableSpecClass)
@@ -144,24 +140,12 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
    }, $initial);
 
    if($query.selectQueryExists == true,
-        | $query.operations->filter(op |$op->instanceOf(SelectOperation))->fold({op, code |
+        | $query.operations->filter(op | $op->instanceOf(SelectOperation))->fold({op, code |
       $op->match([
          s: SelectOperation[1] | generateSelectOperation($s, $code, $tableSpecClass)
       ]);
-  //  }, $initial);
    }, $withFilters),
         | $withFilters);
-   
-  // let selectOps = $query.operations->filter(op |$op->instanceOf(SelectOperation));
-
-  //  let result = $selectOps->fold({op, code |
-  //     $op->match([
-  //        s: SelectOperation[1] | generateSelectOperation($s, $code, $tableSpecClass)
-  //     ]);
-  // //  }, $initial);
-  //  }, $withFilters);
-
-  //  $result;
 }
 
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateSelectOperation(op: SelectOperation[1], chain: Code[1], tableSpecClass: meta::external::language::java::metamodel::Type[1]): Code[1]
@@ -173,7 +157,6 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateFilterOperation(op: FilterOperation[1], chain: Code[1], tableSpecClass: meta::external::language::java::metamodel::Type[1]): Code[1]
 {
    let condition = generateFilterCondition($op.condition);
-  //  $chain->j_invoke('where', [$condition], $tableSpecClass);
    $chain->j_invoke('where', [j_string($condition)], $tableSpecClass);
 }
 
@@ -182,94 +165,48 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
    $expr->match([
       eq: EqOperatorExpression[1] |  println('-------------------- generateFilterCondition EQ -----------------------');
                                       let op01 = generateOperand($eq.expressions->at(0));
-                                      // println($op01);
                                       let op02 = generateOperand($eq.expressions->at(1));
-                                      // println($op02);
-                                      // let res0 = j_string($op01 + ' == ' + $op02);
                                       let res0 = $op01 + ' == ' + $op02;
                                       println($res0);
-                                      $res0;,
-                                    //  j_string(generateOperand($eq.expressions->at(0), $tableSpecClass) + ' == ' + generateOperand($eq.expressions->at(1), $tableSpecClass));,
-  
+                                      $res0;
       and: AndOperatorExpression[1] | println('-------------------- generateFilterCondition AND -----------------------');
                                       let op1 = generateOperand($and.expressions->at(0));
-                                      println($op1); //fail();
+                                      println($op1);
                                       let op2 = generateOperand($and.expressions->at(1));
-                                      // let res = j_string($op1 + ' && ' + $op2);
                                       let res = $op1 + ' && ' + $op2;
-                                      $res;,
-               
+                                      $res;
       not: NotOperatorExpression[1] | let innerExpr = $not.expression;
-                                      // println($innerExpr);
-                                      // fail();
-
                                       $innerExpr->match([
                                                           eq1: EqOperatorExpression[1] |  generateOperand($eq1.expressions->at(0)) + ' != ' + generateOperand($eq1.expressions->at(1)),
-                                                                  
                                                           other: FilterExpression[1] |  '!' + generateFilterCondition($other)
-                                                      
-                                                      ]);,
-               
+                                                      ]);
       or: OrOperatorExpression[1] |  generateOperand($or.expressions->at(0)) + ' || ' + generateOperand($or.expressions->at(1)),
-               
       in: InOperatorExpression[1] |  let res2 = generateOperand($in.expressions->at(0)) + ' in ' + generateOperand($in.expressions->at(1));
                                      println($in.expressions);
                                      println($res2);
-                                     //fail();
                                      $res2;
-  
    ]);
 }
-
 
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateOperand(op: DeephavenOperationElement[1]): String[1]
 {
    $op->match([
-      // f: FilterExpression[1] | '(' + generateFilterCondition($f) + ')', // do we need to wrap with () ??
       f: FilterExpression[1] | generateFilterCondition($f),
-      // c: Column[1] | j_field($tableSpecClass, $c.name),
-      // c: Column[1] | j_invoke($tableSpecClass, 'col', [j_string($c.name)]),
       c: Column[1] | println('-------------------- generateOperand Column -----------------------'); 
                      let r1 = $c.name;
                      println($r1);
-                     $r1;,
+                     $r1;
       l: meta::external::store::deephaven::metamodel::store::Literal[1] | println('-------------------- generateOperand Literal -----------------------');
-                                                                          // let r2 = if($l.value->at(0)->instanceOf(String),
-                                                                          //               | '\'' + $l.value->at(0)->toString() + '\'',
-                                                                          //               | $l.value->at(0)->toString());
                                                                           let r2 = if($l.value->size() > 1,
-                                                                                        | $l.value->map(v | if($v->instanceOf(String), | '\'' + $v->toString() + '\'', | $v->toString()))->joinStrings(', ') ,  // check for ` or '
+                                                                                        | $l.value->map(v | if($v->instanceOf(String), | '\'' + $v->toString() + '\'', | $v->toString()))->joinStrings(', '),
                                                                                         | if($l.value->at(0)->instanceOf(String), | '\'' + $l.value->at(0)->toString() + '\'', | $l.value->at(0)->toString()));
                                                                           println($r2);
                                                                           $r2;
    ]);
 }
 
-// function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateOperand(op: DeephavenOperationElement[1], tableSpecField: Code[1], tableSpecClass: meta::external::language::java::metamodel::Type[1]): Code[1]
-// {
-//    $op->match([
-//       f: FilterExpression[1] | generateFilterCondition($f, $tableSpecField, $tableSpecClass),
-//       // c: Column[1] | j_field($tableSpecClass, $c.name),
-//       // c: Column[1] | j_invoke($tableSpecClass, 'col', [j_string($c.name)]),
-//       c: Column[1] | $c.name,
-//       l: meta::external::store::deephaven::metamodel::store::Literal[1] | if($l.value->at(0)->instanceOf(String),
-//                         | j_string($l.value->at(0)->toString()),
-//                         | if($l.value->at(0)->instanceOf(Integer),
-//                             | j_int($l.value->at(0)->toString()),
-//                             | if($l.value->at(0)->instanceOf(Float),
-//                                 | j_float($l.value->at(0)->toString()),
-//                                 | if($l.value->at(0)->instanceOf(Decimal),  
-//                                     | j_bigDecimal($l.value->at(0)->cast(@Decimal)),
-//                                     | j_double($l.value->at(0)->toString())
-//                                 ))))
-//    ]);
-// }
-
-// Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::_IDeephavenExecutionNodeSpecifics {}
-
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions(): Extension[*]
 {
-  // Pulls together store extension + PlatformBinding extensions required for Deephaven, excludes stuff already loaded by core..
   [
     meta::external::store::deephaven::extension::deephavenExtension(),
     meta::pure::executionPlan::platformBinding::platformBindingExtension('PlatformBinding - LegendJava - Deephaven', [
@@ -280,13 +217,6 @@ function meta::external::store::deephaven::executionPlan::platformBinding::legen
   ]
 }
 
-/*
- * This function should be assigned to the router extension:
- *
- *     plan_javaRuntime_enginePlatformDependencies_conventions = meta::external::format::json::executionPlan::platformBinding::legendJava::extendJavaEngineDependencies_Conventions_1__Conventions_1_
- */
-
- 
 Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics {}
 Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenConnection {}
 Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenSession {}
@@ -295,7 +225,7 @@ Class meta::external::store::deephaven::executionPlan::platformBinding::legendJa
 function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::extendDeephavenJavaEngineDependencies(conventions:Conventions[1]):Conventions[1]
 {
   let jIDeephavenExecutionNodeSpecifics = javaClass('public', 'org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics')
-                                          ->addMethod(javaMethod('public', javaClass('io.deephaven.client.impl.TableHandle'), 'execute', [javaParam(javaClass('io.deephaven.client.impl.BarrageSession'), 'session')]));
-
+                                          ->addMethod(javaMethod('public', javaClass('io.deephaven.client.impl.TableHandle'), 'execute', [javaParam(javaClass('io.deephaven.client.impl.BarrageSession'), 'session')]))
+                                          ->addMethod(javaMethod('public', javaClass('io.deephaven.qst.table.TableSpec'), 'getTableSpec', []));
   $conventions->addProvidedType(meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics, $jIDeephavenExecutionNodeSpecifics);
 }
