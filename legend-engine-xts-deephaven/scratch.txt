@@ -1,11 +1,10 @@
 Execution error at (resource:/core_deephaven_execution_test/deephaven_execution_tests.pure line:90 column:32), "org.finos.legend.engine.shared.javaCompiler.JavaCompileException: 1 error compiling /_pure/plan/root/Execute.java
-/_pure/plan/root/Execute.java:21: error: illegal start of type
-    public .void Execute()
-           ^
+/_pure/plan/root/Execute.java:23: error: cannot assign a value to final variable tableSpec
+        tableSpec = TicketTable.fromQueryScopeField("nds_desktops")
+        ^
 
 /_pure/plan/root/Execute.java
-0001 package _pure.plan.root;
-0002 
+0001:0002 ...
 0003 import io.deephaven.client.impl.BarrageSession;
 0004 import io.deephaven.client.impl.TableHandle;
 0005 import io.deephaven.qst.table.TableSpec;
@@ -24,7 +23,7 @@ Execution error at (resource:/core_deephaven_execution_test/deephaven_execution_
 0018 {
 0019     private final TableSpec tableSpec;
 0020 
-0021     public .void Execute()
+0021     public void Execute()
 0022     {
 0023         tableSpec = TicketTable.fromQueryScopeField("nds_desktops")
 0024                                .select("Desktop_ID", "City_Name", "Desktop_Name");
@@ -43,4 +42,6 @@ Execution error at (resource:/core_deephaven_execution_test/deephaven_execution_
 0037         catch (InterruptedException e)
 0038         {
 0039             throw new RuntimeException(e);
-0040         }"
+0040         }
+0041     }
+0042 "
