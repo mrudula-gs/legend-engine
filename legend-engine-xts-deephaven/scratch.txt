@@ -1,7 +1,36 @@
-Compilation error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:181 column:42), "The system can't find a match for the function: addField(_:Class[1],_:Code[1],_:String[2])
+package _pure.plan.root;
 
-These functions, in packages already imported, would match the function call if you changed the parameters.
-  meta::external::language::java::factory::addField(Class[1], Field[1]):Class[1]
-  meta::external::language::java::factory::addField(Class[1], Function<{Class[1]->Field[1]}>[1]):Class[1]
+import io.deephaven.client.impl.BarrageSession;
+import io.deephaven.client.impl.TableHandle;
+import io.deephaven.qst.table.TableSpec;
+import io.deephaven.qst.table.TicketTable;
+import java.math.*;
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
+import org.finos.legend.engine.plan.dependencies.domain.date.DayOfWeek;
+import org.finos.legend.engine.plan.dependencies.domain.date.DurationUnit;
+import org.finos.legend.engine.plan.dependencies.domain.date.PureDate;
+import org.finos.legend.engine.plan.dependencies.util.Library;
+import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
 
-No functions, in packages not imported, match the function name.
+public class Execute implements IDeephavenExecutionNodeSpecifics
+{
+    public TableHandle execute(BarrageSession session)
+    {
+        TableSpec ts = TicketTable.fromQueryScopeField("nds_desktops")
+                                  .select("Desktop_ID", "City_Name");
+        try
+        {
+            return session.session().execute(ts);
+        }
+        catch (io.deephaven.client.impl.TableHandle.TableHandleException e)
+        {
+            throw new RuntimeException(e);
+        }
+        catch (InterruptedException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+}
