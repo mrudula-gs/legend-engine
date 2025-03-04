@@ -4,154 +4,30 @@ Authentication type and value: io.deephaven.authentication.psk.PskAuthentication
 Initializing Deephaven session for targetdeev.com:OptionalInt[10000]
 Session created successfully for http://deev.com:10000/
 Connected to Deephaven Server at deev.com:10000 with PSK for node execution
+Starting FlightStream for table: e   
+FlightStream initialized successfully
+DeephavenRowSpliterator initialized with FlightStream: org.apache.arrow.flight.FlightStream@5a9c813d
 Deephaven session closed successfully
+Fetching next FlightStream batch
+Fetched batch with 5 rows
+Fetching next FlightStream batch
+No more data in FlightStream
 Creating Deephaven session for http://deev.com:10000/ with PSK: aclct045k0o2
 Creating Deephaven session for deev.com:OptionalInt[10000] with PSK: aclct045k0o2
 Authentication type and value: io.deephaven.authentication.psk.PskAuthenticationHandler aclct045k0o2
 Initializing Deephaven session for targetdeev.com:OptionalInt[10000]
 Session created successfully for http://deev.com:10000/
 Connected to Deephaven Server at deev.com:10000 with PSK for node execution
-Deephaven session closed successfully
-Exception while executing runnable io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed@63a3a4b2
-java.lang.NullPointerException: null
-	at io.deephaven.client.impl.BearerMiddlewear.onHeadersReceived(BearerMiddlewear.java:27)
-	at org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.lambda$onClose$1(ClientInterceptorAdapter.java:111)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-	at org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.onClose(ClientInterceptorAdapter.java:111)
-	at io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:567)
-	at io.grpc.internal.ClientCallImpl.access$300(ClientCallImpl.java:71)
-	at io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:735)
-	at io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:716)
-	at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)
-	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-	at java.base/java.lang.Thread.run(Thread.java:834)
-An I/O error has occurred while writing a response message entity to the container output stream.
-org.glassfish.jersey.server.internal.process.MappableException: java.lang.RuntimeException: org.finos.legend.engine.shared.core.operational.errorManagement.EngineException: Flight streaming error: 
-	at org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor.aroundWriteTo(MappableExceptionWrapperInterceptor.java:92)
-	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
-	at org.glassfish.jersey.message.internal.MessageBodyFactory.writeTo(MessageBodyFactory.java:1130)
-	at org.glassfish.jersey.server.ServerRuntime$Responder.writeResponse(ServerRuntime.java:711)
-	at org.glassfish.jersey.server.ServerRuntime$Responder.processResponse(ServerRuntime.java:444)
-	at org.glassfish.jersey.server.ServerRuntime$Responder.process(ServerRuntime.java:434)
-	at org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:329)
-	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)
-	at org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)
-	at org.glassfish.jersey.internal.Errors.process(Errors.java:315)
-	at org.glassfish.jersey.internal.Errors.process(Errors.java:297)
-	at org.glassfish.jersey.internal.Errors.process(Errors.java:267)
-	at org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)
-	at org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)
-	at org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)
-	at org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)
-	at org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)
-	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)
-	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)
-	at org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)
-	at org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:799)
-	at org.eclipse.jetty.servlet.ServletHandler$ChainEnd.doFilter(ServletHandler.java:1631)
-	at io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:35)
-	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
-	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
-	at io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:45)
-	at io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:39)
-	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
-	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
-	at org.finos.legend.server.pac4j.internal.UsernameFilter.doFilter(UsernameFilter.java:51)
-	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
-	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
-	at org.pac4j.j2e.filter.SecurityFilter.lambda$internalFilter$0(SecurityFilter.java:95)
-	at org.pac4j.core.engine.DefaultSecurityLogic.perform(DefaultSecurityLogic.java:140)
-	at org.pac4j.j2e.filter.SecurityFilter.internalFilter(SecurityFilter.java:93)
-	at org.pac4j.j2e.filter.AbstractConfigFilter.doFilter(AbstractConfigFilter.java:81)
-	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
-	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
-	at org.finos.legend.engine.server.core.session.SessionAttributeBundle$Enricher.doFilter(SessionAttributeBundle.java:77)
-	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
-	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
-	at org.finos.legend.server.shared.bundles.HostnameHeaderBundle$Enricher.doFilter(HostnameHeaderBundle.java:62)
-	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
-	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
-	at org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:319)
-	at org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:273)
-	at org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)
-	at org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)
-	at org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:548)
-	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)
-	at org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1624)
-	at org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)
-	at org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1434)
-	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:188)
-	at org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:501)
-	at org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1594)
-	at org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:186)
-	at org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1349)
-	at org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)
-	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
-	at com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:313)
-	at io.dropwizard.jetty.ContextRoutingHandler.handle(ContextRoutingHandler.java:37)
-	at org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:713)
-	at io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:67)
-	at org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:179)
-	at org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)
-	at org.eclipse.jetty.server.Server.handle(Server.java:516)
-	at org.eclipse.jetty.server.HttpChannel.lambda$handle$1(HttpChannel.java:400)
-	at org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:645)
-	at org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:392)
-	at org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:277)
-	at org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:311)
-	at org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:105)
-	at org.eclipse.jetty.io.ChannelEndPoint$1.run(ChannelEndPoint.java:104)
-	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.runTask(EatWhatYouKill.java:338)
-	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.doProduce(EatWhatYouKill.java:315)
-	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.tryProduce(EatWhatYouKill.java:173)
-	at org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.run(EatWhatYouKill.java:131)
-	at org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:409)
-	at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:883)
-	at org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1034)
-	at java.base/java.lang.Thread.run(Thread.java:834)
-Caused by: java.lang.RuntimeException: org.finos.legend.engine.shared.core.operational.errorManagement.EngineException: Flight streaming error: 
-	at org.finos.legend.engine.plan.execution.result.object.StreamingObjectResultJSONSerializer.stream(StreamingObjectResultJSONSerializer.java:58)
-	at org.finos.legend.engine.plan.execution.result.StreamingResult.stream(StreamingResult.java:47)
-	at org.finos.legend.engine.plan.execution.result.StreamingResult.stream(StreamingResult.java:42)
-	at org.finos.legend.engine.plan.execution.api.result.ResultManager$StreamingResultHandler.write(ResultManager.java:117)
-	at org.glassfish.jersey.message.internal.StreamingOutputProvider.writeTo(StreamingOutputProvider.java:78)
-	at org.glassfish.jersey.message.internal.StreamingOutputProvider.writeTo(StreamingOutputProvider.java:60)
-	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor$TerminalWriterInterceptor.invokeWriteTo(WriterInterceptorExecutor.java:265)
-	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor$TerminalWriterInterceptor.aroundWriteTo(WriterInterceptorExecutor.java:250)
-	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
-	at io.dropwizard.jersey.errors.EofExceptionWriterInterceptor.aroundWriteTo(EofExceptionWriterInterceptor.java:39)
-	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
-	at org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor.aroundWriteTo(JsonWithPaddingInterceptor.java:106)
-	at org.glassfish.jersey.message.internal.WriterInterceptorExecutor.proceed(WriterInterceptorExecutor.java:162)
-	at org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor.aroundWriteTo(MappableExceptionWrapperInterceptor.java:86)
-	... 81 common frames omitted
-Caused by: org.finos.legend.engine.shared.core.operational.errorManagement.EngineException: Flight streaming error: 
-	at org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor$DeephavenRowSpliterator.tryAdvance(DeephavenExecutionNodeExecutor.java:255)
-	at java.base/java.util.Spliterator.forEachRemaining(Spliterator.java:326)
-	at java.base/java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:658)
-	at org.finos.legend.engine.plan.execution.result.object.StreamingObjectResultJSONSerializer.serializeStream(StreamingObjectResultJSONSerializer.java:80)
-	at org.finos.legend.engine.plan.execution.result.object.StreamingObjectResultJSONSerializer.streamObjects(StreamingObjectResultJSONSerializer.java:68)
-	at org.finos.legend.engine.plan.execution.result.object.StreamingObjectResultJSONSerializer.stream(StreamingObjectResultJSONSerializer.java:52)
-	... 94 common frames omitted
-Caused by: org.apache.arrow.flight.FlightRuntimeException: 
-	at org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:131)
-	at org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:164)
-	at org.apache.arrow.flight.grpc.StatusUtils.fromThrowable(StatusUtils.java:185)
-	at org.apache.arrow.flight.FlightStream$Observer.onError(FlightStream.java:454)
-	at org.apache.arrow.flight.FlightClient$1.onError(FlightClient.java:333)
-	at io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:491)
-	at io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)
-	at io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)
-	at io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)
-	at org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.onClose(ClientInterceptorAdapter.java:117)
-	at io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:567)
-	at io.grpc.internal.ClientCallImpl.access$300(ClientCallImpl.java:71)
-	at io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:735)
-	at io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:716)
-	at io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)
-	at io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-	... 1 common frames omitted
+Starting FlightStream for table: e   
+FlightStream initialized successfully
+DeephavenRowSpliterator initialized with FlightStream: org.apache.arrow.flight.FlightStream@7b16d191
+Memory was leaked by query. Memory leaked: (384)
+Allocator(ROOT) 0/384/384/9223372036854775807 (res/actual/peak/limit)
+
+Error closing deephaven session
+Exception added to metric - Label: EngineException. Category: SERVER_EXECUTION_ERROR. Source: PureQueryExecute. Service: N/A. Exception: EngineException. Message: Failed to close deephaven session: Memory was leaked by query. Memory leaked: (384)
+Allocator(ROOT) 0/384/384/9223372036854775807 (res/actual/peak/limit)
+. Cause: java.lang.IllegalStateException: Memory was leaked by query. Memory leaked: (384)
+Allocator(ROOT) 0/384/384/9223372036854775807 (res/actual/peak/limit)
+. Exception Categorisation is: true
+{"duration":0.0,"eventType":"EXECUTE_INTERACTIVE_ERROR","info":{"code":-1,"message":"Failed to close deephaven session: Memory was leaked by query. Memory leaked: (384)\nAllocator(ROOT) 0/384/384/9223372036854775807 (res/actual/peak/limit)\n","status":"error","trace":"org.finos.legend.engine.shared.core.operational.errorManagement.EngineException: Failed to close deephaven session: Memory was leaked by query. Memory leaked: (384)\nAllocator(ROOT) 0/384/384/9223372036854775807 (res/actual/peak/limit)\n\n\tat org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.executeDeephavenNode(DeephavenExecutionNodeExecutor.java:128)\n\tat org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.visit(DeephavenExecutionNodeExecutor.java:79)\n\tat org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.visit(DeephavenExecutionNodeExecutor.java:59)\n\tat org.finos.legend.engine.protocol.deephaven.metamodel.pure.DeephavenExecutionNode.accept(DeephavenExecutionNode.java:31)\n\tat org.finos.legend.engine.plan.execution.stores.deephaven.DeephavenExecutionExtension.lambda$getExtraNodeExecutors$9d7202ba$1(DeephavenExecutionExtension.java:47)\n\tat org.finos.legend.engine.plan.execution.nodes.ExecutionNodeExecutor.lambda$visit$0(ExecutionNodeExecutor.java:173)\n\tat java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)\n\tat java.base/java.util.Spliterators$ArraySpliterator.tryAdvance(Spliterators.java:958)\n\tat java.base/java.util.stream.ReferencePipeline.forEachWithCancel(ReferencePipeline.java:127)\n\tat java.base/java.util.stream.AbstractPipeline.copyIntoWithCancel(AbstractPipeline.java:502)\n\tat java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:488)\n\tat java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)\n\tat java.base/java.util.stream.FindOps$FindOp.evaluateSequential(FindOps.java:150)\n\tat java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\n\tat java.base/java.util.stream.ReferencePipeline.findFirst(ReferencePipeline.java:543)\n\tat org.finos.legend.engine.plan.execution.nodes.ExecutionNodeExecutor.visit(ExecutionNodeExecutor.java:173)\n\tat org.finos.legend.engine.plan.execution.nodes.ExecutionNodeExecutor.visit(ExecutionNodeExecutor.java:108)\n\tat org.finos.legend.engine.protocol.deephaven.metamodel.pure.DeephavenExecutionNode.accept(DeephavenExecutionNode.java:31)\n\tat org.finos.legend.engine.plan.execution.PlanExecutor.execute(PlanExecutor.java:256)\n\tat org.finos.legend.engine.plan.execution.PlanExecutor.execute(PlanExecutor.java:243)\n\tat org.finos.legend.engine.query.pure.api.Execute.execLegacy(Execute.java:328)\n\tat org.finos.legend.engine.query.pure.api.Execute.exec(Execute.java:301)\n\tat org.finos.legend.engine.query.pure.api.Execute.execute(Execute.java:191)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:566)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$ResponseOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:160)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat org.eclipse.jetty.servlet.ServletHolder.handle(ServletHolder.java:799)\n\tat org.eclipse.jetty.servlet.ServletHandler$ChainEnd.doFilter(ServletHandler.java:1631)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:35)\n\tat org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)\n\tat org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:45)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:39)\n\tat org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)\n\tat org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)\n\tat org.finos.legend.server.pac4j.internal.UsernameFilter.doFilter(UsernameFilter.java:51)\n\tat org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)\n\tat org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)\n\tat org.pac4j.j2e.filter.SecurityFilter.lambda$internalFilter$0(SecurityFilter.java:95)\n\tat org.pac4j.core.engine.DefaultSecurityLogic.perform(DefaultSecurityLogic.java:140)\n\tat org.pac4j.j2e.filter.SecurityFilter.internalFilter(SecurityFilter.java:93)\n\tat org.pac4j.j2e.filter.AbstractConfigFilter.doFilter(AbstractConfigFilter.java:81)\n\tat org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)\n\tat org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)\n\tat org.finos.legend.engine.server.core.session.SessionAttributeBundle$Enricher.doFilter(SessionAttributeBundle.java:77)\n\tat org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)\n\tat org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)\n\tat org.finos.legend.server.shared.bundles.HostnameHeaderBundle$Enricher.doFilter(HostnameHeaderBundle.java:62)\n\tat org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)\n\tat org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:319)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:273)\n\tat org.eclipse.jetty.servlet.FilterHolder.doFilter(FilterHolder.java:193)\n\tat org.eclipse.jetty.servlet.ServletHandler$Chain.doFilter(ServletHandler.java:1601)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:548)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)\n\tat org.eclipse.jetty.server.session.SessionHandler.doHandle(SessionHandler.java:1624)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.nextHandle(ScopedHandler.java:233)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1434)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:188)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:501)\n\tat org.eclipse.jetty.server.session.SessionHandler.doScope(SessionHandler.java:1594)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.nextScope(ScopedHandler.java:186)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1349)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:313)\n\tat io.dropwizard.jetty.ContextRoutingHandler.handle(ContextRoutingHandler.java:37)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:713)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:67)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:179)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:127)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:516)\n\tat org.eclipse.jetty.server.HttpChannel.lambda$handle$1(HttpChannel.java:400)\n\tat org.eclipse.jetty.server.HttpChannel.dispatch(HttpChannel.java:645)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:392)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:277)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:311)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:105)\n\tat org.eclipse.jetty.io.ChannelEndPoint$1.run(ChannelEndPoint.java:104)\n\tat org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.runTask(EatWhatYouKill.java:338)\n\tat org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.doProduce(EatWhatYouKill.java:315)\n\tat org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.tryProduce(EatWhatYouKill.java:173)\n\tat org.eclipse.jetty.util.thread.strategy.EatWhatYouKill.run(EatWhatYouKill.java:131)\n\tat org.eclipse.jetty.util.thread.ReservedThreadExecutor$ReservedThread.run(ReservedThreadExecutor.java:409)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:883)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$Runner.run(QueuedThreadPool.java:1034)\n\tat java.base/java.lang.Thread.run(Thread.java:834)\nCaused by: java.lang.IllegalStateException: Memory was leaked by query. Memory leaked: (384)\nAllocator(ROOT) 0/384/384/9223372036854775807 (res/actual/peak/limit)\n\n\tat org.apache.arrow.memory.BaseAllocator.close(BaseAllocator.java:477)\n\tat org.apache.arrow.memory.RootAllocator.close(RootAllocator.java:29)\n\tat org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession.close(DeephavenSession.java:128)\n\tat org.finos.legend.engine.plan.execution.stores.deephaven.plugin.DeephavenExecutionNodeExecutor.executeDeephavenNode(DeephavenExecutionNodeExecutor.java:122)\n\t... 110 more\n"},"mode":"TEST_IGNORE_FUNCTION_MATCH","timeStamp":"2025-03-03 23:42:48.620","user":"_UNKNOWN_"}
