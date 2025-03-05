@@ -1,281 +1,261 @@
-package org.finos.legend.engine.plan.execution.stores.deephaven.plugin;
+Summary
+Legend is a premier data modeling and execution platform optimized for static datasets, delivering finite results such as tabular datasets from single snapshots. However, the increasing prevalence of streaming data—continuously updating datasets from systems like Deephaven (ticking tables) and Chunkstore (streaming feeds)—requires capabilities beyond Legend’s current batch-processing scope. This limitation restricts Legend from supporting real-time analytics and dynamic pipelines, critical for modern data-driven applications.
 
-import org.apache.arrow.flight.FlightRuntimeException;
-import org.apache.arrow.flight.FlightStream;
-import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.VectorSchemaRoot;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.ExecutionNodeJavaPlatformHelper;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
-import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
-import org.finos.legend.engine.plan.execution.result.Result;
-import org.finos.legend.engine.plan.execution.result.object.StreamingObjectResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession;
-import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenExecutionActivity;
-import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenStreamingResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
-//import org.finos.legend.engine.protocol.deephaven.metamodel.executionPlan.DeephavenExecutionNode;
-import org.finos.legend.engine.protocol.deephaven.metamodel.pure.DeephavenExecutionNode;
-import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
-import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenSourceSpecification;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNodeVisitor;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.JavaPlatformImplementation;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.authentication.specification.AuthenticationSpecification;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.authentication.specification.PSKAuthenticationSpecification;
-import org.finos.legend.engine.shared.core.identity.Identity;
-import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
-import org.finos.legend.engine.shared.core.operational.errorManagement.ExceptionCategory;
-import io.deephaven.client.impl.BarrageSession;
-import io.deephaven.client.impl.TableHandle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+This proposal presents a framework to extend Legend with streaming data support, leveraging its existing stereotype system and integrating store-native APIs for optimal performance. Key objectives include:
 
-import java.net.URI;
-import java.util.Spliterator;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+Modeling streaming data in Pure with appropriate metadata.
+Enhancing Pure queries with streaming and timeseries operators.
+Executing queries using store-native streaming mechanisms.
+Delivering and visualizing continuous results in Legend Studio.
+Using Deephaven as a primary example, the design ensures flexibility for Chunkstore and other stores, enhancing Legend’s versatility while preserving its core architecture.
 
-public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Result>
+Introduction
+Background
+Legend’s Pure language and execution framework excel at modeling static datasets, utilizing stereotypes (e.g., <<meta::pure::profiles::temporal.businesstemporal>>) to extend metadata. However, streaming data from sources like Deephaven’s nds_desktops or Chunkstore’s timeseries feeds requires native support for continuous updates, which Legend currently lacks.
+
+Motivation
+Streaming support enables:
+
+Real-Time Insights: Live monitoring of desktop statuses via Deephaven’s nds_desktops.
+Dynamic Pipelines: Continuous timeseries analysis from Chunkstore feeds.
+Unified Platform: Seamless integration of static and streaming workflows in Legend.
+Without this capability, Legend remains constrained to static use cases, trailing platforms optimized for real-time data processing, such as Deephaven or Kafka Streams.
+
+Objectives
+Model streaming data using Legend’s stereotype system with class-level metadata.
+Extend Pure queries for streaming and timeseries operations.
+Integrate store-native streaming APIs into the execution framework.
+Deliver continuous results with enhanced visualization in Legend Studio.
+Proposed Framework
+1. Modeling Streaming Data
+Objective: Enable Pure to model streaming data using existing stereotypes and tagged values at the class level.
+
+Approach: Define a streaming stereotype in a custom profile, applying tagged values like timeseriesKey to class properties and storeType to classes, as tags cannot be applied to stores. Use the provided Deephaven store definition as the streaming source.
+
+Details:
+
+Profile Definition:
+pure
+
+Collapse
+
+Wrap
+
+Copy
+Profile meta::pure::profiles::streaming
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenExecutionNodeExecutor.class);
-
-    private final Identity identity;
-    private final ExecutionState executionState;
-    private final DeephavenStoreState state;
-
-    public DeephavenExecutionNodeExecutor(Identity identity, ExecutionState executionState, DeephavenStoreState state)
-    {
-        this.identity = identity;
-        this.executionState = executionState;
-        this.state = state;
-    }
-
-    @Override
-    public Result visit(ExecutionNode executionNode)
-    {
-        if (executionNode instanceof DeephavenExecutionNode)
-        {
-            return executeDeephavenNode((DeephavenExecutionNode) executionNode);
-        }
-        throw new IllegalStateException("DEEPHAVEN: Unexpected node type: " + executionNode.getClass().getSimpleName());
-    }
-
-    private Result executeDeephavenNode(DeephavenExecutionNode node)
-    {
-        DeephavenSession deephavenSession = null;
-        try
-        {
-            deephavenSession = createDeephavenSession(node.connection);
-            try (BarrageSession session = deephavenSession.getBarrageSession())
-            {
-                System.out.println("Connected to Deephaven Server at " + node.connection.sourceSpec.url.getHost() + ":" +
-                        node.connection.sourceSpec.url.getPort() + " with PSK for node execution");
-                IDeephavenExecutionNodeSpecifics specifics = createSpecifics(node);
-                TableHandle table = specifics.execute(session);
-                System.out.println("Executing query with TableHandle: " + table.ticketId());
-
-                System.out.println("Starting FlightStream for table: " + table.ticketId());
-                FlightStream flightStream = session.stream(table.ticketId());
-                System.out.println("FlightStream initialized successfully: " + flightStream);
-
-                Stream<Map<String, Object>> rowStream = StreamSupport.stream(new DeephavenRowSpliterator(flightStream), false);
-                // Collect the stream into a list to ensure full consumption and closure
-                System.out.println("Consuming stream to collect results");
-                List<Map<String, Object>> results = rowStream.collect(Collectors.toList());
-                System.out.println("Stream consumed, collected " + results.size() + " rows");
-
-                // Explicitly close FlightStream after consumption
-                flightStream.close();
-                System.out.println("FlightStream closed successfully after consumption");
-
-                // Create a new stream from the collected results for serialization
-                Stream<Map<String, Object>> resultStream = results.stream();
-
-                DeephavenSourceSpecification sourceSpec = node.connection.sourceSpec;
-                URI serverUrl = sourceSpec.url;
-                String tableName = table.ticketId().toString();
-                DeephavenExecutionActivity activity = new DeephavenExecutionActivity(serverUrl, tableName);
-                List<org.finos.legend.engine.plan.execution.result.ExecutionActivity> activities = Collections.singletonList(activity);
-
-                DeephavenStreamingResult deephavenResult = new DeephavenStreamingResult(activities);
-                return new StreamingObjectResult<>(resultStream, deephavenResult.getResultBuilder(), deephavenResult);
-            }
-        }
-        catch (EngineException e)
-        {
-            throw e;
-        }
-        catch (io.deephaven.client.impl.TableHandle.TableHandleException e)
-        {
-            throw new EngineException("Deephaven query execution failed: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-        catch (InterruptedException e)
-        {
-            Thread.currentThread().interrupt();
-            throw new EngineException("Deephaven query interrupted: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-        catch (Exception e)
-        {
-            throw new EngineException("Unexpected error executing Deephaven query: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-        finally
-        {
-            if (deephavenSession != null)
-            {
-                try
-                {
-                    deephavenSession.close();
-                    System.out.println("Deephaven session closed successfully");
-                }
-                catch (Exception e)
-                {
-                    System.err.println("Failed to close DeephavenSession: " + e.getMessage());
-                    throw new EngineException("Failed to close Deephaven session: " + e.getMessage(), e, ExceptionCategory.SERVER_EXECUTION_ERROR);
-                }
-            }
-        }
-    }
-
-    private IDeephavenExecutionNodeSpecifics createSpecifics(DeephavenExecutionNode node) throws ReflectiveOperationException
-    {
-        String specificsClassName = JavaHelper.getExecutionClassFullName((JavaPlatformImplementation) node.implementation);
-        Class<?> specificsClass = ExecutionNodeJavaPlatformHelper.getClassToExecute(node, specificsClassName, executionState, identity);
-        return (IDeephavenExecutionNodeSpecifics) specificsClass.getConstructor().newInstance();
-    }
-
-    private DeephavenSession createDeephavenSession(DeephavenConnection connection)
-    {
-        if (!(connection.authSpec instanceof PSKAuthenticationSpecification))
-        {
-            throw new EngineException("Unsupported authentication type: " + connection.authSpec.getClass().getSimpleName(),
-                    ExceptionCategory.USER_CREDENTIALS_ERROR);
-        }
-        PSKAuthenticationSpecification pskSpec = (PSKAuthenticationSpecification) connection.authSpec;
-        if (pskSpec.psk == null || pskSpec.psk.isEmpty())
-        {
-            throw new EngineException("PSK secret is missing or empty for " + connection.sourceSpec.url,
-                    ExceptionCategory.USER_CREDENTIALS_ERROR);
-        }
-        System.out.println("Creating Deephaven session for " + connection.sourceSpec.url + " with PSK: " + pskSpec.psk);
-        Optional<DeephavenSession> session = this.state.getProviders().stream()
-                .map(provider ->
-                {
-                    try
-                    {
-                        Optional<DeephavenSession> providedSession = provider.provide(pskSpec, connection.sourceSpec);
-                        providedSession.ifPresent(s -> System.out.println("Session created successfully for " + connection.sourceSpec.url));
-                        return providedSession;
-                    }
-                    catch (Exception e)
-                    {
-                        System.err.println("Failed to create session with provider: " + e.getMessage());
-                        return Optional.<DeephavenSession>empty();
-                    }
-                })
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findFirst();
-        return session.orElseThrow(() -> new EngineException("Unable to create a Deephaven Session for " +
-                connection.sourceSpec.url,
-                ExceptionCategory.USER_CREDENTIALS_ERROR));
-    }
-
-    private static class DeephavenRowSpliterator implements Spliterator<Map<String, Object>>
-    {
-        private final FlightStream flightStream;
-        private VectorSchemaRoot root;
-        private List<FieldVector> vectors;
-        private int currentRowIndex;
-        private int rowCount;
-
-        DeephavenRowSpliterator(FlightStream flightStream)
-        {
-            this.flightStream = flightStream;
-            this.currentRowIndex = 0;
-            this.rowCount = 0;
-            System.out.println("DeephavenRowSpliterator initialized with FlightStream: " + flightStream);
-        }
-
-
-        @Override
-        public boolean tryAdvance(java.util.function.Consumer<? super Map<String, Object>> action)
-        {
-            try
-            {
-                while (true)
-                {
-                    if (root == null || currentRowIndex >= rowCount)
-                    {
-                        System.out.println("Fetching next FlightStream batch");
-                        if (!flightStream.next())
-                        {
-                            System.out.println("No more data in FlightStream");
-                            return false;
-                        }
-                        root = flightStream.getRoot();
-                        if (root == null)
-                        {
-                            System.err.println("FlightStream returned null root - possible authentication or server issue");
-                            throw new EngineException("FlightStream returned null root, likely due to authentication failure", ExceptionCategory.USER_EXECUTION_ERROR);
-                        }
-                        vectors = root.getFieldVectors();
-                        rowCount = root.getRowCount();
-                        currentRowIndex = 0;
-                        System.out.println("Fetched batch with " + rowCount + " rows");
-                    }
-                    if (currentRowIndex < rowCount)
-                    {
-                        Map<String, Object> row = new HashMap<>(vectors.size());
-                        for (FieldVector vector : vectors)
-                        {
-                            Object value = vector.getObject(currentRowIndex);
-                            row.put(vector.getName(), value);
-                        }
-                        action.accept(row);
-                        currentRowIndex++;
-                        return true;
-                    }
-                }
-            }
-            catch (FlightRuntimeException e)
-            {
-                System.err.println("Flight streaming failed: " + e.getMessage());
-                throw new EngineException("Flight streaming error: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-            }
-            catch (Exception e)
-            {
-                System.err.println("Streaming error: " + e.getMessage());
-                if (e instanceof NullPointerException)
-                {
-                    throw new EngineException("NullPointerException in streaming, likely authentication header issue: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-                }
-                throw new EngineException("Error streaming Deephaven results: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-            }
-        }
-
-        @Override
-        public Spliterator<Map<String, Object>> trySplit()
-        {
-            return null;
-        }
-
-        @Override
-        public long estimateSize()
-        {
-            return Long.MAX_VALUE;
-        }
-
-        @Override
-        public int characteristics()
-        {
-            return Spliterator.ORDERED | Spliterator.NONNULL;
-        }
-    }
+  stereotypes: [streaming];
+  tags: [timeseriesKey, storeType];
 }
+Stereotypes: <<meta::pure::profiles::streaming.streaming>> marks a class or store as streaming, indicating continuous updates.
+Tagged Values:
+{meta::pure::profiles::streaming.timeseriesKey: 'propertyName'}: Applied to a property (e.g., eventTime), identifies it as the temporal key for timeseries operations, providing explicit context rather than assuming all DateTime fields are relevant.
+{meta::pure::profiles::streaming.storeType: 'Deephaven'}: Applied at the class level, specifies the intended store type, as stores themselves cannot hold tags.
+Store Definition: Use the existing Deephaven store syntax without tagged values, relying on class-level metadata.
+TimeseriesKey: Designates the property used for temporal ordering or windowing in timeseries queries, ensuring clarity and intent.
+Example:
+
+pure
+
+Collapse
+
+Wrap
+
+Copy
+###Deephaven
+Deephaven test::StreamingDB
+(
+  Table nds_desktops
+  (
+    id: Integer[1];
+    firstName: String[1];
+    lastName: String[1];
+    employeeType: String[1];
+    timestamp: DateTime[1];
+  )
+)
+
+Class <<meta::pure::profiles::streaming.streaming>> model::Person
+{
+  {meta::pure::profiles::streaming.storeType: 'Deephaven'};
+  id: Integer[1];
+  firstName: String[1];
+  lastName: String[1];
+  employeeType: model::EmployeeType[1];
+  eventTime: DateTime[1] {meta::pure::profiles::streaming.timeseriesKey: 'eventTime'};
+}
+
+Enum model::EmployeeType { CONTRACT, FULL_TIME }
+Use Case: model::Person streams data from Deephaven’s nds_desktops, with eventTime as the timeseries key and storeType indicating Deephaven compatibility.
+2. Mapping Streaming Data
+Objective: Map streaming classes to store sources using existing mechanisms.
+
+Approach: Utilize Legend’s standard mapping syntax, with store-specific details inferred from class-level storeType tags.
+
+Details:
+
+Existing Syntax: No new mapping constructs are needed; standard mappings suffice.
+Studio Support: UI recognizes storeType from the class (e.g., "Deephaven") to streamline mapping.
+Example:
+
+pure
+
+Collapse
+
+Wrap
+
+Copy
+Mapping execution::StreamingMapping
+(
+  *model::Person: Relational
+  {
+    ~mainTable [test::StreamingDB]nds_desktops
+    id: [test::StreamingDB]nds_desktops.id,
+    firstName: [test::StreamingDB]nds_desktops.firstName,
+    lastName: [test::StreamingDB]nds_desktops.lastName,
+    employeeType: EnumerationMapping: [test::StreamingDB]nds_desktops.employeeType,
+    eventTime: [test::StreamingDB]nds_desktops.timestamp
+  }
+  model::EmployeeType: EnumerationMapping
+  {
+    CONTRACT: ['FTC', 'FTO'],
+    FULL_TIME: ['FTE']
+  }
+)
+Use Case: Maps model::Person to nds_desktops in Deephaven, leveraging existing relational mapping capabilities.
+3. Connection and Runtime
+Objective: Configure streaming store access and runtime execution.
+
+Approach: Define StreamingStoreConnection for basic connectivity, with subscription options (e.g., refresh rate) specified at the query level for flexibility.
+
+Details:
+
+Connection: Provides store type, URL, and authentication, kept generic as connections support multiple queries.
+Query-Level Options: tick in queries (e.g., tick('1s')) defines refresh rates, aligning with user intent per query rather than fixing it at the connection level.
+StreamingRuntime: Links mappings to connections.
+Example:
+
+pure
+
+Collapse
+
+Wrap
+
+Copy
+StreamingStoreConnection model::MyStreamingConnection
+{
+  store: test::StreamingDB;
+  type: Deephaven;
+  specification: StreamingDeephaven
+  {
+    url: 'http://deephaven-server:10000/';
+  };
+  auth: PSK { key: '15jso3dd2urlk'; };
+}
+
+Runtime execution::StreamingRuntime
+{
+  mappings: [execution::StreamingMapping];
+  connections:
+  [
+    test::StreamingDB: [connection_1: model::MyStreamingConnection]
+  ];
+}
+Use Case: A single Deephaven connection supports queries with varying tick rates (e.g., 1s for monitoring, 10s for analysis).
+4. Query Language and Platform API
+Objective: Extend Pure for streaming and timeseries queries with a clear API.
+
+Approach: Add tick for streaming updates and window for timeseries aggregation, integrating with Legend’s groupBy and agg, with subscribe as the API for continuous execution.
+
+Details:
+
+Tick: Specifies update frequency (e.g., tick('1s')), streaming results continuously.
+Window: Aggregates over time intervals (e.g., window('1 minute', $this.eventTime)), paired with groupBy and agg for timeseries analysis.
+API (subscribe): Returns a Stream for real-time consumption, distinct from static execute.
+Query Examples:
+
+Streaming (Tick):
+pure
+
+Collapse
+
+Wrap
+
+Copy
+Function model::PersonQuery(): Stream<meta::pure::tds::TabularDataSet>[1]
+{
+  model::Person.all()
+    ->filter(x | $x.employeeType == model::EmployeeType.FULL_TIME)
+    ->project([x | $x.firstName, x | $x.lastName], ['First Name', 'Last Name'])
+    ->tick('1s')
+    ->from(execution::StreamingMapping, execution::StreamingRuntime)
+}
+Use Case: Streams full-time employees’ names every second for a live dashboard.
+Timeseries (Window with Aggregation):
+pure
+
+Collapse
+
+Wrap
+
+Copy
+Function model::PersonWindowed(): Stream<meta::pure::tds::TabularDataSet>[1]
+{
+  model::Person.all()
+    ->window('1 minute', $this.eventTime)
+    ->groupBy(
+      [x | $x.firstName],
+      meta::pure::functions::collection::agg('count', x | $x.id, y | $y->count()),
+      ['First Name', 'Count']
+    )
+    ->tick('10s')
+    ->from(execution::StreamingMapping, execution::StreamingRuntime)
+}
+Use Case: Counts employees by first name in 1-minute windows, updating every 10 seconds, for trend analysis.
+API:
+
+Execution Node:
+json
+
+Collapse
+
+Wrap
+
+Copy
+{
+  "_type": "StreamingExecutionNode",
+  "storeType": "Deephaven",
+  "query": { "source": "nds_desktops", "operations": [{"_type": "select", "columns": ["firstName", "lastName"]}] },
+  "streamingOptions": { "tickInterval": "1s" }
+}
+Interface: IStreamingStoreExecutionNodeSpecifics with subscribe for continuous Stream delivery.
+5. Execution Framework
+Objective: Execute streaming queries using store-native APIs.
+
+Approach: Extend Legend’s execution framework to integrate Deephaven’s streaming API conceptually.
+
+Details:
+
+Deephaven API: Uses BarrageSession.subscribe(TableSpec) to subscribe to ticking table updates, returning a FlightStream of continuous data. Legend translates Pure queries into a TableSpec, which Deephaven streams in real-time.
+Integration Concept:
+Query to Node: Pure queries (e.g., tick('1s')) become StreamingExecutionNode instances.
+Executor: Invokes subscribe, passing the TableSpec, and wraps the FlightStream in a Stream.
+Legend Fit: Extends existing node execution, adding a streaming path.
+Use Case: Streams nds_desktops updates every second to Studio via Deephaven’s native API.
+
+6. Result Handling
+Objective: Deliver and visualize continuous streaming results.
+
+Approach: Implement ContinuousStreamingResult with a store-provided cancellation mechanism and enhance Studio for real-time display.
+
+Details:
+
+Result Handling: Returns a Stream with a cancelSubscription action (e.g., BarrageSession.unsubscribe()), triggered by Studio UI controls, not modeled by users.
+Studio Visualization:
+Proposed: Real-time grid widget updates rows per tick, with "Pause" (buffer data), "Resume", and "Stop" (cancels subscription) buttons.
+Use Case: Displays PersonQuery results updating every second, with user control over the stream.
+Benefits
+Aligned Design: Uses Legend’s stereotypes and mappings.
+Flexible Queries: Query-level tick and window options.
+Efficient Execution: Leverages store-native APIs.
+Enhanced UI: Real-time visualization in Studio.
