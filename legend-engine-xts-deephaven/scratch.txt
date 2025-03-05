@@ -1,36 +1,35 @@
-Summary
-Legend is a premier data modeling and execution platform optimized for static datasets, delivering finite results such as tabular datasets from single snapshots. However, the increasing prevalence of streaming data—continuously updating datasets from systems like Deephaven (ticking tables) and Chunkstore (streaming feeds)—requires capabilities beyond Legend’s current batch-processing scope. This limitation restricts Legend from supporting real-time analytics and dynamic pipelines, critical for modern data-driven applications.
+Legend is a leading data modeling and execution platform optimized for static datasets, delivering finite results such as tabular datasets from single snapshots. However, the rise of streaming data—continuously updating datasets from systems like Deephaven (ticking tables) and Chunkstore (streaming feeds)—demands capabilities beyond Legend’s current batch-processing focus. This limitation restricts Legend from supporting real-time analytics and dynamic pipelines, critical for modern data applications.
 
-This proposal presents a framework to extend Legend with streaming data support, leveraging its existing stereotype system and integrating store-native APIs for optimal performance. Key objectives include:
+This proposal outlines a framework to extend Legend with streaming data support, leveraging its existing stereotype system and integrating store-native APIs. Key objectives include:
 
-Modeling streaming data in Pure with appropriate metadata.
+Modeling streaming data with store-level metadata in Pure.
 Enhancing Pure queries with streaming and timeseries operators.
 Executing queries using store-native streaming mechanisms.
 Delivering and visualizing continuous results in Legend Studio.
-Using Deephaven as a primary example, the design ensures flexibility for Chunkstore and other stores, enhancing Legend’s versatility while preserving its core architecture.
+Using Deephaven as a primary example with a tradeEvents streaming table, the design ensures flexibility for Chunkstore and other stores, maintaining Legend’s store-agnostic modeling principles.
 
 Introduction
 Background
-Legend’s Pure language and execution framework excel at modeling static datasets, utilizing stereotypes (e.g., <<meta::pure::profiles::temporal.businesstemporal>>) to extend metadata. However, streaming data from sources like Deephaven’s nds_desktops or Chunkstore’s timeseries feeds requires native support for continuous updates, which Legend currently lacks.
+Legend’s Pure language excels at modeling static datasets, using stereotypes (e.g., <<meta::pure::profiles::temporal.businesstemporal>>) to extend metadata. However, streaming data—such as Deephaven’s real-time trade events or Chunkstore’s timeseries feeds—requires native support for continuous updates, which Legend currently lacks.
 
 Motivation
 Streaming support enables:
 
-Real-Time Insights: Live monitoring of desktop statuses via Deephaven’s nds_desktops.
-Dynamic Pipelines: Continuous timeseries analysis from Chunkstore feeds.
-Unified Platform: Seamless integration of static and streaming workflows in Legend.
-Without this capability, Legend remains constrained to static use cases, trailing platforms optimized for real-time data processing, such as Deephaven or Kafka Streams.
+Real-Time Insights: Live tracking of financial trades via Deephaven’s tradeEvents.
+Dynamic Pipelines: Continuous analysis of timeseries feeds from Chunkstore.
+Unified Platform: Seamless static and streaming workflows in Legend.
+Without this, Legend trails platforms like Deephaven or Kafka Streams in real-time data processing.
 
 Objectives
-Model streaming data using Legend’s stereotype system with class-level metadata.
+Model streaming data with metadata at the store level using stereotypes.
 Extend Pure queries for streaming and timeseries operations.
 Integrate store-native streaming APIs into the execution framework.
-Deliver continuous results with enhanced visualization in Legend Studio.
+Deliver continuous results with Studio visualization support.
 Proposed Framework
 1. Modeling Streaming Data
-Objective: Enable Pure to model streaming data using existing stereotypes and tagged values at the class level.
+Objective: Enable Pure to model streaming data with metadata confined to the store level.
 
-Approach: Define a streaming stereotype in a custom profile, applying tagged values like timeseriesKey to class properties and storeType to classes, as tags cannot be applied to stores. Use the provided Deephaven store definition as the streaming source.
+Approach: Define a streaming stereotype in a custom profile, applying it to Store definitions with tagged values like storeType. Classes remain store-agnostic, with timeseriesKey tags on properties for temporal context.
 
 Details:
 
@@ -47,13 +46,12 @@ Profile meta::pure::profiles::streaming
   stereotypes: [streaming];
   tags: [timeseriesKey, storeType];
 }
-Stereotypes: <<meta::pure::profiles::streaming.streaming>> marks a class or store as streaming, indicating continuous updates.
+Stereotypes: <<meta::pure::profiles::streaming.streaming>> marks a Store as streaming, indicating it provides continuous updates.
 Tagged Values:
-{meta::pure::profiles::streaming.timeseriesKey: 'propertyName'}: Applied to a property (e.g., eventTime), identifies it as the temporal key for timeseries operations, providing explicit context rather than assuming all DateTime fields are relevant.
-{meta::pure::profiles::streaming.storeType: 'Deephaven'}: Applied at the class level, specifies the intended store type, as stores themselves cannot hold tags.
-Store Definition: Use the existing Deephaven store syntax without tagged values, relying on class-level metadata.
-TimeseriesKey: Designates the property used for temporal ordering or windowing in timeseries queries, ensuring clarity and intent.
-Example:
+{meta::pure::profiles::streaming.storeType: 'Deephaven'}: Applied to the Store, specifies the store type.
+{meta::pure::profiles::streaming.timeseriesKey}: Applied to a property (e.g., tradeTime), flags it as the temporal key for timeseries operations, avoiding redundant naming by using a standalone tag.
+Store-Agnostic Classes: Classes do not include store-specific metadata, ensuring flexibility across stores.
+Updated Store and Class Definitions:
 
 pure
 
@@ -63,39 +61,36 @@ Wrap
 
 Copy
 ###Deephaven
-Deephaven test::StreamingDB
-(
-  Table nds_desktops
+Deephaven <<meta::pure::profiles::streaming.streaming>> test::StreamingDB
+{
+  {meta::pure::profiles::streaming.storeType: 'Deephaven'};
+  Table tradeEvents
   (
-    id: Integer[1];
-    firstName: String[1];
-    lastName: String[1];
-    employeeType: String[1];
-    timestamp: DateTime[1];
+    tradeId: Integer[1];
+    symbol: String[1];
+    price: Float[1];
+    quantity: Integer[1];
+    tradeTime: DateTime[1];
   )
 )
 
-Class <<meta::pure::profiles::streaming.streaming>> model::Person
+Class model::Trade
 {
-  {meta::pure::profiles::streaming.storeType: 'Deephaven'};
-  id: Integer[1];
-  firstName: String[1];
-  lastName: String[1];
-  employeeType: model::EmployeeType[1];
-  eventTime: DateTime[1] {meta::pure::profiles::streaming.timeseriesKey: 'eventTime'};
+  tradeId: Integer[1];
+  symbol: String[1];
+  price: Float[1];
+  quantity: Integer[1];
+  tradeTime: DateTime[1] {meta::pure::profiles::streaming.timeseriesKey};
 }
-
-Enum model::EmployeeType { CONTRACT, FULL_TIME }
-Use Case: model::Person streams data from Deephaven’s nds_desktops, with eventTime as the timeseries key and storeType indicating Deephaven compatibility.
+Use Case: tradeEvents streams real-time financial trades (e.g., stock transactions), with tradeTime as the timeseries key for windowed analysis.
 2. Mapping Streaming Data
 Objective: Map streaming classes to store sources using existing mechanisms.
 
-Approach: Utilize Legend’s standard mapping syntax, with store-specific details inferred from class-level storeType tags.
+Approach: Use standard mapping syntax, with storeType inferred from the Store definition.
 
 Details:
 
-Existing Syntax: No new mapping constructs are needed; standard mappings suffice.
-Studio Support: UI recognizes storeType from the class (e.g., "Deephaven") to streamline mapping.
+No New Syntax: Relies on existing Relational mappings, with Studio UI leveraging storeType for guidance.
 Example:
 
 pure
@@ -107,32 +102,26 @@ Wrap
 Copy
 Mapping execution::StreamingMapping
 (
-  *model::Person: Relational
+  *model::Trade: Relational
   {
-    ~mainTable [test::StreamingDB]nds_desktops
-    id: [test::StreamingDB]nds_desktops.id,
-    firstName: [test::StreamingDB]nds_desktops.firstName,
-    lastName: [test::StreamingDB]nds_desktops.lastName,
-    employeeType: EnumerationMapping: [test::StreamingDB]nds_desktops.employeeType,
-    eventTime: [test::StreamingDB]nds_desktops.timestamp
-  }
-  model::EmployeeType: EnumerationMapping
-  {
-    CONTRACT: ['FTC', 'FTO'],
-    FULL_TIME: ['FTE']
+    ~mainTable [test::StreamingDB]tradeEvents
+    tradeId: [test::StreamingDB]tradeEvents.tradeId,
+    symbol: [test::StreamingDB]tradeEvents.symbol,
+    price: [test::StreamingDB]tradeEvents.price,
+    quantity: [test::StreamingDB]tradeEvents.quantity,
+    tradeTime: [test::StreamingDB]tradeEvents.tradeTime
   }
 )
-Use Case: Maps model::Person to nds_desktops in Deephaven, leveraging existing relational mapping capabilities.
+Use Case: Maps model::Trade to Deephaven’s tradeEvents for streaming trade data.
 3. Connection and Runtime
 Objective: Configure streaming store access and runtime execution.
 
-Approach: Define StreamingStoreConnection for basic connectivity, with subscription options (e.g., refresh rate) specified at the query level for flexibility.
+Approach: Define StreamingStoreConnection for connectivity, with subscription options at the query level.
 
 Details:
 
-Connection: Provides store type, URL, and authentication, kept generic as connections support multiple queries.
-Query-Level Options: tick in queries (e.g., tick('1s')) defines refresh rates, aligning with user intent per query rather than fixing it at the connection level.
-StreamingRuntime: Links mappings to connections.
+Connection: Specifies URL and authentication, reusable across queries.
+Query-Level Options: tick defines refresh rates, ensuring flexibility per query.
 Example:
 
 pure
@@ -161,17 +150,17 @@ Runtime execution::StreamingRuntime
     test::StreamingDB: [connection_1: model::MyStreamingConnection]
   ];
 }
-Use Case: A single Deephaven connection supports queries with varying tick rates (e.g., 1s for monitoring, 10s for analysis).
+Use Case: Supports multiple trade queries with varying tick rates (e.g., 1s, 5s) over one connection.
 4. Query Language and Platform API
 Objective: Extend Pure for streaming and timeseries queries with a clear API.
 
-Approach: Add tick for streaming updates and window for timeseries aggregation, integrating with Legend’s groupBy and agg, with subscribe as the API for continuous execution.
+Approach: Add tick for streaming and window for timeseries, integrating with groupBy and agg, with subscribe as the streaming API.
 
 Details:
 
-Tick: Specifies update frequency (e.g., tick('1s')), streaming results continuously.
-Window: Aggregates over time intervals (e.g., window('1 minute', $this.eventTime)), paired with groupBy and agg for timeseries analysis.
-API (subscribe): Returns a Stream for real-time consumption, distinct from static execute.
+Tick: Streams updates at a specified interval (e.g., tick('1s')).
+Window: Aggregates over time intervals using the timeseriesKey property.
+API (subscribe): Returns a continuous Stream, enabling real-time processing.
 Query Examples:
 
 Streaming (Tick):
@@ -182,15 +171,15 @@ Collapse
 Wrap
 
 Copy
-Function model::PersonQuery(): Stream<meta::pure::tds::TabularDataSet>[1]
+Function model::TradeQuery(): Stream<meta::pure::tds::TabularDataSet>[1]
 {
-  model::Person.all()
-    ->filter(x | $x.employeeType == model::EmployeeType.FULL_TIME)
-    ->project([x | $x.firstName, x | $x.lastName], ['First Name', 'Last Name'])
+  model::Trade.all()
+    ->filter(x | $x.quantity > 100)
+    ->project([x | $x.symbol, x | $x.price], ['Symbol', 'Price'])
     ->tick('1s')
     ->from(execution::StreamingMapping, execution::StreamingRuntime)
 }
-Use Case: Streams full-time employees’ names every second for a live dashboard.
+Use Case: Streams large trades every second for real-time market monitoring.
 Timeseries (Window with Aggregation):
 pure
 
@@ -199,19 +188,19 @@ Collapse
 Wrap
 
 Copy
-Function model::PersonWindowed(): Stream<meta::pure::tds::TabularDataSet>[1]
+Function model::TradeVolume(): Stream<meta::pure::tds::TabularDataSet>[1]
 {
-  model::Person.all()
-    ->window('1 minute', $this.eventTime)
+  model::Trade.all()
+    ->window('5 minutes', $this.tradeTime)
     ->groupBy(
-      [x | $x.firstName],
-      meta::pure::functions::collection::agg('count', x | $x.id, y | $y->count()),
-      ['First Name', 'Count']
+      [x | $x.symbol],
+      meta::pure::functions::collection::agg('totalQty', x | $x.quantity, y | $y->sum()),
+      ['Symbol', 'Total Quantity']
     )
-    ->tick('10s')
+    ->tick('30s')
     ->from(execution::StreamingMapping, execution::StreamingRuntime)
 }
-Use Case: Counts employees by first name in 1-minute windows, updating every 10 seconds, for trend analysis.
+Use Case: Aggregates trade volumes by symbol over 5-minute windows, updating every 30 seconds, for market trend analysis.
 API:
 
 Execution Node:
@@ -225,7 +214,7 @@ Copy
 {
   "_type": "StreamingExecutionNode",
   "storeType": "Deephaven",
-  "query": { "source": "nds_desktops", "operations": [{"_type": "select", "columns": ["firstName", "lastName"]}] },
+  "query": { "source": "tradeEvents", "operations": [{"_type": "select", "columns": ["symbol", "price"]}] },
   "streamingOptions": { "tickInterval": "1s" }
 }
 Interface: IStreamingStoreExecutionNodeSpecifics with subscribe for continuous Stream delivery.
@@ -236,26 +225,25 @@ Approach: Extend Legend’s execution framework to integrate Deephaven’s strea
 
 Details:
 
-Deephaven API: Uses BarrageSession.subscribe(TableSpec) to subscribe to ticking table updates, returning a FlightStream of continuous data. Legend translates Pure queries into a TableSpec, which Deephaven streams in real-time.
+Deephaven API: BarrageSession.subscribe(TableSpec) subscribes to ticking updates, returning a FlightStream of real-time data. Legend translates Pure queries into a TableSpec for subscription.
 Integration Concept:
-Query to Node: Pure queries (e.g., tick('1s')) become StreamingExecutionNode instances.
-Executor: Invokes subscribe, passing the TableSpec, and wraps the FlightStream in a Stream.
-Legend Fit: Extends existing node execution, adding a streaming path.
-Use Case: Streams nds_desktops updates every second to Studio via Deephaven’s native API.
+Pure query → StreamingExecutionNode → subscribe invocation → FlightStream → Stream.
+Reuses Legend’s execution pipeline, adding a streaming branch.
+Use Case: Streams tradeEvents updates every second to Studio via Deephaven’s API.
 
 6. Result Handling
 Objective: Deliver and visualize continuous streaming results.
 
-Approach: Implement ContinuousStreamingResult with a store-provided cancellation mechanism and enhance Studio for real-time display.
+Approach: Use a streaming result object with store-provided cancellation, enhancing Studio for real-time display.
 
 Details:
 
-Result Handling: Returns a Stream with a cancelSubscription action (e.g., BarrageSession.unsubscribe()), triggered by Studio UI controls, not modeled by users.
-Studio Visualization:
-Proposed: Real-time grid widget updates rows per tick, with "Pause" (buffer data), "Resume", and "Stop" (cancels subscription) buttons.
-Use Case: Displays PersonQuery results updating every second, with user control over the stream.
+Result Handling: Delivers a Stream with a cancelSubscription action (e.g., BarrageSession.unsubscribe()), triggered by Studio UI.
+Studio Visualization: Real-time grid widget updates rows per tick, with "Pause", "Resume", and "Stop" controls.
+Use Case: Displays TradeQuery results updating every second, with user control over the stream.
+
 Benefits
-Aligned Design: Uses Legend’s stereotypes and mappings.
-Flexible Queries: Query-level tick and window options.
+Store-Agnostic Models: Classes remain flexible across stores.
+Query Flexibility: tick and window at query level.
 Efficient Execution: Leverages store-native APIs.
 Enhanced UI: Real-time visualization in Studio.
