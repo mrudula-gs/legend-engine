@@ -1,10 +1,27 @@
+$jThis->j_invoke('check', [javaArrays()->j_invoke('asList', $acceptableNodes, javaList(jsonNodeType())), $nodeParameter->j_invoke('getNodeType', [], jsonNodeType()), $errorMessage], javaVoid()),
 
-Compilation error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:309 column:57), "The system can't find a match for the function: j_new(_:Type[1])
+function meta::external::language::java::factory::j_invoke(class:meta::external::language::java::metamodel::Type[1], methodName:String[1], args:Code[*], type:meta::external::language::java::metamodel::Type[1]):Code[1]
+{
+   j_invoke($class, [], $methodName, $args, $type);
+}
 
-These functions, in packages already imported, would match the function call if you changed the parameters.
-  meta::external::language::java::factory::j_new(Type[1], Code[*]):Code[1]
+$chain->j_invoke('sort', [javaArrays()->j_invoke('asList', $sortColumns)], $tableSpecClass);
 
-No functions, in packages not imported, match the function name.
+function meta::external::language::java::factory::j_invoke(class:meta::external::language::java::metamodel::Type[1], methodName:String[1], args:Code[*]):Code[1]
+{
+   j_invoke($class, [], $methodName, $args);
+}
 
+function meta::external::language::java::factory::j_invoke(class:meta::external::language::java::metamodel::Type[1], typeArguments:meta::external::language::java::metamodel::Type[*], methodName:String[1], args:Code[*]):Code[1]
+{
+   j_invoke($class, $typeArguments, $methodName, $args, $class->methodReturnType($methodName));
+}
 
-And what is $list in let arrayListPopulated = $sortColumns->fold({col, list | $list->j_invoke('add',[$col])}, $arrayListInit);
+function meta::external::language::java::factory::methodReturnType(from:meta::external::language::java::metamodel::Type[1], methodName:String[1]):meta::external::language::java::metamodel::Type[1]
+{
+   let types = $from->apiKnowledge().methods->filter(m|$m.name == $methodName).returnType->removeDuplicates();
+   assert($types->size() > 0,  |'Type not found for method ' + $methodName + ' from ' + $from->typeToString());
+   assert($types->size() == 1, |'Type ambiguous for method ' + $methodName + ' from ' + $from->typeToString());
+   assert(!$types->at(0)->instanceOf(meta::external::language::java::metamodel::TypeVariable), |'Type unresolved for method ' + $methodName + ' from ' + $from->typeToString());
+   $types->toOne();
+}
