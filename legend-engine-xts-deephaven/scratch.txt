@@ -1,4 +1,10 @@
-function meta::external::language::java::factory::javaArrayList(t:meta::external::language::java::metamodel::Type[1]) : meta::external::language::java::metamodel::Type[1]
-{
-   ^meta::external::language::java::metamodel::ParameterizedType(rawType=javaClass('java.util.ArrayList'), typeArguments=$t->toBoxed());
-}
+
+Compilation error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:309 column:57), "The system can't find a match for the function: j_new(_:Type[1])
+
+These functions, in packages already imported, would match the function call if you changed the parameters.
+  meta::external::language::java::factory::j_new(Type[1], Code[*]):Code[1]
+
+No functions, in packages not imported, match the function name.
+
+
+And what is $list in let arrayListPopulated = $sortColumns->fold({col, list | $list->j_invoke('add',[$col])}, $arrayListInit);
