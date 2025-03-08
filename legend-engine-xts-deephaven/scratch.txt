@@ -1,7 +1,133 @@
+import meta::pure::mapping::*;
+import meta::pure::store::*;
+import meta::core::runtime::*;
+import meta::pure::mapping::modelToModel::chain::*;
+import meta::pure::functions::io::http::*;
+import meta::pure::test::org::*;
+import meta::pure::test::pct::*;
+import meta::external::store::deephaven::extension::*;
+import meta::external::store::deephaven::executionTest::*;
+import meta::json::*;
+import meta::pure::metamodel::relation::*;
+
+// Adapter Definition
+function <<PCT.adapter>> {PCT.adapterName='Deephaven'} meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution<X|o>(f:Function<{->X[o]}>[1]):X[o]
+{
+    meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecutionImpl(
+        $f,
+        meta::external::store::deephaven::executionTest::utils::startDeephaven('latest')
+    )
+}
+
+// Core Adapter Implementation
+function meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecutionImpl<X|o>(f:Function<{->X[o]}>[1], dbc:URL[1]):X[o]
+{
+    let debug = noDebug();
+    let reprocessed = $f->meta::external::store::deephaven::executionTest::reprocess($dbc, $debug);
+    let newFunction = $reprocessed.first;
+
+    let extensions = meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions();
+
+    // Generate raw execution plan
+    let rawPlan = meta::pure::executionPlan::executionPlan(
+        $newFunction->cast(@FunctionDefinition<{->Any[*]}>),
+        ^meta::pure::runtime::ExecutionContext(),
+        $extensions,
+        $debug
+    );
+
+    // Bind and transform plan
+    let planBindToJava = $rawPlan->meta::pure::executionPlan::platformBinding::localBinding::bindTestPlanToPlatformLocallyWithClasspathExtensions('LegendJava');
+    let plan = $planBindToJava->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::executionPlan::transformPlan($extensions);
+    let planAsJson = $plan->meta::json::toJSON(1000, meta::json::config(false, false, true, true));
+
+    // Execute plan
+    let resultJson = meta::legend::executePlanAsJSON($planAsJson, []);
+
+    // Process result
+    let funcReturnType = $f->functionReturnType().rawType->toOne();
+    let json = $resultJson->meta::json::parseJSON();
+    let res = $json->meta::json::fromJSON(
+        $funcReturnType,
+        ^meta::json::ExtendedJSONDeserializationConfig(typeKeyName='__TYPE', failOnUnknownProperties=true, nullReplacementInArray=TDSNull)
+    );
+
+    // Handle TDS result specifically
+
+    $res->cast(@X)->toMultiplicity(@[o]); 
+
+   // todo - anumam - needed ?
+
+    // if ($funcReturnType->instanceOf(Relation),
+    //     | let tdsString = $res->cast(@TDS<Any>)->toString();
+    //       $tdsString->stringToTDS();,
+    //     | $res
+    // )->cast(@X)->toMultiplicity(@[o]);
+}
+
+// Reprocessing Logic
+function meta::external::store::deephaven::executionTest::reprocess(f:Function<Any>[1], dbc:URL[1], debug:DebugContext[1]):Pair<FunctionDefinition<Any>, ProcessingState>[1]
+{
+    let expr = $f;
+      let db = ^meta::external::store::deephaven::metamodel::store::DeephavenStore(name='DeephavenTestStore',
+                                                                               package=meta::external::store::deephaven::executionTest);
+      let state = ^ProcessingState(
+          database = $db,
+          runtime = ^Runtime(
+              connectionStores = ^ConnectionStore(
+                  connection = $dbc,
+                  element = $db
+              )
+          )
+      );
+
+      // Reprocess the expression
+      let reprocessedExpr = $expr->evaluateAndDeactivate()->map(e | $e->reprocessExpr($state));
+      let newFunction = ^FunctionDefinition<Any>(
+          name = 'testFunction',
+          package = test,
+          expressionSequence = $reprocessedExpr->cast(@ValueSpecification)->toOneMany()
+      );
+
+      // Setup tables from TDS if present
+      // todo - anumam - fix
+      $reprocessedExpr->map(e | $e->setupTables($state));
+
+      pair($newFunction->addWith($state.runtime->toOne()), $state);
+}
+
+// Expression Reprocessing
+function meta::external::store::deephaven::executionTest::reprocessExpr(expr:Any[1], state:ProcessingState[1]):Any[1]
+{
+    $expr->match([
+        fe:FunctionExpression[1] |
+            let params = $fe.parametersValues->evaluateAndDeactivate()->map(p | $p->reprocessExpr($state));
+            ^$fe(parametersValues = $params);,
+        iv:InstanceValue[1] |
+            if ($iv.genericType.rawType->toOne()->instanceOf(TDS),
+                | let tds = $iv.values->toOne()->cast(@TDS<Any>);
+                  let tableName = 'table_' + random()->toString();
+                  let storeAccessor = ^RelationStoreAccessor<Any>(
+                      store = $state.database,
+                      sourceElement = $tableName
+                  );
+                  $state->mutateAdd('csvs', $tds->toCSV($tableName));
+                  $storeAccessor;,
+                | $iv
+            ),
+        lf:LambdaFunction<Any>[1] |
+            let body = $lf.expressionSequence->evaluateAndDeactivate()->map(e | $e->reprocessExpr($state));
+            ^$lf(expressionSequence = $body->cast(@ValueSpecification)->toOneMany());,
+        ve:VariableExpression[1] | $ve,
+        x:Any[1] | $x
+    ])
+}
+
+// Add Runtime to Function
 // Replace this in your pct_deephaven.pure
 function meta::external::store::deephaven::executionTest::addWith(func:FunctionDefinition<Any>[1], runtime:Runtime[1]):FunctionDefinition<Any>[1]
 {
-    let evaluatedExpr = $func->expressionSequence->evaluateAndDeactivate()->toOne();
+    let evaluatedExpr = $func.expressionSequence->evaluateAndDeactivate()->toOne();
     let withExpr = ^SimpleFunctionExpression(
         importGroup = system::imports::coreImport,
         func = from_T_m__Runtime_1__T_m_,
@@ -22,4 +148,73 @@ function meta::external::store::deephaven::executionTest::addWith(func:FunctionD
         ]
     );
     ^$func(expressionSequence = $withExpr);
+}
+
+// Setup Tables from CSV
+function meta::external::store::deephaven::executionTest::setupTables(expr:Any[1], state:ProcessingState[1]):Nil[0]
+{
+    if ($expr->instanceOf(RelationStoreAccessor),
+        | let storeAccessor = $expr->cast(@RelationStoreAccessor<Any>);
+          let tableName = $storeAccessor.sourceElement->toOne()->cast(@String);
+          let csv = $state.csvs->filter(c | $c->contains($tableName))->toOne();
+          meta::external::store::deephaven::executionTest::utils::createTableFromCSV($tableName, $csv, $state.runtime.connectionStores.connection->toOne()->cast(@URL));,
+        | []
+    );
+}
+
+native function meta::external::store::deephaven::executionTest::utils::createTableFromCSV(tableName: String[1], csvData: String[1], connection: URL[1]): Nil[0];
+
+// TDS to CSV Conversion
+function meta::pure::metamodel::relation::toCSV(tds:TDS<Any>[1], tableName:String[1]):String[1]
+{
+    let header = $tds->columns()->map(c | $c.name->toOne())->joinStrings(',');
+    let rows = $tds->map(row | 
+        $tds->columns()->map(col | 
+            let val = $col->eval($row)->toOne();
+            $val->match([
+                d:Date[1] | format('%t{yyyy-MM-dd"T"HH:mm:ss.SSSSSSSSS}', $d),
+                x:Any[1] | $x->toString()
+            ]);
+        )->joinStrings(',')
+    )->joinStrings('\n');
+    $tableName + '\n' + $header + '\n' + $rows;
+}
+
+// Processing State
+Class meta::external::store::deephaven::executionTest::ProcessingState
+{
+    database: meta::external::store::deephaven::metamodel::store::DeephavenStore[1];
+    runtime: Runtime[1];
+    csvs: String[*];
+}
+
+
+
+Compilation error at (resource:/core_deephaven_execution_test/pct_deephaven.pure lines:86c16-87c135), "Missing value(s) for required property 'tables' which has a multiplicity of [1..*] for type meta::external::store::deephaven::metamodel::store::DeephavenStore"
+
+
+import meta::external::store::deephaven::metamodel::store::*;
+import meta::external::store::deephaven::metamodel::type::*;
+
+Class meta::external::store::deephaven::metamodel::store::DeephavenStore extends meta::pure::store::Store
+{
+  tables : Table[1..*]; 
+}
+
+Class meta::external::store::deephaven::metamodel::store::Table
+{
+  name : String[1];
+  columns : Column[1..*];
+}
+
+Class meta::external::store::deephaven::metamodel::store::Column extends meta::external::store::deephaven::metamodel::DeephavenOperationElement
+{
+  name : String[1];
+  type : meta::external::store::deephaven::metamodel::type::Type[1];
+}
+
+// TODO - anumam - add the sourceInformation fields to all classes for Deephaven such that the parser can add metadata back into the pojos/pmcd
+Class meta::external::store::deephaven::metamodel::store::Literal extends meta::external::store::deephaven::metamodel::DeephavenOperationElement
+{
+   <<equality.Key>> value:Any[*];
 }
