@@ -58,7 +58,7 @@ function meta::external::store::deephaven::executionTest::testAdapterForDeephave
         | let tdsString = $res->cast(@TDS<Any>)->toString();
           $tdsString->stringToTDS(),
         | $res
-    )->cast(@X)->toMultiplicity(@[o]);
+    )->cast(@X)->toMultiplicity(@[o])
 }
 
 // Reprocessing Logic
@@ -68,7 +68,13 @@ function meta::external::store::deephaven::executionTest::reprocess(f:Function<A
     let db = ^meta::external::store::deephaven::metamodel::store::DeephavenStore(
         name = 'DeephavenTestStore',
         package = meta::external::store::deephaven::executionTest,
-        tables = [] // Will be populated dynamically
+        tables = [^meta::external::store::deephaven::metamodel::store::Table(
+            name = 'dummy',
+            columns = [^meta::external::store::deephaven::metamodel::store::Column(
+                name = 'dummyCol',
+                type = ^meta::external::store::deephaven::metamodel::type::StringType()
+            )]
+        )]
     );
     let state = ^ProcessingState(
         database = $db,
@@ -90,7 +96,7 @@ function meta::external::store::deephaven::executionTest::reprocess(f:Function<A
 
     // Setup tables from TDS and update store
     $reprocessedExpr->forEach(e | $e->setupTables($state));
-    pair($newFunction->addWith($state.runtime->toOne()), $state);
+    pair($newFunction->addWith($state.runtime->toOne()), $state)
 }
 
 // Expression Reprocessing
@@ -143,7 +149,7 @@ function meta::external::store::deephaven::executionTest::addWith(func:FunctionD
             )
         ]
     );
-    ^$func(expressionSequence = $withExpr);
+    ^$func(expressionSequence = $withExpr)
 }
 
 // Setup Tables from CSV and Update Store
@@ -156,21 +162,21 @@ function meta::external::store::deephaven::executionTest::setupTables(expr:Any[1
           let columns = $csv->split('\n')->at(2)->split(',')->map(c | 
               ^meta::external::store::deephaven::metamodel::store::Column(
                   name = $c,
-                  type = ^meta::external::store::deephaven::metamodel::type::StringType() // Simplified type inference
+                  type = ^meta::external::store::deephaven::metamodel::type::StringType()
               )
           );
           let table = ^meta::external::store::deephaven::metamodel::store::Table(
               name = $tableName,
               columns = $columns
           );
-          $state.database->mutateAdd('tables', $table);
+          $state.database->mutateReplace('tables', $state.database.tables->filter(t | $t.name != 'dummy')->concatenate($table));
           meta::external::store::deephaven::executionTest::utils::createTableFromCSV(
               $tableName,
               $csv,
               $state.runtime.connectionStores.connection->toOne()->cast(@URL)
           ),
         | []
-    );
+    )
 }
 
 native function meta::external::store::deephaven::executionTest::utils::createTableFromCSV(tableName: String[1], csvData: String[1], connection: URL[1]): Nil[0];
@@ -188,7 +194,7 @@ function meta::pure::metamodel::relation::toCSV(tds:TDS<Any>[1], tableName:Strin
             ])
         )->joinStrings(',')
     )->joinStrings('\n');
-    $tableName + '\n' + $header + '\n' + $rows;
+    $tableName + '\n' + $header + '\n' + $rows
 }
 
 // Processing State
