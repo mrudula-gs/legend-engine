@@ -1,53 +1,4 @@
-  let deephavenAdapter = meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution_Function_1__X_o_;
-  $deephavenAdapter->meta::pure::functions::relation::tests::select::testSelectAll()->println();
-
-
-
-
-
-function <<PCT.test>> meta::pure::functions::relation::tests::select::testSelectAll<T|m>(f:Function<{Function<{->T[m]}>[1]->T[m]}>[1]):Boolean[1]
-{
-    let expr = {
-                | #TDS
-                      val, str, other
-                      1, a,  a
-                      3, ewe, b
-                      4, qw, c
-                      5, wwe, d
-                      6, weq, e
-                  #->select();
-               };
-
-    let res =  $f->eval($expr);
-
-    assertEquals( '#TDS\n'+
-                  '   val,str,other\n'+
-                  '   1,a,a\n'+
-                  '   3,ewe,b\n'+
-                  '   4,qw,c\n'+
-                  '   5,wwe,d\n'+
-                  '   6,weq,e\n'+
-                  '#', $res->toString());
-}
-
-
-
-
-
-// Copyright 2025 Goldman Sachs
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
+###Pure
 import meta::pure::mapping::modelToModel::chain::*;
 import meta::pure::functions::io::http::*;
 import meta::pure::test::org::*;
@@ -55,112 +6,170 @@ import meta::pure::test::pct::*;
 import meta::external::store::deephaven::extension::*;
 import meta::external::store::deephaven::executionTest::*;
 import meta::json::*;
+import meta::pure::metamodel::relation::*;
 
-native function meta::external::store::deephaven::executionTest::getDeephavenTestConnection():meta::external::store::deephaven::metamodel::runtime::DeephavenConnection[1];
-
+// Adapter Definition
 function <<PCT.adapter>> {PCT.adapterName='Deephaven'} meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution<X|o>(f:Function<{->X[o]}>[1]):X[o]
 {
-  meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution(
-      $f,
-      // meta::external::store::deephaven::executionTest::getDeephavenTestConnection()
-      meta::external::store::deephaven::executionTest::utils::startDeephaven('latest')
-  )
+    meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecutionImpl(
+        $f,
+        meta::external::store::deephaven::executionTest::utils::startDeephaven('latest')
+    )
 }
 
-// function meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution<X|o>(f:Function<{->X[o]}>[1], dbc:meta::external::store::deephaven::metamodel::runtime::DeephavenConnection[1]):X[o]
-function meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution<X|o>(fu:Function<{->X[o]}>[1], dbc:URL[1]):X[o]
+// Core Adapter Implementation
+function meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecutionImpl<X|o>(f:Function<{->X[o]}>[1], dbc:URL[1]):X[o]
 {
     let debug = noDebug();
-
-
-    let repocessed = $fu->meta::external::store::deephaven::executionTest::reprocess($dbc, $debug);
-    let f = $repocessed.first;
+    let reprocessed = $f->meta::external::store::deephaven::executionTest::reprocess($dbc, $debug);
+    let newFunction = $reprocessed.first;
 
     let extensions = meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions();
 
-    let rawPlan = meta::pure::executionPlan::executionPlan($f->cast(@FunctionDefinition<{->Any[*]}>), ^meta::pure::runtime::ExecutionContext(), $extensions, $debug);
+    // Generate raw execution plan
+    let rawPlan = meta::pure::executionPlan::executionPlan(
+        $newFunction->cast(@FunctionDefinition<{->Any[*]}>),
+        ^meta::pure::runtime::ExecutionContext(),
+        $extensions,
+        $debug
+    );
 
-    println('-------------------------------------------- rawPlan -----------------------------------------------------');
-    println($rawPlan);
-    fail();
-
+    // Bind and transform plan
     let planBindToJava = $rawPlan->meta::pure::executionPlan::platformBinding::localBinding::bindTestPlanToPlatformLocallyWithClasspathExtensions('LegendJava');
-
     let plan = $planBindToJava->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::executionPlan::transformPlan($extensions);
-
     let planAsJson = $plan->meta::json::toJSON(1000, meta::json::config(false, false, true, true));
 
-    let x = meta::legend::executePlanAsJSON($planAsJson, []);
+    // Execute plan
+    let resultJson = meta::legend::executePlanAsJSON($planAsJson, []);
 
+    // Process result
     let funcReturnType = $f->functionReturnType().rawType->toOne();
-    let returnType = if ($funcReturnType->isEmpty(), |Any, |$funcReturnType);
-
-    let res = if ($returnType != Nil && $returnType->meta::pure::functions::meta::subTypeOf(Date),
-      | jsonToDate($x),
-      |$x->meta::json::parseJSON()->meta::json::fromJSON($returnType, ^meta::json::ExtendedJSONDeserializationConfig(typeKeyName='__TYPE', failOnUnknownProperties=true, nullReplacementInArray=TDSNull));
+    let json = $resultJson->meta::json::parseJSON();
+    let res = $json->meta::json::fromJSON(
+        $funcReturnType,
+        ^meta::json::ExtendedJSONDeserializationConfig(typeKeyName='__TYPE', failOnUnknownProperties=true, nullReplacementInArray=TDSNull)
     );
 
-    // processResult
-    let resultType = $f->functionReturnType().rawType;
-
-    $res->cast(@X)->toMultiplicity(@[o]);
+    // Handle TDS result specifically
+    if ($funcReturnType->instanceOf(Relation),
+        | let tdsString = $res->cast(@TDS<Any>)->toString();
+          $tdsString->stringToTDS(),
+        | $res
+    )->cast(@X)->toMultiplicity(@[o]);
 }
 
-function meta::external::store::deephaven::executionTest::jsonToDate(s:String[1]):Date[1]
+// Reprocessing Logic
+function meta::external::store::deephaven::executionTest::reprocess(dbc:URL[1], debug:DebugContext[1]):Pair<FunctionDefinition<Any>, ProcessingState>[1]
 {
-    let jsonObject = $s->meta::json::parseJSON()->cast(@meta::json::JSONObject);
-    let year = extractValue($jsonObject, 'year');
-    let month = extractValue($jsonObject, 'month');
-    let day = extractValue($jsonObject, 'day');
-    let hour = extractValue($jsonObject, 'hour');
-    let minute = extractValue($jsonObject, 'minute');
-    let second = extractValue($jsonObject, 'second');
-    let subsecond = extractValue($jsonObject, 'subsecond');
-    let res = if(
-      [
-        pair(|$month == '-1',|'%'+$year),
-        pair(|$day == '-1',|'%'+$year+'-'+$month),
-        pair(|$hour == '-1',|'%'+$year+'-'+$month+'-'+$day),
-        pair(|$minute == '-1',|'%'+$year+'-'+$month+'-'+$day+'T'+$hour),
-        pair(|$second == '-1',|'%'+$year+'-'+$month+'-'+$day+'T'+$hour+':'+$minute),
-        pair(|$subsecond == '',|'%'+$year+'-'+$month+'-'+$day+'T'+$hour+':'+$minute+':'+$second)
-      ],
-      |'%'+$year+'-'+$month+'-'+$day+'T'+$hour+':'+$minute+':'+$second+'.'+$subsecond
+    | let expr = $inputFunction;
+      let state = ^ProcessingState(
+          database = ^meta::external::store::deephaven::metamodel::store::Store(name='DeephavenTestStore', package=meta::external::store::deephaven::executionTest),
+          runtime = ^Runtime(
+              connectionStores = ^ConnectionStore(
+                  connection = $dbc,
+                  element = meta::external::store::deephaven::metamodel::store::Store->getByFullPath('meta::external::store::deephaven::executionTest::DeephavenTestStore')
+              )
+          )
+      );
+
+      // Reprocess the expression
+      let reprocessedExpr = $expr->evaluateAndDeactivate()->map(e | $e->reprocessExpr($state));
+      let newFunction = ^FunctionDefinition<Any>(
+          name = 'testFunction',
+          package = test,
+          expressionSequence = $reprocessedExpr->cast(@ValueSpecification)->toOneMany()
+      );
+
+      // Setup tables from TDS if present
+      $reprocessedExpr->forEach(e | $e->setupTables($state));
+
+      pair($newFunction->addWith($state.runtime->toOne()), $state);
+}
+
+// Expression Reprocessing
+function meta::external::store::deephaven::executionTest::reprocessExpr(expr:Any[1], state:ProcessingState[1]):Any[1]
+{
+    $expr->match([
+        fe:FunctionExpression[1] |
+            let params = $fe.parametersValues->evaluateAndDeactivate()->map(p | $p->reprocessExpr($state));
+            ^$fe(parametersValues = $params),
+        iv:InstanceValue[1] |
+            if ($iv.genericType.rawType->toOne()->instanceOf(TDS),
+                | let tds = $iv.values->toOne()->cast(@TDS<Any>);
+                  let tableName = 'table_' + random()->toString();
+                  let storeAccessor = ^RelationStoreAccessor<Any>(
+                      store = $state.database,
+                      sourceElement = $tableName
+                  );
+                  $state->mutateAdd('csvs', $tds->toCSV($tableName));
+                  $storeAccessor,
+                | $iv
+            ),
+        lf:LambdaFunction<Any>[1] |
+            let body = $lf.expressionSequence->evaluateAndDeactivate()->map(e | $e->reprocessExpr($state));
+            ^$lf(expressionSequence = $body->cast(@ValueSpecification)->toOneMany()),
+        ve:VariableExpression[1] | $ve,
+        x:Any[1] | $x
+    ])
+}
+
+// Add Runtime to Function
+function meta::external::store::deephaven::executionTest::addWith(func:FunctionDefinition<Any>[1], runtime:Runtime[1]):FunctionDefinition<Any>[1]
+{
+    let withExpr = ^SimpleFunctionExpression(
+        importGroup = system::imports::coreImport,
+        func = from_T_m__Runtime_1__T_m_,
+        functionName = 'with',
+        genericType = $func->functionReturnType(),
+        multiplicity = $func->functionReturnMultiplicity(),
+        parametersValues = [
+            ^InstanceValue(
+                genericType = $func->genericType()->toOne(),
+                multiplicity = PureOne,
+                values = $func->expressionSequence
+            ),
+            ^InstanceValue(
+                genericType = ^GenericType(rawType=Runtime),
+                multiplicity = PureOne,
+                values = $runtime
+            )
+        ]
     );
-    parseDate($res);
+    ^$func(expressionSequence = $withExpr);
 }
 
-function meta::external::store::deephaven::executionTest::extractValue(obj:JSONObject[1], key:String[1]):String[1]
+// Setup Tables from CSV
+function meta::external::store::deephaven::executionTest::setupTables(expr:Any[1], state:ProcessingState[1]):Nil[0]
 {
-  $obj.keyValuePairs->filter(k|$k.key.value == $key).value->match(
-    [
-        n:JSONNumber[1]|$n.value->toOne()->toString(),
-        s:JSONString[1]|$s.value->toOne(),
-        x:Any[0..1]|''
-    ]
-  );
+    if ($expr->instanceOf(RelationStoreAccessor),
+        | let storeAccessor = $expr->cast(@RelationStoreAccessor<Any>);
+          let tableName = $storeAccessor.sourceElement->toOne()->cast(@String);
+          let csv = $state.csvs->filter(c | $c->contains($tableName))->toOne();
+          meta::external::store::deephaven::executionTest::utils::createTableFromCSV($tableName, $csv, $state.runtime.connectionStores.connection->toOne()->cast(@URL)),
+        | []
+    );
 }
 
-
-
-function meta::pure::router::clustering::generateExecutionNodeFromCluster(cluster:ClusteredValueSpecification[1], inScopeVars:Map<String, List<Any>>[1], context:meta::pure::runtime::ExecutionContext[1], extensions:meta::pure::extension::Extension[*], debugContext:DebugContext[1]):ExecutionNode[1]
+// TDS to CSV Conversion
+function meta::pure::metamodel::relation::toCSV(tds:TDS<Any>[1], tableName:String[1]):String[1]
 {
-  let vs = $cluster.val->byPassValueSpecificationWrapper();
+    let header = $tds->columns()->map(c | $c.name->toOne())->joinStrings(',');
+    let rows = $tds->map(row | 
+        $tds->columns()->map(col | 
+            let val = $col->eval($row)->toOne();
+            $val->match([
+                d:Date[1] | format('%t{yyyy-MM-dd"T"HH:mm:ss.SSSSSSSSS}', $d),
+                x:Any[1] | $x->toString()
+            ])
+        )->joinStrings(',')
+    )->joinStrings('\n');
+    $tableName + '\n' + $header + '\n' + $rows;
+}
 
-  $cluster->match([
-      sc:StoreMappingClusteredValueSpecification[1] |
-          //This is required to populate the setup sql for test connections where csv data has been supplied. It is done here to ensure that the plan generation is always
-          //the only place where sql is generated for this case.
-          $sc->buildExecutionNodeForStoreClusteredVS($vs, $sc.mapping, $inScopeVars, $context, $extensions, $debugContext);,
-      sc:StoreClusteredValueSpecification[1] |
-          //This is required to populate the setup sql for test connections where csv data has been supplied. It is done here to ensure that the plan generation is always
-          //the only place where sql is generated for this case.
-          $sc->buildExecutionNodeForStoreClusteredVS($vs, [], $inScopeVars, $context, $extensions, $debugContext);,
-      ef:ExternalFormatClusteredValueSpecification[1] |
-          let state = ^meta::external::format::shared::executionPlan::ExternalFormatPlanGenerationState(inScopeVars = $inScopeVars, exeCtx = $ef.exeCtx->toOne(), binding = $ef.binding);
-          $vs->meta::external::format::shared::executionPlan::processValueSpecification($state, $extensions, $debugContext)->toOne();,
-      pl:PlatformClusteredValueSpecification[1] |
-          let state = ^meta::pure::platform::executionPlan::generation::PlatformPlanGenerationState(inScopeVars = $inScopeVars, exeCtx = $pl.exeCtx->toOne());
-          $vs->meta::pure::platform::executionPlan::generation::processValueSpecification($state, $extensions, $debugContext)->toOne();
-  ]);
+// Processing State
+Class meta::external::store::deephaven::executionTest::ProcessingState
+{
+    database: meta::external::store::deephaven::metamodel::store::Store[1];
+    runtime: Runtime[1];
+    csvs: String[*];
 }
