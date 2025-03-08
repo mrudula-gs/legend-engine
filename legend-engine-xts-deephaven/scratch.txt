@@ -1,291 +1,166 @@
-package org.finos.legend.engine.plan.execution.stores.deephaven.plugin;
+  let deephavenAdapter = meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution_Function_1__X_o_;
+  $deephavenAdapter->meta::pure::functions::relation::tests::select::testSelectAll()->println();
 
-import io.deephaven.qst.table.FriendlyString;
-import org.apache.arrow.flight.FlightRuntimeException;
-import org.apache.arrow.flight.FlightStream;
-import org.apache.arrow.vector.FieldVector;
-import org.apache.arrow.vector.VectorSchemaRoot;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.ExecutionNodeJavaPlatformHelper;
-import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
-import org.finos.legend.engine.plan.execution.nodes.state.ExecutionState;
-import org.finos.legend.engine.plan.execution.result.Result;
-import org.finos.legend.engine.plan.execution.result.object.StreamingObjectResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.connection.DeephavenSession;
-import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenExecutionActivity;
-import org.finos.legend.engine.plan.execution.stores.deephaven.result.DeephavenStreamingResult;
-import org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics;
-import org.finos.legend.engine.protocol.deephaven.metamodel.pure.DeephavenExecutionNode;
-import org.finos.legend.engine.protocol.deephaven.metamodel.runtime.DeephavenConnection;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNode;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.ExecutionNodeVisitor;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.JavaPlatformImplementation;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.authentication.specification.PSKAuthenticationSpecification;
-import org.finos.legend.engine.shared.core.identity.Identity;
-import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
-import org.finos.legend.engine.shared.core.operational.errorManagement.ExceptionCategory;
-import io.deephaven.client.impl.BarrageSession;
-import io.deephaven.client.impl.TableHandle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.util.Spliterator;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
-public class DeephavenExecutionNodeExecutor implements ExecutionNodeVisitor<Result>
+
+
+function <<PCT.test>> meta::pure::functions::relation::tests::select::testSelectAll<T|m>(f:Function<{Function<{->T[m]}>[1]->T[m]}>[1]):Boolean[1]
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeephavenExecutionNodeExecutor.class);
-    private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH::mm::ss'Z'");
+    let expr = {
+                | #TDS
+                      val, str, other
+                      1, a,  a
+                      3, ewe, b
+                      4, qw, c
+                      5, wwe, d
+                      6, weq, e
+                  #->select();
+               };
 
-    private final Identity identity;
-    private final ExecutionState executionState;
-    private final DeephavenStoreState state;
+    let res =  $f->eval($expr);
 
-    public DeephavenExecutionNodeExecutor(Identity identity, ExecutionState executionState, DeephavenStoreState state)
-    {
-        this.identity = identity;
-        this.executionState = executionState;
-        this.state = state;
-    }
-
-    @Override
-    public Result visit(ExecutionNode executionNode)
-    {
-        if (executionNode instanceof DeephavenExecutionNode)
-        {
-            return executeDeephavenNode((DeephavenExecutionNode) executionNode);
-        }
-        throw new IllegalStateException("DEEPHAVEN: Unexpected node type: " + executionNode.getClass().getSimpleName());
-    }
-
-    private Result executeDeephavenNode(DeephavenExecutionNode node)
-    {
-        DeephavenSession deephavenSession = null;
-        try
-        {
-            deephavenSession = createDeephavenSession(node.connection);
-            try (BarrageSession session = deephavenSession.getBarrageSession())
-            {
-                System.out.println("Connected to Deephaven Server at " + node.connection.sourceSpec.url.getHost() + ":" +
-                        node.connection.sourceSpec.url.getPort() + " with PSK for node execution");
-                IDeephavenExecutionNodeSpecifics specifics = createSpecifics(node);
-                TableHandle table = specifics.execute(session);
-                System.out.println("Executing query with TableHandle: " + table.ticketId());
-
-                System.out.println("Starting FlightStream for table: " + table.ticketId());
-                FlightStream flightStream = session.stream(table.ticketId());
-                System.out.println("FlightStream initialized successfully: " + flightStream);
-
-                Stream<Map<String, Object>> rowStream = StreamSupport.stream(new DeephavenRowSpliterator(flightStream), false);
-                // Collect the stream into a list to ensure full consumption and closure
-                System.out.println("Consuming stream to collect results");
-                List<Map<String, Object>> results = rowStream.collect(Collectors.toList());
-                System.out.println("Stream consumed, collected " + results.size() + " rows");
-
-                // Explicitly close FlightStream after consumption
-                flightStream.close();
-                System.out.println("FlightStream closed successfully after consumption");
-
-                // Create a new stream from the collected results for serialization
-                Stream<Map<String, Object>> resultStream = results.stream();
-//                Stream<Map<String, Object>> resultStream = results.stream().map(row ->
-//                {
-//                    row.replaceAll((key, value) ->
-//                    {
-//                        if (value instanceof Long && (Long) value >= 1_000_000_000_000_000_000L)
-//                        {
-//                            Instant instant = Instant.ofEpochSecond(((Long) value) / 1_000_000_000L, ((Long) value) % 1_000_000_000L);
-//                            return ISO_FORMATTER.format(instant);
-//                        }
-//                        return value;
-//                    });
-//                    return row;
-//                });
-
-                String query = FriendlyString.of(specifics.getTableSpec());
-                DeephavenExecutionActivity activity = new DeephavenExecutionActivity(query);
-                List<org.finos.legend.engine.plan.execution.result.ExecutionActivity> activities = Collections.singletonList(activity);
-
-                DeephavenStreamingResult deephavenResult = new DeephavenStreamingResult(activities);
-                return new StreamingObjectResult<>(resultStream, deephavenResult.getResultBuilder(), deephavenResult);
-            }
-        }
-        catch (EngineException e)
-        {
-            throw e;
-        }
-        catch (io.deephaven.client.impl.TableHandle.TableHandleException e)
-        {
-            throw new EngineException("Deephaven query execution failed: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-        catch (InterruptedException e)
-        {
-            Thread.currentThread().interrupt();
-            throw new EngineException("Deephaven query interrupted: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-        catch (Exception e)
-        {
-            throw new EngineException("Unexpected error executing Deephaven query: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-        }
-        finally
-        {
-            if (deephavenSession != null)
-            {
-                try
-                {
-                    deephavenSession.close();
-                    System.out.println("Deephaven session closed successfully");
-                }
-                catch (Exception e)
-                {
-                    System.err.println("Failed to close DeephavenSession: " + e.getMessage());
-                    throw new EngineException("Failed to close Deephaven session: " + e.getMessage(), e, ExceptionCategory.SERVER_EXECUTION_ERROR);
-                }
-            }
-        }
-    }
-
-    private IDeephavenExecutionNodeSpecifics createSpecifics(DeephavenExecutionNode node) throws ReflectiveOperationException
-    {
-        String specificsClassName = JavaHelper.getExecutionClassFullName((JavaPlatformImplementation) node.implementation);
-        Class<?> specificsClass = ExecutionNodeJavaPlatformHelper.getClassToExecute(node, specificsClassName, executionState, identity);
-        return (IDeephavenExecutionNodeSpecifics) specificsClass.getConstructor().newInstance();
-    }
-
-    private DeephavenSession createDeephavenSession(DeephavenConnection connection)
-    {
-        if (!(connection.authSpec instanceof PSKAuthenticationSpecification))
-        {
-            throw new EngineException("Unsupported authentication type: " + connection.authSpec.getClass().getSimpleName(),
-                    ExceptionCategory.USER_CREDENTIALS_ERROR);
-        }
-        PSKAuthenticationSpecification pskSpec = (PSKAuthenticationSpecification) connection.authSpec;
-        if (pskSpec.psk == null || pskSpec.psk.isEmpty())
-        {
-            throw new EngineException("PSK secret is missing or empty for " + connection.sourceSpec.url,
-                    ExceptionCategory.USER_CREDENTIALS_ERROR);
-        }
-        System.out.println("Creating Deephaven session for " + connection.sourceSpec.url + " with PSK: " + pskSpec.psk);
-        Optional<DeephavenSession> session = this.state.getProviders().stream()
-                .map(provider ->
-                {
-                    try
-                    {
-                        Optional<DeephavenSession> providedSession = provider.provide(pskSpec, connection.sourceSpec);
-                        providedSession.ifPresent(s -> System.out.println("Session created successfully for " + connection.sourceSpec.url));
-                        return providedSession;
-                    }
-                    catch (Exception e)
-                    {
-                        System.err.println("Failed to create session with provider: " + e.getMessage());
-                        return Optional.<DeephavenSession>empty();
-                    }
-                })
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .findFirst();
-        return session.orElseThrow(() -> new EngineException("Unable to create a Deephaven Session for " +
-                connection.sourceSpec.url,
-                ExceptionCategory.USER_CREDENTIALS_ERROR));
-    }
-
-    private static class DeephavenRowSpliterator implements Spliterator<Map<String, Object>>
-    {
-        private final FlightStream flightStream;
-        private VectorSchemaRoot root;
-        private List<FieldVector> vectors;
-        private int currentRowIndex;
-        private int rowCount;
-
-        DeephavenRowSpliterator(FlightStream flightStream)
-        {
-            this.flightStream = flightStream;
-            this.currentRowIndex = 0;
-            this.rowCount = 0;
-            System.out.println("DeephavenRowSpliterator initialized with FlightStream: " + flightStream);
-        }
+    assertEquals( '#TDS\n'+
+                  '   val,str,other\n'+
+                  '   1,a,a\n'+
+                  '   3,ewe,b\n'+
+                  '   4,qw,c\n'+
+                  '   5,wwe,d\n'+
+                  '   6,weq,e\n'+
+                  '#', $res->toString());
+}
 
 
-        @Override
-        public boolean tryAdvance(java.util.function.Consumer<? super Map<String, Object>> action)
-        {
-            try
-            {
-                while (true)
-                {
-                    if (root == null || currentRowIndex >= rowCount)
-                    {
-                        System.out.println("Fetching next FlightStream batch");
-                        if (!flightStream.next())
-                        {
-                            System.out.println("No more data in FlightStream");
-                            return false;
-                        }
-                        root = flightStream.getRoot();
-                        if (root == null)
-                        {
-                            System.err.println("FlightStream returned null root - possible authentication or server issue");
-                            throw new EngineException("FlightStream returned null root, likely due to authentication failure", ExceptionCategory.USER_EXECUTION_ERROR);
-                        }
-                        vectors = root.getFieldVectors();
-                        rowCount = root.getRowCount();
-                        currentRowIndex = 0;
-                        System.out.println("Fetched batch with " + rowCount + " rows");
-                    }
-                    if (currentRowIndex < rowCount)
-                    {
-                        Map<String, Object> row = new HashMap<>(vectors.size());
-                        for (FieldVector vector : vectors)
-                        {
-                            Object value = vector.getObject(currentRowIndex);
-                            row.put(vector.getName(), value);
-                        }
-                        action.accept(row);
-                        currentRowIndex++;
-                        return true;
-                    }
-                }
-            }
-            catch (FlightRuntimeException e)
-            {
-                System.err.println("Flight streaming failed: " + e.getMessage());
-                throw new EngineException("Flight streaming error: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-            }
-            catch (Exception e)
-            {
-                System.err.println("Streaming error: " + e.getMessage());
-                if (e instanceof NullPointerException)
-                {
-                    throw new EngineException("NullPointerException in streaming, likely authentication header issue: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-                }
-                throw new EngineException("Error streaming Deephaven results: " + e.getMessage(), e, ExceptionCategory.USER_EXECUTION_ERROR);
-            }
-        }
 
-        @Override
-        public Spliterator<Map<String, Object>> trySplit()
-        {
-            return null;
-        }
 
-        @Override
-        public long estimateSize()
-        {
-            return Long.MAX_VALUE;
-        }
 
-        @Override
-        public int characteristics()
-        {
-            return Spliterator.ORDERED | Spliterator.NONNULL;
-        }
-    }
+// Copyright 2025 Goldman Sachs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import meta::pure::mapping::modelToModel::chain::*;
+import meta::pure::functions::io::http::*;
+import meta::pure::test::org::*;
+import meta::pure::test::pct::*;
+import meta::external::store::deephaven::extension::*;
+import meta::external::store::deephaven::executionTest::*;
+import meta::json::*;
+
+native function meta::external::store::deephaven::executionTest::getDeephavenTestConnection():meta::external::store::deephaven::metamodel::runtime::DeephavenConnection[1];
+
+function <<PCT.adapter>> {PCT.adapterName='Deephaven'} meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution<X|o>(f:Function<{->X[o]}>[1]):X[o]
+{
+  meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution(
+      $f,
+      // meta::external::store::deephaven::executionTest::getDeephavenTestConnection()
+      meta::external::store::deephaven::executionTest::utils::startDeephaven('latest')
+  )
+}
+
+// function meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution<X|o>(f:Function<{->X[o]}>[1], dbc:meta::external::store::deephaven::metamodel::runtime::DeephavenConnection[1]):X[o]
+function meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecution<X|o>(fu:Function<{->X[o]}>[1], dbc:URL[1]):X[o]
+{
+    let debug = noDebug();
+
+
+    let repocessed = $fu->meta::external::store::deephaven::executionTest::reprocess($dbc, $debug);
+    let f = $repocessed.first;
+
+    let extensions = meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions();
+
+    let rawPlan = meta::pure::executionPlan::executionPlan($f->cast(@FunctionDefinition<{->Any[*]}>), ^meta::pure::runtime::ExecutionContext(), $extensions, $debug);
+
+    println('-------------------------------------------- rawPlan -----------------------------------------------------');
+    println($rawPlan);
+    fail();
+
+    let planBindToJava = $rawPlan->meta::pure::executionPlan::platformBinding::localBinding::bindTestPlanToPlatformLocallyWithClasspathExtensions('LegendJava');
+
+    let plan = $planBindToJava->meta::protocols::pure::vX_X_X::transformation::fromPureGraph::executionPlan::transformPlan($extensions);
+
+    let planAsJson = $plan->meta::json::toJSON(1000, meta::json::config(false, false, true, true));
+
+    let x = meta::legend::executePlanAsJSON($planAsJson, []);
+
+    let funcReturnType = $f->functionReturnType().rawType->toOne();
+    let returnType = if ($funcReturnType->isEmpty(), |Any, |$funcReturnType);
+
+    let res = if ($returnType != Nil && $returnType->meta::pure::functions::meta::subTypeOf(Date),
+      | jsonToDate($x),
+      |$x->meta::json::parseJSON()->meta::json::fromJSON($returnType, ^meta::json::ExtendedJSONDeserializationConfig(typeKeyName='__TYPE', failOnUnknownProperties=true, nullReplacementInArray=TDSNull));
+    );
+
+    // processResult
+    let resultType = $f->functionReturnType().rawType;
+
+    $res->cast(@X)->toMultiplicity(@[o]);
+}
+
+function meta::external::store::deephaven::executionTest::jsonToDate(s:String[1]):Date[1]
+{
+    let jsonObject = $s->meta::json::parseJSON()->cast(@meta::json::JSONObject);
+    let year = extractValue($jsonObject, 'year');
+    let month = extractValue($jsonObject, 'month');
+    let day = extractValue($jsonObject, 'day');
+    let hour = extractValue($jsonObject, 'hour');
+    let minute = extractValue($jsonObject, 'minute');
+    let second = extractValue($jsonObject, 'second');
+    let subsecond = extractValue($jsonObject, 'subsecond');
+    let res = if(
+      [
+        pair(|$month == '-1',|'%'+$year),
+        pair(|$day == '-1',|'%'+$year+'-'+$month),
+        pair(|$hour == '-1',|'%'+$year+'-'+$month+'-'+$day),
+        pair(|$minute == '-1',|'%'+$year+'-'+$month+'-'+$day+'T'+$hour),
+        pair(|$second == '-1',|'%'+$year+'-'+$month+'-'+$day+'T'+$hour+':'+$minute),
+        pair(|$subsecond == '',|'%'+$year+'-'+$month+'-'+$day+'T'+$hour+':'+$minute+':'+$second)
+      ],
+      |'%'+$year+'-'+$month+'-'+$day+'T'+$hour+':'+$minute+':'+$second+'.'+$subsecond
+    );
+    parseDate($res);
+}
+
+function meta::external::store::deephaven::executionTest::extractValue(obj:JSONObject[1], key:String[1]):String[1]
+{
+  $obj.keyValuePairs->filter(k|$k.key.value == $key).value->match(
+    [
+        n:JSONNumber[1]|$n.value->toOne()->toString(),
+        s:JSONString[1]|$s.value->toOne(),
+        x:Any[0..1]|''
+    ]
+  );
+}
+
+
+
+function meta::pure::router::clustering::generateExecutionNodeFromCluster(cluster:ClusteredValueSpecification[1], inScopeVars:Map<String, List<Any>>[1], context:meta::pure::runtime::ExecutionContext[1], extensions:meta::pure::extension::Extension[*], debugContext:DebugContext[1]):ExecutionNode[1]
+{
+  let vs = $cluster.val->byPassValueSpecificationWrapper();
+
+  $cluster->match([
+      sc:StoreMappingClusteredValueSpecification[1] |
+          //This is required to populate the setup sql for test connections where csv data has been supplied. It is done here to ensure that the plan generation is always
+          //the only place where sql is generated for this case.
+          $sc->buildExecutionNodeForStoreClusteredVS($vs, $sc.mapping, $inScopeVars, $context, $extensions, $debugContext);,
+      sc:StoreClusteredValueSpecification[1] |
+          //This is required to populate the setup sql for test connections where csv data has been supplied. It is done here to ensure that the plan generation is always
+          //the only place where sql is generated for this case.
+          $sc->buildExecutionNodeForStoreClusteredVS($vs, [], $inScopeVars, $context, $extensions, $debugContext);,
+      ef:ExternalFormatClusteredValueSpecification[1] |
+          let state = ^meta::external::format::shared::executionPlan::ExternalFormatPlanGenerationState(inScopeVars = $inScopeVars, exeCtx = $ef.exeCtx->toOne(), binding = $ef.binding);
+          $vs->meta::external::format::shared::executionPlan::processValueSpecification($state, $extensions, $debugContext)->toOne();,
+      pl:PlatformClusteredValueSpecification[1] |
+          let state = ^meta::pure::platform::executionPlan::generation::PlatformPlanGenerationState(inScopeVars = $inScopeVars, exeCtx = $pl.exeCtx->toOne());
+          $vs->meta::pure::platform::executionPlan::generation::processValueSpecification($state, $extensions, $debugContext)->toOne();
+  ]);
 }
