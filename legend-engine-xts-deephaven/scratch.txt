@@ -1,4 +1,5 @@
 ###Pure
+import meta::external::store::deephaven::metamodel::runtime::*;
 import meta::pure::mapping::*;
 import meta::pure::store::*;
 import meta::core::runtime::*;
@@ -24,7 +25,11 @@ function <<PCT.adapter>> {PCT.adapterName='Deephaven'} meta::external::store::de
 function meta::external::store::deephaven::executionTest::testAdapterForDeephavenExecutionImpl<X|o>(f:Function<{->X[o]}>[1], dbc:URL[1]):X[o]
 {
     let debug = noDebug();
-    let reprocessed = $f->meta::external::store::deephaven::executionTest::reprocess($dbc, $debug);
+
+    let t = ^meta::external::store::deephaven::metamodel::runtime::DeephavenConnection( authSpec = ^meta::pure::runtime::connection::authentication::AuthenticationSpecification(),
+                                                                                        sourceSpec = ^meta::external::store::deephaven::metamodel::runtime::DeephavenSourceSpecification(url = ^URL(path = 'a', host = 'local', port = 10)));
+
+    let reprocessed = $f->meta::external::store::deephaven::executionTest::reprocess($t, $debug);
     let newFunction = $reprocessed.first;
 
     let extensions = meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions();
@@ -54,15 +59,18 @@ function meta::external::store::deephaven::executionTest::testAdapterForDeephave
     );
 
     // Handle TDS result
-    if ($funcReturnType->instanceOf(Relation),
-        | let tdsString = $res->cast(@TDS<Any>)->toString();
-          $tdsString->stringToTDS(),
-        | $res
-    )->cast(@X)->toMultiplicity(@[o])
+    //  if ($funcReturnType->instanceOf(Relation),
+    //     | let tdsString = $res->cast(@TDS<Any>)->toString();
+    //       $tdsString->stringToTDS();,
+    //     | $res
+    // )->cast(@X)->toMultiplicity(@[o])
+
+    $res->cast(@X)->toMultiplicity(@[o]);
 }
 
 // Reprocessing Logic
-function meta::external::store::deephaven::executionTest::reprocess(f:Function<Any>[1], dbc:URL[1], debug:DebugContext[1]):Pair<FunctionDefinition<Any>, ProcessingState>[1]
+// function meta::external::store::deephaven::executionTest::reprocess(f:Function<Any>[1], dbc:URL[1], debug:DebugContext[1]):Pair<FunctionDefinition<Any>, ProcessingState>[1]
+function meta::external::store::deephaven::executionTest::reprocess(f:Function<Any>[1], dbc:DeephavenConnection[1], debug:DebugContext[1]):Pair<FunctionDefinition<Any>, ProcessingState>[1]
 {
     let expr = $f;
     let db = ^meta::external::store::deephaven::metamodel::store::DeephavenStore(
@@ -95,8 +103,9 @@ function meta::external::store::deephaven::executionTest::reprocess(f:Function<A
     );
 
     // Setup tables from TDS and update store
-    $reprocessedExpr->forEach(e | $e->setupTables($state));
-    pair($newFunction->addWith($state.runtime->toOne()), $state)
+    // $reprocessedExpr->forEach(e | $e->setupTables($state));
+    $reprocessedExpr->map(e | $e->setupTables($state));
+    pair($newFunction->addWith($state.runtime->toOne()), $state);
 }
 
 // Expression Reprocessing
@@ -105,7 +114,7 @@ function meta::external::store::deephaven::executionTest::reprocessExpr(expr:Any
     $expr->match([
         fe:FunctionExpression[1] |
             let params = $fe.parametersValues->evaluateAndDeactivate()->map(p | $p->reprocessExpr($state));
-            ^$fe(parametersValues = $params),
+            ^$fe(parametersValues = $params);,
         iv:InstanceValue[1] |
             if ($iv.genericType.rawType->toOne()->instanceOf(TDS),
                 | let tds = $iv.values->toOne()->cast(@TDS<Any>);
@@ -115,12 +124,12 @@ function meta::external::store::deephaven::executionTest::reprocessExpr(expr:Any
                       sourceElement = $tableName
                   );
                   $state->mutateAdd('csvs', $tds->toCSV($tableName));
-                  $storeAccessor,
+                  $storeAccessor;,
                 | $iv
             ),
         lf:LambdaFunction<Any>[1] |
             let body = $lf.expressionSequence->evaluateAndDeactivate()->map(e | $e->reprocessExpr($state));
-            ^$lf(expressionSequence = $body->cast(@ValueSpecification)->toOneMany()),
+            ^$lf(expressionSequence = $body->cast(@ValueSpecification)->toOneMany());,
         ve:VariableExpression[1] | $ve,
         x:Any[1] | $x
     ])
@@ -149,7 +158,7 @@ function meta::external::store::deephaven::executionTest::addWith(func:FunctionD
             )
         ]
     );
-    ^$func(expressionSequence = $withExpr)
+    ^$func(expressionSequence = $withExpr);
 }
 
 // Setup Tables from CSV and Update Store
@@ -169,12 +178,13 @@ function meta::external::store::deephaven::executionTest::setupTables(expr:Any[1
               name = $tableName,
               columns = $columns
           );
-          $state.database->mutateReplace('tables', $state.database.tables->filter(t | $t.name != 'dummy')->concatenate($table));
+          // todo
+          // $state.database->mutateReplace('tables', $state.database.tables->filter(t | $t.name != 'dummy')->concatenate($table));
           meta::external::store::deephaven::executionTest::utils::createTableFromCSV(
               $tableName,
               $csv,
               $state.runtime.connectionStores.connection->toOne()->cast(@URL)
-          ),
+          );,
         | []
     )
 }
@@ -191,10 +201,10 @@ function meta::pure::metamodel::relation::toCSV(tds:TDS<Any>[1], tableName:Strin
             $val->match([
                 d:Date[1] | format('%t{yyyy-MM-dd"T"HH:mm:ss.SSSSSSSSS}', $d),
                 x:Any[1] | $x->toString()
-            ])
+            ]);
         )->joinStrings(',')
     )->joinStrings('\n');
-    $tableName + '\n' + $header + '\n' + $rows
+    $tableName + '\n' + $header + '\n' + $rows;
 }
 
 // Processing State
