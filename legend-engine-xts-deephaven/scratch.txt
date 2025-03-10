@@ -1,650 +1,391 @@
-'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
-'------------------ In process VS - FE - Any (Not Col) -------------------'
-'------------------ debug find SupFilterFunc for DD 1 -------------------'
-'select_Relation_1__ColSpecArray_1__Relation_1_'
-'---------------------------------------------------------------------------------------------------------------- In process TdsRestrict - ColSpec Select -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
-'------------------ In process VS - FE - Any (Not Col) -------------------'
-'------------------ debug find SupFilterFunc for DD 1 -------------------'
-'filter_Relation_1__Function_1__Relation_1_'
-'---------------------------------------------------------------------------------------------------------------- In process Filter -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
-'------------------ In process VS - InstanceValue -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process InstanceValue -------------------'
-'------------------ In process InstanceValue - RelationStoreAccessor -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process FilterLambda -------------------'
-'------------------ In process FilterLambda - FunctionRoutedValueSpecification -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process FilterLambda -------------------'
-'------------------ In process FilterLambda - InstanceValue - FunctionDefinition -------------------'
-'------------------ debug find SupFilterFunc for DD 1 -------------------'
-'or_Boolean_1__Boolean_1__Boolean_1_'
-'---------------------------------------------------------------------------------------------------------------- In process Or -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process FilterLambda -------------------'
-'------------------ In process FilterLambda - FunctionExpression -------------------'
-'------------------ debug find SupFilterFunc for DD 1 -------------------'
-'not_Boolean_1__Boolean_1_'
-'---------------------------------------------------------------------------------------------------------------- In process Not -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
-'------------------ In process VS - FE - Any (Not Col) -------------------'
-'------------------ debug find SupFilterFunc for DD 1 -------------------'
-'in_Any_1__Any_MANY__Boolean_1_'
-'---------------------------------------------------------------------------------------------------------------- In process In -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
-'------------------ In process VS - FE - Column -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process Column -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
-'------------------ In process VS - VariableExpression -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process VariableExpression -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
-'------------------ In process VS - InstanceValue -------------------'
-'---------------------------------------------------------------------------------------------------------------- In process InstanceValue -------------------'
-'------------------ In process InstanceValue - String -------------------'
-'------------------ In process InstanceValue - String -------------------'
-Anonymous_StripedId instance DeephavenQuery
-    classifierGenericType(Property):
-         instance GenericType
-            rawType(Property):
-                [X] DeephavenQuery instance Class
-    operations(Property):
-        Anonymous_StripedId instance SelectOperation
-            classifierGenericType(Property):
-                [>1]  instance GenericType
-            columns(Property):
-                [>1] TradeID instance Column
-                [>1] StockSymbol instance Column
-                [>1] Price instance Column
-                [>1] Quantity instance Column
-                [>1] TradeTime instance Column
-                [>1] City instance Column
-                [>1] IsBuy instance Column
-        Anonymous_StripedId instance FilterOperation
-            classifierGenericType(Property):
-                [>1]  instance GenericType
-            condition(Property):
-                [>1] Anonymous_StripedId instance InOperatorExpression
-    source(Property):
-        stockTrades instance Table
-            classifierGenericType(Property):
-            columns(Property):
-                [>1] TradeID instance Column
-                [>1] StockSymbol instance Column
-                [>1] Price instance Column
-                [>1] Quantity instance Column
-                [>1] TradeTime instance Column
-                [>1] City instance Column
-                [>1] IsBuy instance Column
-            elementOverride(Property):
-            name(Property):
-                [>1] stockTrades instance String
+Execution error at (resource:/core_deephaven_java_platform_binding/deephavenStoreLegendJavaPlatformBindingExtension.pure line:245 column:11), "Match failure: @_01b2ep0(105677759) instanceOf ComparisonOperatorExpression"
 
-
-Execution error at (resource:/core_deephaven_pure/functions/pure_to_deephaven.pure line:278 column:67), "Cast exception: DeephavenQuery cannot be cast to FilterExpression"
-
-
-
-
-
-
-
-
-
-
-
-
-import meta::pure::functions::collection::tests::intersection::*;
-import meta::pure::functions::collection::*;
-import meta::pure::store::*;
-import meta::pure::metamodel::relation::*;
-import meta::pure::executionPlan::*;
-import meta::pure::router::utils::*;
-import meta::pure::router::metamodel::*;
-import meta::pure::metamodel::serialization::grammar::*;
-import meta::pure::extension::*;
-import meta::pure::mapping::*;
-import meta::core::runtime::*;
-import meta::pure::functions::lang::*;
-import meta::external::store::deephaven::metamodel::*;
 import meta::external::store::deephaven::metamodel::store::*;
-import meta::external::store::deephaven::metamodel::executionPlan::context::*;
-import meta::external::store::deephaven::extension::*;
-import meta::external::store::deephaven::pureToDeephaven::*;
+import meta::external::language::java::metamodel::*;
+import meta::external::store::deephaven::metamodel::*;
+import meta::pure::executionPlan::*;
+import meta::external::language::java::factory::project::*;
+import meta::external::language::java::factory::*;
+import meta::external::language::java::transform::*;
+import meta::pure::executionPlan::platformBinding::legendJava::shared::naming::*;
+import meta::pure::executionPlan::platformBinding::legendJava::shared::constraints::*;
+import meta::external::format::shared::binding::validation::*;
+import meta::pure::executionPlan::platformBinding::typeInfo::*;
+import meta::external::store::deephaven::executionPlan::platformBinding::legendJava::*;
+import meta::external::store::deephaven::metamodel::executionPlan::*;
+import meta::pure::extension::*;
+import meta::pure::executionPlan::platformBinding::legendJava::*;
 
-Class meta::external::store::deephaven::metamodel::DeephavenQuery extends DeephavenOperationElement
+
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::DeephavenLegendJavaPlatformBindingDescriptor extends LegendJavaPlatformBindingAdhocExtension
 {
-  source : meta::external::store::deephaven::metamodel::store::Table[0..1]; // make this 1
-  operations: QueryOperation[*];
-  selectQueryExists: Boolean[0..1]; // to Ommit unecessary selecty clause
+  enginePlatformDependencies: Function<{Conventions[1]->Conventions[1]}>[*];
 }
 
-Class meta::external::store::deephaven::metamodel::QueryOperation extends DeephavenOperationElement
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenStoreLegendJavaPlatformBindingExtension(): LegendJavaPlatformBindingExtension[1]
 {
-}
-
-Class meta::external::store::deephaven::metamodel::SelectOperation extends QueryOperation
-{
-  columns: meta::external::store::deephaven::metamodel::store::Column[*];
-}
-
-Class meta::external::store::deephaven::metamodel::FilterOperation extends QueryOperation
-{
-  condition: FilterExpression[1];
-}
-
-Class meta::external::store::deephaven::metamodel::SortOperation extends QueryOperation
-{
-  columns: SortColumn[*];
-}
-
-
-Class meta::external::store::deephaven::metamodel::JoinOperation extends QueryOperation
-{
-  rightTable: meta::external::store::deephaven::metamodel::store::Table[1];
-  joinType: meta::external::store::deephaven::metamodel::JoinKind[1];
-  conditions: JoinCondition[*];
-}
-
-Enum meta::external::store::deephaven::metamodel::JoinKind
-{
-  JOIN, //INNER,
-  LEFT, //left_outer_join
-  RIGHT,
-  OUTER // full_outer_join
-}
-
-
-Class meta::external::store::deephaven::metamodel::JoinCondition
-{
-  leftColumn: String[1];
-  rightColumn: String[1];
-}
-
-Class meta::external::store::deephaven::metamodel::SortColumn
-{
-  name: String[1];
-  direction: meta::external::store::deephaven::metamodel::SortDirection[1];
-}
-
-Enum meta::external::store::deephaven::metamodel::SortDirection
-{
-  ASCENDING,DESCENDING
-}
-
-Class meta::external::store::deephaven::metamodel::FilterExpression extends DeephavenOperationElement
-{
-}
-
-
-Class meta::external::store::deephaven::metamodel::DeephavenOperationElement
-{
-}
-
-Class meta::external::store::deephaven::metamodel::ComparisonOperatorExpression extends FilterExpression
-{
-  expressions: DeephavenOperationElement[2];
-}
-
-Class meta::external::store::deephaven::metamodel::LogicalOperatorExpression extends FilterExpression
-{
-  expressions: DeephavenOperationElement[1..*];
-}
-
-Class meta::external::store::deephaven::metamodel::NotOperatorExpression extends FilterExpression
-{
-  expression: FilterExpression[1];
-}
-
-Class meta::external::store::deephaven::metamodel::EqOperatorExpression extends ComparisonOperatorExpression
-{
-}
-
-Class meta::external::store::deephaven::metamodel::InOperatorExpression extends ComparisonOperatorExpression
-{
-}
-
-Class meta::external::store::deephaven::metamodel::AndOperatorExpression extends LogicalOperatorExpression
-{
-}
-
-Class meta::external::store::deephaven::metamodel::OrOperatorExpression extends LogicalOperatorExpression
-{
-}
-
-Class meta::external::store::deephaven::pureToDeephaven::State
-{
-  dhQuery: meta::external::store::deephaven::metamodel::DeephavenQuery[0..1];
-  // mapping:Mapping[0..1];
-  inFilter: Boolean[1];
-  inProject: Boolean[1];
-  sq: StoreQuery[1];
-  exeCtx: DeephavenExecutionContext[1];
-  extensions: Extension[*];
-  ext: RoutedValueSpecification[0..1];
-  supportedRoutingFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], DeephavenOperationElement[1], State[1]->DeephavenOperationElement[1]}>>[*];
-  supportedFilterFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], DeephavenOperationElement[1], State[1]->DeephavenOperationElement[1]}>>[*];
-  supportedSimpleValueFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->Pair<List<Any>, State>[1]}>>[*];
-  debug: DebugContext[1];
-  debug(s : Function<{->String[1]}>[1])
-  {
-    if($this.debug.debug, |println($this.debug.space + $s->eval()), |[]);
-  }:Any[0];
-
-  // TODO - anumam - need class for result here
-  // tdsDEDetails: TDSDEDetail[*];
-}
-
-
-
-function meta::external::store::deephaven::pureToDeephaven::process(sq:StoreQuery[1], ext:RoutedValueSpecification[0..1], m:Mapping[0..1], runtime:Runtime[0..1], exeCtx:DeephavenExecutionContext[1], extensions:Extension[*], debug:DebugContext[1]): State[1]
-{
-  let req = ^State(
-    inFilter = false,
-    inProject = false,
-    sq = $sq,
-    exeCtx = $exeCtx,
-    extensions = $extensions,
-    ext = $ext,
-    debug = $debug,
-    supportedFilterFunctions = supportedFilterFunctions(),
-    supportedRoutingFunctions = supportedRoutingFunctions(),
-    supportedSimpleValueFunctions = supportedSimpleValueFunctions()
-  );
-  let processedReq = $sq.vs->processValueSpecification(^DeephavenQuery(), $req);
-  ^$req(dhQuery = $processedReq->toOne()->cast(@DeephavenQuery));
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////// process Instance Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function meta::external::store::deephaven::pureToDeephaven::processValueSpecification(vs: ValueSpecification[1], operation: DeephavenOperationElement[1], req: State[1]): DeephavenOperationElement[*]
-{
-  $req.debug(|'-- processing VS ' + $vs->printValueSpecification('\n'));
-  println('---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------');
-  $vs->match([
-                fe: FunctionExpression[1] | let res  = $fe.func->match([
-                                                                          c:meta::pure::metamodel::relation::Column<Nil,Any|*>[1] | println('------------------ In process VS - FE - Column -------------------'); 
-                                                                                                                                    processCol($fe, $operation, $req);,
-                                                                          a:Any[1]| println('------------------ In process VS - FE - Any (Not Col) -------------------'); 
-                                                                                    if($req.inFilter,
-                                                                                        | $req.supportedFilterFunctions->findAndEvalSupportedFunction($fe, $operation, $req),
-                                                                                        | $req.supportedRoutingFunctions->findAndEvalSupportedFunction($fe, $operation, $req));
-                                                                                    // $req.supportedRoutingFunctions->findAndEvalSupportedFunction($fe, $operation, $req);
-                                                                       ]);
-                                            $res;,
-                // TODO - anumam - not sure if tds and ervs are needed
-                tds: TDSRoutedValueSpecification[1] |       println('------------------ In process VS - TDSRoutedValueSpecification -------------------');      $tds.value->processValueSpecification($operation, $req);,
-                ervs: ExtendedRoutedValueSpecification[1] | println('------------------ In process VS - ExtendedRoutedValueSpecification -------------------'); $ervs.value->processValueSpecification($operation, $req);,
-                v: VariableExpression[1] |                  println('------------------ In process VS - VariableExpression -------------------');               $v->processVariableExpression($operation, $req);,
-                ins: InstanceValue[1] |                     println('------------------ In process VS - InstanceValue -------------------');                    $ins->processInstanceValue($operation, $req);
-  ]);
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processCol(fe: FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  $initReq.debug(|'-- processing equal ' + $fe->printValueSpecification('\n'));
-  println('---------------------------------------------------------------------------------------------------------------- In process Column -------------------');
-  let debug = $initReq.debug;
-
-  let currReq = processValueSpecification($fe.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
-  let colFuncName = $fe.func.name->toOne();
-  let foundColumn = $currReq->cast(@DeephavenQuery)->toOne()->findColumn($colFuncName);
-  $foundColumn->toOne();
-}
-
-function meta::external::store::deephaven::pureToDeephaven::findColumn(dhQuery:DeephavenQuery[1], name:String[1]):meta::external::store::deephaven::metamodel::store::Column[0..1]
-{
-  $dhQuery.operations->filter(o | $o->instanceOf(SelectOperation))->toOne()->cast(@SelectOperation).columns->filter(c | let colName = $c->match([
-                                                                                                                                                  col:meta::external::store::deephaven::metamodel::store::Column[1]|$col.name
-                                                                                                                                                  // a:Alias[1]|$a.name
-                                                                                                                                                ]);
-                                                                                                                        $colName == $name || $colName == '"'+$name+'"';
-                                                                                                                   )->first();
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processVariableExpression(v: VariableExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  $initReq.debug(|'-- processing equal ' + $v->printValueSpecification('\n'));
-  println('---------------------------------------------------------------------------------------------------------------- In process VariableExpression -------------------');
-  $operation; // FIX THIS
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processInstanceValue(i: InstanceValue[1], operation: DeephavenOperationElement[1], req: State[1]): DeephavenOperationElement[*]
-{
-  processValue($i.values, $operation, $req);
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processValue(vals: Any[*], operation: DeephavenOperationElement[1], req: State[1]): DeephavenOperationElement[*]
-{
-  println('---------------------------------------------------------------------------------------------------------------- In process InstanceValue -------------------');
-  let res = if ($vals->isEmpty(), 
-        | $req.dhQuery, 
-        | $vals->map(v | $v->match([
-                                    s:String[1]                                        | println('------------------ In process InstanceValue - String -------------------');
-                                                                                         ^Literal(value=$s);,
-                                    i:Integer[1]                                       | ^Literal(value=$i),
-                                    b:Boolean[1]                                       | ^Literal(value=$b),
-                                    x:meta::pure::store::RelationStoreAccessor<Any>[1] | println('------------------ In process InstanceValue - RelationStoreAccessor -------------------');
-                                                                                         let relation = $x.sourceElement->cast(@Table);
-                                                                                         ^meta::external::store::deephaven::metamodel::DeephavenQuery(source = $relation, operations = ^SelectOperation(columns = $relation.columns));
-                                  //  ])); )->at(0);
-                                   ])); );
-  $res;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////// Boolean Operatyion Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function meta::external::store::deephaven::pureToDeephaven::processEqual(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  $initReq.debug(|'-- processing equal ' + $vs->printValueSpecification('\n'));
-  println('---------------------------------------------------------------------------------------------------------------- In process Equal -------------------');
-  let debug = $initReq.debug;
-
-  let leftSide = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne();
-  let rightSide = processValueSpecification($vs.parametersValues->at(1), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne();
-  let mergedSQL = ^EqOperatorExpression(expressions=[$leftSide, $rightSide]);
-  $mergedSQL;
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processNot(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  $initReq.debug(|'-- processing not ' + $vs->printValueSpecification('\n'));
-  println('---------------------------------------------------------------------------------------------------------------- In process Not -------------------');
-  let debug = $initReq.debug;
-
-  // let innerExpr = processFilterLambda($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
-  let innerExpr = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne();
-  println($innerExpr);
-  // let mergedSQL = ^NotOperatorExpression(expression = $innerExpr->cast(@FilterExpression));
-  let mergedSQL = ^NotOperatorExpression(expression = $innerExpr->cast(@FilterExpression));
-  $mergedSQL;
-}
-
-
-
-function meta::external::store::deephaven::pureToDeephaven::processAnd(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  $initReq.debug(|'-- processing and ' + $vs->printValueSpecification('\n'));
-  println('---------------------------------------------------------------------------------------------------------------- In process And -------------------');
-  let debug = $initReq.debug;
-
-  let leftSide = $vs.parametersValues->at(0)->processFilterLambda($operation, $initReq);
-  let rightSide = $vs.parametersValues->at(1)->processFilterLambda($operation, $initReq);
-  let tmpSql = $operation->cast(@DeephavenQuery);
-  let mergedSQL = ^$tmpSql(operations = $tmpSql.operations->concatenate(^FilterOperation(condition = ^AndOperatorExpression(expressions=[$leftSide, $rightSide]))));
-  $mergedSQL;
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processIn(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  $initReq.debug(|'-- processing in ' + $vs->printValueSpecification('\n'));
-  println('---------------------------------------------------------------------------------------------------------------- In process In -------------------');
-  let debug = $initReq.debug;
-
-  let leftSide = $vs.parametersValues->at(0)->processValueSpecification($operation, $initReq)->toOne();
-  let rightSide = $vs.parametersValues->at(1)->processValueSpecification($operation, $initReq);
-  let combinedRightSide = ^Literal(value = $rightSide->map(r | $r->cast(@Literal).value));
-  let tmpSql = $operation->cast(@DeephavenQuery);
-  let mergedSQL = ^$tmpSql(operations = $tmpSql.operations->concatenate(^FilterOperation(condition = ^InOperatorExpression(expressions=[$leftSide, $combinedRightSide]))));
-  $mergedSQL;
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processOr(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  $initReq.debug(|'-- processing or ' + $vs->printValueSpecification('\n'));
-  println('---------------------------------------------------------------------------------------------------------------- In process Or -------------------');
-  let debug = $initReq.debug;
-
-  let leftSide = $vs.parametersValues->at(0)->processFilterLambda($operation, $initReq);
-  let rightSide = $vs.parametersValues->at(1)->processFilterLambda($operation, $initReq);
-  let tmpSql = $operation->cast(@DeephavenQuery);
-  let mergedSQL = ^$tmpSql(operations = $tmpSql.operations->concatenate(^FilterOperation(condition = ^OrOperatorExpression(expressions=[$leftSide, $rightSide]))));
-  $mergedSQL;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////// Relation Operatyion Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function meta::external::store::deephaven::pureToDeephaven::processSelect(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  println('---------------------------------------------------------------------------------------------------------------- In process Select -------------------');
-  $initReq.debug(|'Processing -> select');
-  let debug = $initReq.debug;
-
-  let currReq = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
-  let tmp = $currReq->cast(@DeephavenQuery)->toOne();
-  ^$tmp(selectQueryExists = true);
-}
-
-
-
-function meta::external::store::deephaven::pureToDeephaven::processJoin(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  println('---------------------------------------------------------------------------------------------------------------- In process join -------------------');
-  $initReq.debug(|'Processing -> sort');
-  let debug = $initReq.debug;
-
-
-  let processStore = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne()->cast(@DeephavenQuery);
-
-  let rightTableQuery = processValueSpecification($vs.parametersValues->at(1), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne()->cast(@DeephavenQuery);
-  let rightTable = $rightTableQuery.source->toOne();
-
-  let jt = $vs.parametersValues->at(2)->cast(@FunctionExpression).parametersValues;
-  let type = extractEnumValue($jt->at(0)->cast(@InstanceValue).values->toOne()->cast(@Enumeration<Any>), $jt->at(1)->cast(@InstanceValue).values->cast(@String)->toOne())->cast(@meta::pure::functions::relation::JoinKind);
-
-  let tmp1 = $vs->instanceValuesAtParameter(3, [], [])->cast(@FunctionDefinition<Any>)->toOne();
-  let tmp2 = $tmp1.expressionSequence->at(0)->cast(@ValueSpecification);
-  let joinConditions = processTdsLambda($tmp2,$operation,$initReq);
-
-  let res = ^$processStore(operations = $processStore.operations->concatenate(^JoinOperation(
-                                                                                              rightTable = $rightTable,
-                                                                                              joinType = translateJoinKind($type),
-                                                                                              conditions = $joinConditions
-  )));
-  $res;
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processTdsLambda(mapFn:ValueSpecification[1], operation: DeephavenOperationElement[1], initReq: State[1]): JoinCondition[1]
-{
-   $mapFn->match(
-                  [
-                     fx:FunctionExpression[1]| let f = $fx->meta::pure::functions::meta::removeAutomap()->cast(@FunctionExpression);
-                                               println('-------------------- processTdsLambda - FunctionExpression ----------------------');
-                                               println($f);
-                                               let overrides = [^Pair<meta::pure::metamodel::function::Function<Any>, meta::pure::metamodel::function::Function<{->JoinCondition[1]}>>(first  = equal_Any_MANY__Any_MANY__Boolean_1_,
-                                                                                                                                                                                       second = {| println('-------------------- processTdsLambda - Not Column ----------------------');
-                                                                                                                                                                                                   println($f.parametersValues->at(0)->cast(@SimpleFunctionExpression).func);
-                                                                                                                                                                                                   ^JoinCondition(
-                                                                                                                                                                                                                    leftColumn  = $f.parametersValues->at(0)->cast(@SimpleFunctionExpression).func.name->toOne(),
-                                                                                                                                                                                                                    rightColumn = $f.parametersValues->at(1)->cast(@SimpleFunctionExpression).func.name->toOne()
-                                                                                                                                                                                                                 );
-                                                                                                                                                                                                }
-                                                                                                                                                                                      )
-                                                               ];
-                                               let override = $overrides->filter(o | $o.first == $f.func)->first();
-                                               if($override->isNotEmpty(),
-                                                    | $override->toOne().second->eval();,
-                                                    | fail('function ' + $f.func.name->makeString() + ' is not yet supported');
-                                                      ^JoinCondition(leftColumn  = '',rightColumn = '');
-                                                 );
-                  ]
-                );
-}
-
-function meta::external::store::deephaven::pureToDeephaven::isFunctionWithName(r: ValueSpecification[1], functionName: String[1]):Boolean[1]
-{
-  $r->instanceOf(FunctionExpression) && $r->cast(@FunctionExpression).func.functionName == $functionName;
-}
-
-function meta::external::store::deephaven::pureToDeephaven::translateJoinKind(jk:  meta::pure::functions::relation::JoinKind[1]): meta::external::store::deephaven::metamodel::JoinKind[1]
-{
-  if($jk.name == 'INNER',
-      | meta::external::store::deephaven::metamodel::JoinKind.JOIN,
-      | if($jk.name == 'LEFT',
-            | meta::external::store::deephaven::metamodel::JoinKind.LEFT,
-            | if($jk.name == 'RIGHT',
-                  | meta::external::store::deephaven::metamodel::JoinKind.RIGHT,
-                  | meta::external::store::deephaven::metamodel::JoinKind.OUTER)))
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processSort(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  println('---------------------------------------------------------------------------------------------------------------- In process sort -------------------');
-  $initReq.debug(|'Processing -> sort');
-  let debug = $initReq.debug;
-
-  let processStore = processValueSpecification($vs.parametersValues->at(0), $operation, 
-  ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne()->cast(@DeephavenQuery);
-  
-  let sortInfos = $vs.parametersValues->at(1)->cast(@InstanceValue).values->cast(@SortInfo<Any>);
-  println('----------------------- sortInfos ---------------------');
-  println($sortInfos);
-  let sortColumns = $sortInfos->map(si | ^SortColumn(name = $si.column.name,
-                                                     direction = if($si.direction->toString() == 'ASC',
-                                                                      | meta::external::store::deephaven::metamodel::SortDirection.ASCENDING,
-                                                                      | meta::external::store::deephaven::metamodel::SortDirection.DESCENDING)));
-  let res = ^$processStore(operations = $processStore.operations->concatenate(^SortOperation(columns = $sortColumns)));
-  
-  println('----------------------- sort res ---------------------');
-  println($res.operations->at(1));
-  //fail();
-  $res;
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processFilter(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  println('---------------------------------------------------------------------------------------------------------------- In process Filter -------------------');
-  $initReq.debug(|'Processing -> filter');
-  let debug = $initReq.debug;
-
-  let processStore = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne()->cast(@DeephavenQuery);
-  // TODO - anumam - revisit whether deephaven allows filter in aggregation queries - however for PoC this is not covered
-  // assertFalse($processStore.aggregationQuery, |'filter not supported in aggregation queries');
-  let withFilterReq = processFilterLambda($vs.parametersValues->at(1), $processStore, ^$initReq(inFilter = true)); //->cast(@SelectSQLQuery);
-  // let res = if($withFilterReq->instanceOf(DeephavenQuery),
-  //                 | $withFilterReq;,
-  //                 | ^$processStore(operations = $processStore.operations->concatenate(^FilterOperation(condition = $withFilterReq->cast(@FilterExpression))));
-  //             );
-  let res = ^$processStore(operations = $processStore.operations->concatenate(^FilterOperation(condition = $withFilterReq->cast(@FilterExpression))));
-  $res;
-}
-
-// function meta::external::store::deephaven::pureToDeephaven::processFilterLambda(vs : ValueSpecification[1], operation: DeephavenOperationElement[1], req: State[1]): DeephavenOperationElement[1]
-function meta::external::store::deephaven::pureToDeephaven::processFilterLambda(vs : ValueSpecification[1], operation: DeephavenOperationElement[*], req: State[1]): DeephavenOperationElement[1]
-{
-  $req.debug(|'-- processing filter lambda ' + $vs->type()->toString() + ': ' + $vs->printValueSpecification('\n'));
-  println('---------------------------------------------------------------------------------------------------------------- In process FilterLambda -------------------');
-  $vs->match([
-                fr: FunctionRoutedValueSpecification[1] | println('------------------ In process FilterLambda - FunctionRoutedValueSpecification -------------------');
-                                                          $fr.value->processFilterLambda($operation, $req);,
-                iv: InstanceValue[1] | $iv.values->match([
-                                                          f: FunctionDefinition<Any>[1] | println('------------------ In process FilterLambda - InstanceValue - FunctionDefinition -------------------');
-                                                                                          // $f.expressionSequence->at(0)->processFilterLambda($operation, $req);
-                                                                                          $req.supportedFilterFunctions->findAndEvalSupportedFunction($f.expressionSequence->at(0)->cast(@FunctionExpression), $operation, $req);
-                                                        ]),
-                fe: FunctionExpression[1] | println('------------------ In process FilterLambda - FunctionExpression -------------------');
-                                            $req.supportedFilterFunctions->findAndEvalSupportedFunction($fe, $operation, $req);
-                                            // let res = $req.supportedFilterFunctions->findAndEvalSupportedFunction($fe, $operation, $req);
-                                            // if($fe.func == meta::pure::functions::boolean::not_Boolean_1__Boolean_1_,
-                                            //       | let innerExpr = processFilterLambda($fe.parametersValues->at(0), $operation, $req);
-                                            //         ^NotOperatorExpression(expression = $innerExpr->cast(@FilterExpression));,
-                                            //       | $res;
-                                            //   );
-  ]);
-}
-
-function meta::external::store::deephaven::pureToDeephaven::processTdsRestrict(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
-{
-  $initReq.debug(|'Processing -> select colSpec');
-  println('---------------------------------------------------------------------------------------------------------------- In process TdsRestrict - ColSpec Select -------------------');
-  let debug = $initReq.debug;
-
-  let relAccessor = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
-  let projectColNames = $vs.parametersValues->at(1)->cast(@InstanceValue).values->match(
-                              [
-                                s:String[*]|$s,
-                                c:meta::pure::metamodel::relation::ColSpecArray<Any>[1]|$c.names,
-                                c:meta::pure::metamodel::relation::ColSpec<Any>[1]|$c.name
-                              ]
-                          );
-  let projectAliasNames = $projectColNames;
-  let origSelect = $relAccessor->cast(@DeephavenQuery)->toOne();
-  let origColumnsByName = $origSelect.operations->filter(o | $o->instanceOf(SelectOperation))->toOne()->cast(@SelectOperation).columns->map(column|
-         let name = $column->match([
-               c:meta::external::store::deephaven::metamodel::store::Column[1]|$c.name
+   ^LegendJavaPlatformBindingExtension
+   (
+      platformId = legendJavaPlatformBindingId(),
+      id = 'DeephavenStoreLegendJavaPlatformBindingExtension',
+
+      supportedExecutionNodes = [meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode],
+
+      adhocExtensions = [
+                            ^LegendJavaPlatformDependencyUpdateExtension
+                            (
+                                platformDependencyUpdate = {conventions: Conventions[1], extensions: Extension[*] |
+                                  $extensions->extractLegendJavaAdhocExtensionsOfType(DeephavenLegendJavaPlatformBindingDescriptor)
+                                      ->fold({e, uc |
+                                        $e.enginePlatformDependencies
+                                            ->map(e | $e->eval($uc))->first()->orElse($uc)
+                                      }, extendDeephavenJavaEngineDependencies($conventions))
+                                }
+                            )
+                        ],
+
+      updateGenerationContextForNode = {node: ExecutionNode[1], context: GenerationContext[1], path: String[1], extensions: Extension[*], debug: DebugContext[1] |
+         $node->match([
+            d: meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1] | prepareForDeephavenExecutionNode($d, $path, $context, $extensions, $debug),
+            n: ExecutionNode[1] | $context
+         ])
+      },
+
+      generateLegendJavaCodeForNode = {node: meta::pure::executionPlan::ExecutionNode[1], path: String[1], context: GenerationContext[1], extensions: meta::pure::extension::Extension[*], debug: DebugContext[1] |
+        $node->match([
+            d: meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1]   | $d->meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateForDeephavenExecutionNode($path, $context, $debug),
+            n: meta::pure::executionPlan::ExecutionNode[1]   | ^GeneratedCode()
          ]);
-         pair($name, $column);
-      );
-  let origColumnsByNameAsMap = $origColumnsByName->newMap();
-  let newCols = $projectAliasNames->map(aliasName | let origCol = $origColumnsByNameAsMap->get($aliasName); 
-                                                    assertNotEmpty($origCol, | 'Failed to find column ' + $aliasName + ' in ' + $origColumnsByNameAsMap->keys()->joinStrings('[', ',', ']')); 
-                                                    $origCol->toOne();
-                                       );
-  let tmpSel = $origSelect.operations->map(o | if($o->instanceOf(SelectOperation),
-                                                    | let tmp = $o->cast(@SelectOperation);
-                                                      ^$tmp(columns = $newCols);,
-                                                    | $o));
-  let res = ^$origSelect(operations = $tmpSel, selectQueryExists = true);
-  $res;
+      }
+   )
+}
+      
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::prepareForDeephavenExecutionNode(node: meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1], path: String[1], context: GenerationContext[1], extensions: Extension[*], debug: DebugContext[1]): GenerationContext[1]
+{
+  print(if($debug.debug, | $debug.space + '(' + $path + ') prepare DeephavenExecutionNode\n', | ''));
+
+  let conventions = $context.conventions;
+  let resultType = $node.resultType;
+
+  let updatedTypeInfo = $context.typeInfos->addForClass(DeephavenQuery); // TODO anumam - what is this for ?
+
+  let nodeInfo = ^NodeInfo(
+                            path = $path,
+                            returnType = ^SimpleJavaType(
+                                                          pureType = $resultType.genericType.rawType->toOne(),
+                                                          javaType = $conventions->className($resultType.genericType.rawType->toOne())
+                                                          //javaType = $conventions->className(meta::pure::executionPlan::platformBinding::legendJava::PureDate)
+                                                        ),
+                            data = $node
+                          );
+
+   $context->addNodeInfo($nodeInfo)->setTypeInfos($updatedTypeInfo);
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////// Supported Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function meta::external::store::deephaven::pureToDeephaven::findAndEvalSupportedFunction<P, T | n, m>(funcs: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], DeephavenOperationElement[1], P[n]->T[m]}>>[*], fe : FunctionExpression[1], req: P[n], state: State[1]): T[m]
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateForDeephavenExecutionNode(node:meta::external::store::deephaven::metamodel::pure::DeephavenExecutionNode[1], path:String[1], context:GenerationContext[1], debug:DebugContext[1]): GeneratedCode[1]
 {
-  println('------------------ debug find SupFilterFunc for DD 1 -------------------'); 
-  println($fe.func.name);
-   eval($funcs->filter(x|$x.first->eval($fe.func, $state))->first()->toOne('function not supported yet: ' + $fe.func->elementToPath()).second, $fe, $req, $state);
+  print(if($debug.debug, | $debug.space + '(' + $path + ') generate DeephavenExecutionNode\n', | ''));
+  let conventions = $context.conventions;
+
+   let ticketTableClass = javaClass('io.deephaven.qst.table.TicketTable');
+   let tableSpecClass = javaClass('io.deephaven.qst.table.TableSpec');
+   let tableHandleClass = javaClass('io.deephaven.client.impl.TableHandle');
+   let barrageSessionClass = javaClass('io.deephaven.client.impl.BarrageSession');
+
+   // todo - can we see if can add to import only if it is needed ?
+   let columnNameClass = javaClass('io.deephaven.api.ColumnName');
+   let sortColumnClass = javaClass('io.deephaven.api.SortColumn');
+
+  // Create base execution class
+  let executeClass = $conventions->planNodeClass('public', $path, 'Execute')
+                                 ->usingKnownPackages($conventions->knownPackages())
+                                 ->imports($conventions->standardImports())
+                                 ->imports([
+                                              $ticketTableClass,
+                                              $tableSpecClass,
+                                              $tableHandleClass,
+                                              $barrageSessionClass,
+
+                                              $columnNameClass,
+                                              $sortColumnClass
+                                           ])
+                                 ->imports([meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics]->map(x | $conventions->className($x)))
+                                 ->implements($conventions->className(IDeephavenExecutionNodeSpecifics));
+
+  //  let tableSpecVar = j_variable($tableSpecClass, 'ts');
+  //  let operationChain = $tableSpecVar->j_declare(generateDeephavenOperationChain($node.query, $tableSpecClass, $context));
+
+  // Add TableSpec field to store the spec
+  // let tableSpecField = j_variable($tableSpecClass, 'tableSpec', ['private', 'final'], 
+  // generateDeephavenOperationChain($node.query, $tableSpecClass, $context));
+
+  
+  // let tableSpecField = j_field(['private', 'final'], $tableSpecClass, 'tableSpec',
+  // generateDeephavenOperationChain($node.query, $tableSpecClass, $context));
+
+  // let tableSpecField = javaField(['private', 'final'], $tableSpecClass, 'tableSpec'); //->addModifiers(['private', 'final']);
+  let tableSpecInit = generateDeephavenOperationChain($node.query, $tableSpecClass, $context);  
+  let tableSpecField = javaField(['private', 'final'], $tableSpecClass, 'tableSpec', $tableSpecInit);
+  // let tableSpecField = ^meta::external::language::java::metamodel::Field(
+  //     modifiers = ['private', 'final'],
+  //     name=$tableSpecClass,
+  //     type='tableSpec',
+  //     valueCode = $tableSpecInit
+  //  );
+
+  // Constructor to initialize tableSpec
+  // let constructor = javaMethod(
+  //                               ['public'],
+  //                               javaClass('void'),
+  //                               // javaVoid(),
+  //                               'Execute',
+  //                               [],
+  //                               []
+  //                               // [j_assign(j_field($tableSpecClass, 'tableSpec'), generateDeephavenOperationChain($node.query, $tableSpecClass, $context))]
+  //                               // [j_assign(j_variable($tableSpecClass, 'tableSpec'), generateDeephavenOperationChain($node.query, $tableSpecClass, $context))]
+  //                             );
+
+
+   let executeMethod = javaMethod(
+                                    ['public'],
+                                    $tableHandleClass,
+                                    'execute',
+                                    [javaParam($barrageSessionClass, 'session')],
+                                    [
+                                      // $operationChain,
+                                      j_try(
+                                              [j_return(j_invoke(j_invoke(j_parameter($barrageSessionClass, 'session'), 'session',[]), 'execute', [j_variable($tableSpecClass, 'tableSpec')]))],
+                                              // [j_return(j_invoke(j_invoke(j_parameter($barrageSessionClass, 'session'), 'session',[]), 'execute', [$tableSpecVar]))],
+                                              j_catch(
+                                                        j_parameter(javaClass('io.deephaven.client.impl.TableHandle.TableHandleException'), 'e'),
+                                                        javaRuntimeException()->j_new(j_parameter(javaClass('io.deephaven.client.impl.TableHandle.TableHandleException'), 'e'))->j_throw()
+                                                     ),
+                                              j_catch(
+                                                        j_parameter(javaInterruptedException(), 'e'),
+                                                        javaRuntimeException()->j_new(j_parameter(javaInterruptedException(), 'e'))->j_throw()
+                                                     )
+                                            )
+                                    ]
+                                 );
+
+  // Add getTableSpec method
+  let getTableSpecMethod = javaMethod(
+                                          ['public'],
+                                          $tableSpecClass,
+                                          'getTableSpec',
+                                          [],
+                                          [j_return(j_variable($tableSpecClass, 'tableSpec'))]
+                                      );
+  let executeProject = newProject()->addClasses($executeClass->addField($tableSpecField)
+                                                            //  ->addMethod($constructor)
+                                                             ->addMethod($executeMethod)
+                                                             ->addMethod($getTableSpecMethod));
+  $executeProject->mergeProjects()->generatedCode($executeClass);
 }
 
-function meta::external::store::deephaven::pureToDeephaven::supportedRoutingFunctions():Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],DeephavenOperationElement[1],State[1]->DeephavenOperationElement[1]}>>[*]
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateDeephavenOperationChain(query: DeephavenQuery[1], tableSpecClass: meta::external::language::java::metamodel::Type[1], context: GenerationContext[1]): Code[1]
 {
-  let supported = [
-    pair(supportedIfEqual(meta::pure::functions::relation::select_Relation_1__Relation_1_),                  processSelect_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
-    pair(supportedIfEqual(meta::pure::functions::relation::select_Relation_1__ColSpecArray_1__Relation_1_),  processTdsRestrict_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
-    pair(supportedIfEqual(meta::pure::functions::relation::sort_Relation_1__SortInfo_MANY__Relation_1_),     processSort_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
-    pair(supportedIfEqual(meta::pure::functions::relation::join_Relation_1__Relation_1__JoinKind_1__Function_1__Relation_1_),     processJoin_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
-    pair(supportedIfEqual(meta::pure::functions::relation::filter_Relation_1__Function_1__Relation_1_),      processFilter_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_)
-  ];
+  let initial = javaClass('io.deephaven.qst.table.TicketTable')->j_invoke('fromQueryScopeField', [j_string($query.source->toOne().name)]);
+
+  let filterOps = $query.operations->filter(op |$op->instanceOf(FilterOperation));
+  let withFilters = $filterOps->fold({op, code |
+      $op->match([
+         f: FilterOperation[1] | generateFilterOperation($f, $code, $tableSpecClass)
+      ]);
+   }, $initial);
+
+
+  let selectOps = $query.operations->filter(op |$op->instanceOf(SelectOperation));
+  let withSelects = if($query.selectQueryExists == true,
+                        | $selectOps->fold({op, code |
+                                                      $op->match([
+                                                        s: SelectOperation[1] | generateSelectOperation($s, $code, $tableSpecClass)
+                                                      ]);
+                                  }, $withFilters),
+                        | $withFilters );
+   
+  let sortOps = $query.operations->filter(op |$op->instanceOf(SortOperation));
+  let result = $sortOps->fold({op, code |
+                                  $op->match([
+                                    s: SortOperation[1] | generateSortOperation($s, $code, $tableSpecClass)
+                                  ]);
+                              //  }, $initial);
+                              }, $withSelects);
+
+  $result;
 }
 
-function meta::external::store::deephaven::pureToDeephaven::supportedFilterFunctions():Pair<LambdaFunction<{Function<Any>[1],State[1]->Boolean[1]}>, Function<{FunctionExpression[1],DeephavenOperationElement[1],State[1]->DeephavenOperationElement[1]}>>[*]
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateSelectOperation(op: SelectOperation[1], chain: Code[1], tableSpecClass: meta::external::language::java::metamodel::Type[1]): Code[1]
 {
-  let supported = [
-     pair(supportedIfEqual(meta::pure::functions::boolean::equal_Any_MANY__Any_MANY__Boolean_1_), processEqual_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
-     pair(supportedIfEqual(meta::pure::functions::boolean::and_Boolean_1__Boolean_1__Boolean_1_), processAnd_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
-     pair(supportedIfEqual(meta::pure::functions::boolean::or_Boolean_1__Boolean_1__Boolean_1_),  processOr_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
-     pair(supportedIfEqual(meta::pure::functions::collection::in_Any_1__Any_MANY__Boolean_1_),  processIn_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
-     pair(supportedIfEqual(meta::pure::functions::boolean::not_Boolean_1__Boolean_1_),            processNot_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_)
+   let columnNames = $op.columns->map(c | j_string($c.name));
+   $chain->j_invoke('select', $columnNames, $tableSpecClass);
+}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateFilterOperation(op: FilterOperation[1], chain: Code[1], tableSpecClass: meta::external::language::java::metamodel::Type[1]): Code[1]
+{
+   let condition = generateFilterCondition($op.condition);
+  //  $chain->j_invoke('where', [$condition], $tableSpecClass);
+   $chain->j_invoke('where', [j_string($condition)], $tableSpecClass);
+}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateFilterCondition(expr: FilterExpression[1]): String[1]
+{
+   $expr->match([
+      eq: EqOperatorExpression[1] |  println('-------------------- generateFilterCondition EQ -----------------------');
+                                      let op01 = generateOperand($eq.expressions->at(0));
+                                      // println($op01);
+                                      let op02 = generateOperand($eq.expressions->at(1));
+                                      // println($op02);
+                                      // let res0 = j_string($op01 + ' == ' + $op02);
+                                      let res0 = $op01 + ' == ' + $op02;
+                                      println($res0);
+                                      $res0;,
+                                    //  j_string(generateOperand($eq.expressions->at(0), $tableSpecClass) + ' == ' + generateOperand($eq.expressions->at(1), $tableSpecClass));,
+  
+      and: AndOperatorExpression[1] | println('-------------------- generateFilterCondition AND -----------------------');
+                                      let op1 = generateOperand($and.expressions->at(0));
+                                      println($op1); //fail();
+                                      let op2 = generateOperand($and.expressions->at(1));
+                                      // let res = j_string($op1 + ' && ' + $op2);
+                                      let res = $op1 + ' && ' + $op2;
+                                      $res;,
+               
+      not: NotOperatorExpression[1] | let innerExpr = $not.expression;
+                                      // println($innerExpr);
+                                      // fail();
+
+                                      $innerExpr->match([
+                                                          eq1: EqOperatorExpression[1] |  generateOperand($eq1.expressions->at(0)) + ' != ' + generateOperand($eq1.expressions->at(1)),
+                                                                  
+                                                          other: FilterExpression[1] |  '!' + generateFilterCondition($other)
+                                                      
+                                                      ]);,
+               
+      or: OrOperatorExpression[1] |  generateOperand($or.expressions->at(0)) + ' || ' + generateOperand($or.expressions->at(1)),
+               
+      in: InOperatorExpression[1] |  let res2 = generateOperand($in.expressions->at(0)) + ' in ' + generateOperand($in.expressions->at(1));
+                                     println($in.expressions);
+                                     println($res2);
+                                     //fail();
+                                     $res2;
+  
+   ]);
+}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateSortOperation(op: SortOperation[1], chain: Code[1], tableSpecClass: meta::external::language::java::metamodel::Type[1]): Code[1]
+{
+  // Determine sort type based on columns and directions
+  let allAscending = $op.columns->forAll(c | $c.direction == meta::external::store::deephaven::metamodel::SortDirection.ASCENDING);
+  let allDescending = $op.columns->forAll(c | $c.direction == meta::external::store::deephaven::metamodel::SortDirection.DESCENDING);
+  
+  if($op.columns->size() == 1 && $allAscending,
+      // Case 1: Single ascending column
+      | $chain->j_invoke('sort', [j_string($op.columns->at(0).name)], $tableSpecClass),
+      | if($allAscending,
+            // Case 1: Multi-column ascending
+            | $chain->j_invoke('sort', $op.columns->map(c | j_string($c.name)), $tableSpecClass),
+            | if($allDescending,
+                  // Case 2: Multi-column descending
+                  | $chain->j_invoke('sortDescending', $op.columns->map(c | j_string($c.name)), $tableSpecClass),
+                  // Case 3: Mixed directions
+                  | let sortColumnType = javaClass('io.deephaven.api.SortColumn');
+                    let columnNameClass = javaClass('io.deephaven.api.ColumnName');
+                    let sortColumns = $op.columns->map(c | 
+                      if($c.direction == meta::external::store::deephaven::metamodel::SortDirection.ASCENDING,
+                         | $sortColumnType->j_invoke('asc', [$columnNameClass->j_invoke('of', [j_string($c.name)], $columnNameClass)], $sortColumnType),
+                         | $sortColumnType->j_invoke('desc', [$columnNameClass->j_invoke('of', [j_string($c.name)], $columnNameClass)], $sortColumnType)
+                      )
+                    );
+                    // let arrayListType = meta::external::language::java::factory::javaArrayList($sortColumnType);
+                    // let arrayListInit = $arrayListType->j_new([]);
+                    // let arrayListPopulated = $sortColumns->fold({col, list | $list->j_invoke('add',[$col])}, $arrayListInit);
+                    // $chain->j_invoke('sort', [$arrayListPopulated], $tableSpecClass);
+                    let listType = javaList($sortColumnType);
+                    $chain->j_invoke('sort', [javaArrays()->j_invoke('asList', $sortColumns, $listType)], $tableSpecClass);
+                    // $chain->j_invoke('sort', [javaClass('java.util.Arrays')->j_invoke('asList', $sortColumns)], $tableSpecClass);
+                );
+          )
+  );
+}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateOperand(op: DeephavenOperationElement[1]): String[1]
+{
+   $op->match([
+      // f: FilterExpression[1] | '(' + generateFilterCondition($f) + ')', // do we need to wrap with () ??
+      f: FilterExpression[1] | generateFilterCondition($f),
+      // c: Column[1] | j_field($tableSpecClass, $c.name),
+      // c: Column[1] | j_invoke($tableSpecClass, 'col', [j_string($c.name)]),
+      c: Column[1] | println('-------------------- generateOperand Column -----------------------'); 
+                     let r1 = $c.name;
+                     println($r1);
+                     $r1;,
+      l: meta::external::store::deephaven::metamodel::store::Literal[1] | println('-------------------- generateOperand Literal -----------------------');
+                                                                          // let r2 = if($l.value->at(0)->instanceOf(String),
+                                                                          //               | '\'' + $l.value->at(0)->toString() + '\'',
+                                                                          //               | $l.value->at(0)->toString());
+                                                                          let r2 = if($l.value->size() > 1,
+                                                                                        | $l.value->map(v | if($v->instanceOf(String), | '`' + $v->toString() + '`', | $v->toString()))->joinStrings(', ') ,  // check for ` or '
+                                                                                        | if($l.value->at(0)->instanceOf(String), | '`' + $l.value->at(0)->toString() + '`', | $l.value->at(0)->toString()));
+                                                                          println($r2);
+                                                                          $r2;
+   ]);
+}
+
+// function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::generateOperand(op: DeephavenOperationElement[1], tableSpecField: Code[1], tableSpecClass: meta::external::language::java::metamodel::Type[1]): Code[1]
+// {
+//    $op->match([
+//       f: FilterExpression[1] | generateFilterCondition($f, $tableSpecField, $tableSpecClass),
+//       // c: Column[1] | j_field($tableSpecClass, $c.name),
+//       // c: Column[1] | j_invoke($tableSpecClass, 'col', [j_string($c.name)]),
+//       c: Column[1] | $c.name,
+//       l: meta::external::store::deephaven::metamodel::store::Literal[1] | if($l.value->at(0)->instanceOf(String),
+//                         | j_string($l.value->at(0)->toString()),
+//                         | if($l.value->at(0)->instanceOf(Integer),
+//                             | j_int($l.value->at(0)->toString()),
+//                             | if($l.value->at(0)->instanceOf(Float),
+//                                 | j_float($l.value->at(0)->toString()),
+//                                 | if($l.value->at(0)->instanceOf(Decimal),  
+//                                     | j_bigDecimal($l.value->at(0)->cast(@Decimal)),
+//                                     | j_double($l.value->at(0)->toString())
+//                                 ))))
+//    ]);
+// }
+
+// Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::_IDeephavenExecutionNodeSpecifics {}
+
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions(): Extension[*]
+{
+  // Pulls together store extension + PlatformBinding extensions required for Deephaven, excludes stuff already loaded by core..
+  [
+    meta::external::store::deephaven::extension::deephavenExtension(),
+    meta::pure::executionPlan::platformBinding::platformBindingExtension('PlatformBinding - LegendJava - Deephaven', [
+    meta::pure::executionPlan::platformBinding::legendJava::legendJavaPlatformBinding([
+                                                                                        meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenStoreLegendJavaPlatformBindingExtension()
+                                                                                      ])
+  ])
   ]
 }
 
+/*
+ * This function should be assigned to the router extension:
+ *
+ *     plan_javaRuntime_enginePlatformDependencies_conventions = meta::external::format::json::executionPlan::platformBinding::legendJava::extendJavaEngineDependencies_Conventions_1__Conventions_1_
+ */
 
-///////////////////////////////////////////////////////////////////////////////////////// Helper Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics {}
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenConnection {}
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenSession {}
+Class meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IBarrageSession {}
 
-function meta::external::store::deephaven::pureToDeephaven::addQuotesIfNecessary(s:String[1]):String[1]
+function meta::external::store::deephaven::executionPlan::platformBinding::legendJava::extendDeephavenJavaEngineDependencies(conventions:Conventions[1]):Conventions[1]
 {
-   if($s->startsWith('"') && $s->endsWith('"'), | $s, | '"' + $s + '"');
-}
+  // let jIDeephavenExecutionNodeSpecifics = javaClass('public', 'org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics')
+  //                                         ->addMethod(javaMethod('public', javaClass('io.deephaven.client.impl.TableHandle'), 'execute', [javaParam(javaClass('io.deephaven.client.impl.BarrageSession'), 'session')]));
 
-function meta::external::store::deephaven::pureToDeephaven::supportedIfEqual(func: Function<Any>[1]):LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>[1]
-{
-  {x: Function<Any>[1], req: State[0..1] | $x == $func}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////// Extra Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function meta::external::store::deephaven::pureToDeephaven::supportedSimpleValueFunctions(): Pair<LambdaFunction<{Function<Any>[1],  State[1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->Pair<List<Any>, State>[1]}>>[*]
-{
-  let supported = [
-    // pair({x: Function<Any>[1], req: State[1] | $req.inFilter}, evaluateAsPureExpressionNode_FunctionExpression_1__State_1__Pair_1_),
-    // pair({x: Function<Any>[1], req: State[1] | $req.dhQuery.inFilter}, evaluateAsPureExpressionNode_FunctionExpression_1__State_1__Pair_1_),
-    pair({x: Function<Any>[1], req: State[1] | $req.inProject}, passthruForPainlessExpression_FunctionExpression_1__State_1__Pair_1_)
-  ];
-}
-
-function meta::external::store::deephaven::pureToDeephaven::passthruForPainlessExpression(fe: FunctionExpression[1], req: State[1]): Pair<List<Any>, State>[1]
-{
-  $req.debug(|'Passthru for painless: ' + $fe->printValueSpecification(''));
-  assert($req.inProject, |'Evaluation as runtime mapping expression only supported on project context');
-  pair(list($fe), $req);
+let jIDeephavenExecutionNodeSpecifics = javaClass('public', 'org.finos.legend.engine.plan.execution.stores.deephaven.specifics.IDeephavenExecutionNodeSpecifics')
+                                          ->addMethod(javaMethod('public', javaClass('io.deephaven.client.impl.TableHandle'), 'execute', [javaParam(javaClass('io.deephaven.client.impl.BarrageSession'), 'session')]))
+                                          ->addMethod(javaMethod('public', javaClass('io.deephaven.qst.table.TableSpec'), 'getTableSpec', []));
+  
+  $conventions->addProvidedType(meta::external::store::deephaven::executionPlan::platformBinding::legendJava::IDeephavenExecutionNodeSpecifics, $jIDeephavenExecutionNodeSpecifics);
 }
