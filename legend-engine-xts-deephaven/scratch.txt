@@ -1,17 +1,650 @@
-function test::basicWhereWithIn(): Any[*]
+'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
+'------------------ In process VS - FE - Any (Not Col) -------------------'
+'------------------ debug find SupFilterFunc for DD 1 -------------------'
+'select_Relation_1__ColSpecArray_1__Relation_1_'
+'---------------------------------------------------------------------------------------------------------------- In process TdsRestrict - ColSpec Select -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
+'------------------ In process VS - FE - Any (Not Col) -------------------'
+'------------------ debug find SupFilterFunc for DD 1 -------------------'
+'filter_Relation_1__Function_1__Relation_1_'
+'---------------------------------------------------------------------------------------------------------------- In process Filter -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
+'------------------ In process VS - InstanceValue -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process InstanceValue -------------------'
+'------------------ In process InstanceValue - RelationStoreAccessor -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process FilterLambda -------------------'
+'------------------ In process FilterLambda - FunctionRoutedValueSpecification -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process FilterLambda -------------------'
+'------------------ In process FilterLambda - InstanceValue - FunctionDefinition -------------------'
+'------------------ debug find SupFilterFunc for DD 1 -------------------'
+'or_Boolean_1__Boolean_1__Boolean_1_'
+'---------------------------------------------------------------------------------------------------------------- In process Or -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process FilterLambda -------------------'
+'------------------ In process FilterLambda - FunctionExpression -------------------'
+'------------------ debug find SupFilterFunc for DD 1 -------------------'
+'not_Boolean_1__Boolean_1_'
+'---------------------------------------------------------------------------------------------------------------- In process Not -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
+'------------------ In process VS - FE - Any (Not Col) -------------------'
+'------------------ debug find SupFilterFunc for DD 1 -------------------'
+'in_Any_1__Any_MANY__Boolean_1_'
+'---------------------------------------------------------------------------------------------------------------- In process In -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
+'------------------ In process VS - FE - Column -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process Column -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
+'------------------ In process VS - VariableExpression -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process VariableExpression -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------'
+'------------------ In process VS - InstanceValue -------------------'
+'---------------------------------------------------------------------------------------------------------------- In process InstanceValue -------------------'
+'------------------ In process InstanceValue - String -------------------'
+'------------------ In process InstanceValue - String -------------------'
+Anonymous_StripedId instance DeephavenQuery
+    classifierGenericType(Property):
+         instance GenericType
+            rawType(Property):
+                [X] DeephavenQuery instance Class
+    operations(Property):
+        Anonymous_StripedId instance SelectOperation
+            classifierGenericType(Property):
+                [>1]  instance GenericType
+            columns(Property):
+                [>1] TradeID instance Column
+                [>1] StockSymbol instance Column
+                [>1] Price instance Column
+                [>1] Quantity instance Column
+                [>1] TradeTime instance Column
+                [>1] City instance Column
+                [>1] IsBuy instance Column
+        Anonymous_StripedId instance FilterOperation
+            classifierGenericType(Property):
+                [>1]  instance GenericType
+            condition(Property):
+                [>1] Anonymous_StripedId instance InOperatorExpression
+    source(Property):
+        stockTrades instance Table
+            classifierGenericType(Property):
+            columns(Property):
+                [>1] TradeID instance Column
+                [>1] StockSymbol instance Column
+                [>1] Price instance Column
+                [>1] Quantity instance Column
+                [>1] TradeTime instance Column
+                [>1] City instance Column
+                [>1] IsBuy instance Column
+            elementOverride(Property):
+            name(Property):
+                [>1] stockTrades instance String
+
+
+Execution error at (resource:/core_deephaven_pure/functions/pure_to_deephaven.pure line:278 column:67), "Cast exception: DeephavenQuery cannot be cast to FilterExpression"
+
+
+
+
+
+
+
+
+
+
+
+
+import meta::pure::functions::collection::tests::intersection::*;
+import meta::pure::functions::collection::*;
+import meta::pure::store::*;
+import meta::pure::metamodel::relation::*;
+import meta::pure::executionPlan::*;
+import meta::pure::router::utils::*;
+import meta::pure::router::metamodel::*;
+import meta::pure::metamodel::serialization::grammar::*;
+import meta::pure::extension::*;
+import meta::pure::mapping::*;
+import meta::core::runtime::*;
+import meta::pure::functions::lang::*;
+import meta::external::store::deephaven::metamodel::*;
+import meta::external::store::deephaven::metamodel::store::*;
+import meta::external::store::deephaven::metamodel::executionPlan::context::*;
+import meta::external::store::deephaven::extension::*;
+import meta::external::store::deephaven::pureToDeephaven::*;
+
+Class meta::external::store::deephaven::metamodel::DeephavenQuery extends DeephavenOperationElement
 {
-  #>{test::DeephavenStore.stockTrades}#->filter(c | $c.City->in(['London', 'Tokyo']))->from(test::DeephavenRuntime)
+  source : meta::external::store::deephaven::metamodel::store::Table[0..1]; // make this 1
+  operations: QueryOperation[*];
+  selectQueryExists: Boolean[0..1]; // to Ommit unecessary selecty clause
 }
 
-function test::basicWhereWithNotEqual(): Any[*]
+Class meta::external::store::deephaven::metamodel::QueryOperation extends DeephavenOperationElement
 {
-  #>{test::DeephavenStore.stockTrades}#->filter(c | $c.City != 'New York')->from(test::DeephavenRuntime)
-  //#>{test::DeephavenStore.stockTrades}#->filter(c | !($c.City == 'New York'))->from(test::DeephavenRuntime)
 }
 
-function test::a4FilterWithNotAndOr(): Any[*]
+Class meta::external::store::deephaven::metamodel::SelectOperation extends QueryOperation
 {
-  #>{test::DeephavenStore.stockTrades}#->filter(x|(!($x.City->in( ['London', 'Tokyo'] ))) || ($x.Price > 200))->select(~[TradeID,StockSymbol,Price,City])->from(test::DeephavenRuntime)
+  columns: meta::external::store::deephaven::metamodel::store::Column[*];
 }
 
-Execution error at (resource:/core_deephaven_pure/functions/pure_to_deephaven.pure line:512 column:70), "function not supported yet: meta::pure::functions::collection::in_Any_1__Any_MANY__Boolean_1_"
+Class meta::external::store::deephaven::metamodel::FilterOperation extends QueryOperation
+{
+  condition: FilterExpression[1];
+}
+
+Class meta::external::store::deephaven::metamodel::SortOperation extends QueryOperation
+{
+  columns: SortColumn[*];
+}
+
+
+Class meta::external::store::deephaven::metamodel::JoinOperation extends QueryOperation
+{
+  rightTable: meta::external::store::deephaven::metamodel::store::Table[1];
+  joinType: meta::external::store::deephaven::metamodel::JoinKind[1];
+  conditions: JoinCondition[*];
+}
+
+Enum meta::external::store::deephaven::metamodel::JoinKind
+{
+  JOIN, //INNER,
+  LEFT, //left_outer_join
+  RIGHT,
+  OUTER // full_outer_join
+}
+
+
+Class meta::external::store::deephaven::metamodel::JoinCondition
+{
+  leftColumn: String[1];
+  rightColumn: String[1];
+}
+
+Class meta::external::store::deephaven::metamodel::SortColumn
+{
+  name: String[1];
+  direction: meta::external::store::deephaven::metamodel::SortDirection[1];
+}
+
+Enum meta::external::store::deephaven::metamodel::SortDirection
+{
+  ASCENDING,DESCENDING
+}
+
+Class meta::external::store::deephaven::metamodel::FilterExpression extends DeephavenOperationElement
+{
+}
+
+
+Class meta::external::store::deephaven::metamodel::DeephavenOperationElement
+{
+}
+
+Class meta::external::store::deephaven::metamodel::ComparisonOperatorExpression extends FilterExpression
+{
+  expressions: DeephavenOperationElement[2];
+}
+
+Class meta::external::store::deephaven::metamodel::LogicalOperatorExpression extends FilterExpression
+{
+  expressions: DeephavenOperationElement[1..*];
+}
+
+Class meta::external::store::deephaven::metamodel::NotOperatorExpression extends FilterExpression
+{
+  expression: FilterExpression[1];
+}
+
+Class meta::external::store::deephaven::metamodel::EqOperatorExpression extends ComparisonOperatorExpression
+{
+}
+
+Class meta::external::store::deephaven::metamodel::InOperatorExpression extends ComparisonOperatorExpression
+{
+}
+
+Class meta::external::store::deephaven::metamodel::AndOperatorExpression extends LogicalOperatorExpression
+{
+}
+
+Class meta::external::store::deephaven::metamodel::OrOperatorExpression extends LogicalOperatorExpression
+{
+}
+
+Class meta::external::store::deephaven::pureToDeephaven::State
+{
+  dhQuery: meta::external::store::deephaven::metamodel::DeephavenQuery[0..1];
+  // mapping:Mapping[0..1];
+  inFilter: Boolean[1];
+  inProject: Boolean[1];
+  sq: StoreQuery[1];
+  exeCtx: DeephavenExecutionContext[1];
+  extensions: Extension[*];
+  ext: RoutedValueSpecification[0..1];
+  supportedRoutingFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], DeephavenOperationElement[1], State[1]->DeephavenOperationElement[1]}>>[*];
+  supportedFilterFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], DeephavenOperationElement[1], State[1]->DeephavenOperationElement[1]}>>[*];
+  supportedSimpleValueFunctions: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->Pair<List<Any>, State>[1]}>>[*];
+  debug: DebugContext[1];
+  debug(s : Function<{->String[1]}>[1])
+  {
+    if($this.debug.debug, |println($this.debug.space + $s->eval()), |[]);
+  }:Any[0];
+
+  // TODO - anumam - need class for result here
+  // tdsDEDetails: TDSDEDetail[*];
+}
+
+
+
+function meta::external::store::deephaven::pureToDeephaven::process(sq:StoreQuery[1], ext:RoutedValueSpecification[0..1], m:Mapping[0..1], runtime:Runtime[0..1], exeCtx:DeephavenExecutionContext[1], extensions:Extension[*], debug:DebugContext[1]): State[1]
+{
+  let req = ^State(
+    inFilter = false,
+    inProject = false,
+    sq = $sq,
+    exeCtx = $exeCtx,
+    extensions = $extensions,
+    ext = $ext,
+    debug = $debug,
+    supportedFilterFunctions = supportedFilterFunctions(),
+    supportedRoutingFunctions = supportedRoutingFunctions(),
+    supportedSimpleValueFunctions = supportedSimpleValueFunctions()
+  );
+  let processedReq = $sq.vs->processValueSpecification(^DeephavenQuery(), $req);
+  ^$req(dhQuery = $processedReq->toOne()->cast(@DeephavenQuery));
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////// process Instance Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function meta::external::store::deephaven::pureToDeephaven::processValueSpecification(vs: ValueSpecification[1], operation: DeephavenOperationElement[1], req: State[1]): DeephavenOperationElement[*]
+{
+  $req.debug(|'-- processing VS ' + $vs->printValueSpecification('\n'));
+  println('---------------------------------------------------------------------------------------------------------------- In process ValueSpecification -------------------');
+  $vs->match([
+                fe: FunctionExpression[1] | let res  = $fe.func->match([
+                                                                          c:meta::pure::metamodel::relation::Column<Nil,Any|*>[1] | println('------------------ In process VS - FE - Column -------------------'); 
+                                                                                                                                    processCol($fe, $operation, $req);,
+                                                                          a:Any[1]| println('------------------ In process VS - FE - Any (Not Col) -------------------'); 
+                                                                                    if($req.inFilter,
+                                                                                        | $req.supportedFilterFunctions->findAndEvalSupportedFunction($fe, $operation, $req),
+                                                                                        | $req.supportedRoutingFunctions->findAndEvalSupportedFunction($fe, $operation, $req));
+                                                                                    // $req.supportedRoutingFunctions->findAndEvalSupportedFunction($fe, $operation, $req);
+                                                                       ]);
+                                            $res;,
+                // TODO - anumam - not sure if tds and ervs are needed
+                tds: TDSRoutedValueSpecification[1] |       println('------------------ In process VS - TDSRoutedValueSpecification -------------------');      $tds.value->processValueSpecification($operation, $req);,
+                ervs: ExtendedRoutedValueSpecification[1] | println('------------------ In process VS - ExtendedRoutedValueSpecification -------------------'); $ervs.value->processValueSpecification($operation, $req);,
+                v: VariableExpression[1] |                  println('------------------ In process VS - VariableExpression -------------------');               $v->processVariableExpression($operation, $req);,
+                ins: InstanceValue[1] |                     println('------------------ In process VS - InstanceValue -------------------');                    $ins->processInstanceValue($operation, $req);
+  ]);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processCol(fe: FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  $initReq.debug(|'-- processing equal ' + $fe->printValueSpecification('\n'));
+  println('---------------------------------------------------------------------------------------------------------------- In process Column -------------------');
+  let debug = $initReq.debug;
+
+  let currReq = processValueSpecification($fe.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
+  let colFuncName = $fe.func.name->toOne();
+  let foundColumn = $currReq->cast(@DeephavenQuery)->toOne()->findColumn($colFuncName);
+  $foundColumn->toOne();
+}
+
+function meta::external::store::deephaven::pureToDeephaven::findColumn(dhQuery:DeephavenQuery[1], name:String[1]):meta::external::store::deephaven::metamodel::store::Column[0..1]
+{
+  $dhQuery.operations->filter(o | $o->instanceOf(SelectOperation))->toOne()->cast(@SelectOperation).columns->filter(c | let colName = $c->match([
+                                                                                                                                                  col:meta::external::store::deephaven::metamodel::store::Column[1]|$col.name
+                                                                                                                                                  // a:Alias[1]|$a.name
+                                                                                                                                                ]);
+                                                                                                                        $colName == $name || $colName == '"'+$name+'"';
+                                                                                                                   )->first();
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processVariableExpression(v: VariableExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  $initReq.debug(|'-- processing equal ' + $v->printValueSpecification('\n'));
+  println('---------------------------------------------------------------------------------------------------------------- In process VariableExpression -------------------');
+  $operation; // FIX THIS
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processInstanceValue(i: InstanceValue[1], operation: DeephavenOperationElement[1], req: State[1]): DeephavenOperationElement[*]
+{
+  processValue($i.values, $operation, $req);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processValue(vals: Any[*], operation: DeephavenOperationElement[1], req: State[1]): DeephavenOperationElement[*]
+{
+  println('---------------------------------------------------------------------------------------------------------------- In process InstanceValue -------------------');
+  let res = if ($vals->isEmpty(), 
+        | $req.dhQuery, 
+        | $vals->map(v | $v->match([
+                                    s:String[1]                                        | println('------------------ In process InstanceValue - String -------------------');
+                                                                                         ^Literal(value=$s);,
+                                    i:Integer[1]                                       | ^Literal(value=$i),
+                                    b:Boolean[1]                                       | ^Literal(value=$b),
+                                    x:meta::pure::store::RelationStoreAccessor<Any>[1] | println('------------------ In process InstanceValue - RelationStoreAccessor -------------------');
+                                                                                         let relation = $x.sourceElement->cast(@Table);
+                                                                                         ^meta::external::store::deephaven::metamodel::DeephavenQuery(source = $relation, operations = ^SelectOperation(columns = $relation.columns));
+                                  //  ])); )->at(0);
+                                   ])); );
+  $res;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////// Boolean Operatyion Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function meta::external::store::deephaven::pureToDeephaven::processEqual(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  $initReq.debug(|'-- processing equal ' + $vs->printValueSpecification('\n'));
+  println('---------------------------------------------------------------------------------------------------------------- In process Equal -------------------');
+  let debug = $initReq.debug;
+
+  let leftSide = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne();
+  let rightSide = processValueSpecification($vs.parametersValues->at(1), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne();
+  let mergedSQL = ^EqOperatorExpression(expressions=[$leftSide, $rightSide]);
+  $mergedSQL;
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processNot(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  $initReq.debug(|'-- processing not ' + $vs->printValueSpecification('\n'));
+  println('---------------------------------------------------------------------------------------------------------------- In process Not -------------------');
+  let debug = $initReq.debug;
+
+  // let innerExpr = processFilterLambda($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
+  let innerExpr = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne();
+  println($innerExpr);
+  // let mergedSQL = ^NotOperatorExpression(expression = $innerExpr->cast(@FilterExpression));
+  let mergedSQL = ^NotOperatorExpression(expression = $innerExpr->cast(@FilterExpression));
+  $mergedSQL;
+}
+
+
+
+function meta::external::store::deephaven::pureToDeephaven::processAnd(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  $initReq.debug(|'-- processing and ' + $vs->printValueSpecification('\n'));
+  println('---------------------------------------------------------------------------------------------------------------- In process And -------------------');
+  let debug = $initReq.debug;
+
+  let leftSide = $vs.parametersValues->at(0)->processFilterLambda($operation, $initReq);
+  let rightSide = $vs.parametersValues->at(1)->processFilterLambda($operation, $initReq);
+  let tmpSql = $operation->cast(@DeephavenQuery);
+  let mergedSQL = ^$tmpSql(operations = $tmpSql.operations->concatenate(^FilterOperation(condition = ^AndOperatorExpression(expressions=[$leftSide, $rightSide]))));
+  $mergedSQL;
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processIn(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  $initReq.debug(|'-- processing in ' + $vs->printValueSpecification('\n'));
+  println('---------------------------------------------------------------------------------------------------------------- In process In -------------------');
+  let debug = $initReq.debug;
+
+  let leftSide = $vs.parametersValues->at(0)->processValueSpecification($operation, $initReq)->toOne();
+  let rightSide = $vs.parametersValues->at(1)->processValueSpecification($operation, $initReq);
+  let combinedRightSide = ^Literal(value = $rightSide->map(r | $r->cast(@Literal).value));
+  let tmpSql = $operation->cast(@DeephavenQuery);
+  let mergedSQL = ^$tmpSql(operations = $tmpSql.operations->concatenate(^FilterOperation(condition = ^InOperatorExpression(expressions=[$leftSide, $combinedRightSide]))));
+  $mergedSQL;
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processOr(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  $initReq.debug(|'-- processing or ' + $vs->printValueSpecification('\n'));
+  println('---------------------------------------------------------------------------------------------------------------- In process Or -------------------');
+  let debug = $initReq.debug;
+
+  let leftSide = $vs.parametersValues->at(0)->processFilterLambda($operation, $initReq);
+  let rightSide = $vs.parametersValues->at(1)->processFilterLambda($operation, $initReq);
+  let tmpSql = $operation->cast(@DeephavenQuery);
+  let mergedSQL = ^$tmpSql(operations = $tmpSql.operations->concatenate(^FilterOperation(condition = ^OrOperatorExpression(expressions=[$leftSide, $rightSide]))));
+  $mergedSQL;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////// Relation Operatyion Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function meta::external::store::deephaven::pureToDeephaven::processSelect(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  println('---------------------------------------------------------------------------------------------------------------- In process Select -------------------');
+  $initReq.debug(|'Processing -> select');
+  let debug = $initReq.debug;
+
+  let currReq = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
+  let tmp = $currReq->cast(@DeephavenQuery)->toOne();
+  ^$tmp(selectQueryExists = true);
+}
+
+
+
+function meta::external::store::deephaven::pureToDeephaven::processJoin(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  println('---------------------------------------------------------------------------------------------------------------- In process join -------------------');
+  $initReq.debug(|'Processing -> sort');
+  let debug = $initReq.debug;
+
+
+  let processStore = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne()->cast(@DeephavenQuery);
+
+  let rightTableQuery = processValueSpecification($vs.parametersValues->at(1), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne()->cast(@DeephavenQuery);
+  let rightTable = $rightTableQuery.source->toOne();
+
+  let jt = $vs.parametersValues->at(2)->cast(@FunctionExpression).parametersValues;
+  let type = extractEnumValue($jt->at(0)->cast(@InstanceValue).values->toOne()->cast(@Enumeration<Any>), $jt->at(1)->cast(@InstanceValue).values->cast(@String)->toOne())->cast(@meta::pure::functions::relation::JoinKind);
+
+  let tmp1 = $vs->instanceValuesAtParameter(3, [], [])->cast(@FunctionDefinition<Any>)->toOne();
+  let tmp2 = $tmp1.expressionSequence->at(0)->cast(@ValueSpecification);
+  let joinConditions = processTdsLambda($tmp2,$operation,$initReq);
+
+  let res = ^$processStore(operations = $processStore.operations->concatenate(^JoinOperation(
+                                                                                              rightTable = $rightTable,
+                                                                                              joinType = translateJoinKind($type),
+                                                                                              conditions = $joinConditions
+  )));
+  $res;
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processTdsLambda(mapFn:ValueSpecification[1], operation: DeephavenOperationElement[1], initReq: State[1]): JoinCondition[1]
+{
+   $mapFn->match(
+                  [
+                     fx:FunctionExpression[1]| let f = $fx->meta::pure::functions::meta::removeAutomap()->cast(@FunctionExpression);
+                                               println('-------------------- processTdsLambda - FunctionExpression ----------------------');
+                                               println($f);
+                                               let overrides = [^Pair<meta::pure::metamodel::function::Function<Any>, meta::pure::metamodel::function::Function<{->JoinCondition[1]}>>(first  = equal_Any_MANY__Any_MANY__Boolean_1_,
+                                                                                                                                                                                       second = {| println('-------------------- processTdsLambda - Not Column ----------------------');
+                                                                                                                                                                                                   println($f.parametersValues->at(0)->cast(@SimpleFunctionExpression).func);
+                                                                                                                                                                                                   ^JoinCondition(
+                                                                                                                                                                                                                    leftColumn  = $f.parametersValues->at(0)->cast(@SimpleFunctionExpression).func.name->toOne(),
+                                                                                                                                                                                                                    rightColumn = $f.parametersValues->at(1)->cast(@SimpleFunctionExpression).func.name->toOne()
+                                                                                                                                                                                                                 );
+                                                                                                                                                                                                }
+                                                                                                                                                                                      )
+                                                               ];
+                                               let override = $overrides->filter(o | $o.first == $f.func)->first();
+                                               if($override->isNotEmpty(),
+                                                    | $override->toOne().second->eval();,
+                                                    | fail('function ' + $f.func.name->makeString() + ' is not yet supported');
+                                                      ^JoinCondition(leftColumn  = '',rightColumn = '');
+                                                 );
+                  ]
+                );
+}
+
+function meta::external::store::deephaven::pureToDeephaven::isFunctionWithName(r: ValueSpecification[1], functionName: String[1]):Boolean[1]
+{
+  $r->instanceOf(FunctionExpression) && $r->cast(@FunctionExpression).func.functionName == $functionName;
+}
+
+function meta::external::store::deephaven::pureToDeephaven::translateJoinKind(jk:  meta::pure::functions::relation::JoinKind[1]): meta::external::store::deephaven::metamodel::JoinKind[1]
+{
+  if($jk.name == 'INNER',
+      | meta::external::store::deephaven::metamodel::JoinKind.JOIN,
+      | if($jk.name == 'LEFT',
+            | meta::external::store::deephaven::metamodel::JoinKind.LEFT,
+            | if($jk.name == 'RIGHT',
+                  | meta::external::store::deephaven::metamodel::JoinKind.RIGHT,
+                  | meta::external::store::deephaven::metamodel::JoinKind.OUTER)))
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processSort(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  println('---------------------------------------------------------------------------------------------------------------- In process sort -------------------');
+  $initReq.debug(|'Processing -> sort');
+  let debug = $initReq.debug;
+
+  let processStore = processValueSpecification($vs.parametersValues->at(0), $operation, 
+  ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne()->cast(@DeephavenQuery);
+  
+  let sortInfos = $vs.parametersValues->at(1)->cast(@InstanceValue).values->cast(@SortInfo<Any>);
+  println('----------------------- sortInfos ---------------------');
+  println($sortInfos);
+  let sortColumns = $sortInfos->map(si | ^SortColumn(name = $si.column.name,
+                                                     direction = if($si.direction->toString() == 'ASC',
+                                                                      | meta::external::store::deephaven::metamodel::SortDirection.ASCENDING,
+                                                                      | meta::external::store::deephaven::metamodel::SortDirection.DESCENDING)));
+  let res = ^$processStore(operations = $processStore.operations->concatenate(^SortOperation(columns = $sortColumns)));
+  
+  println('----------------------- sort res ---------------------');
+  println($res.operations->at(1));
+  //fail();
+  $res;
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processFilter(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  println('---------------------------------------------------------------------------------------------------------------- In process Filter -------------------');
+  $initReq.debug(|'Processing -> filter');
+  let debug = $initReq.debug;
+
+  let processStore = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')))->toOne()->cast(@DeephavenQuery);
+  // TODO - anumam - revisit whether deephaven allows filter in aggregation queries - however for PoC this is not covered
+  // assertFalse($processStore.aggregationQuery, |'filter not supported in aggregation queries');
+  let withFilterReq = processFilterLambda($vs.parametersValues->at(1), $processStore, ^$initReq(inFilter = true)); //->cast(@SelectSQLQuery);
+  // let res = if($withFilterReq->instanceOf(DeephavenQuery),
+  //                 | $withFilterReq;,
+  //                 | ^$processStore(operations = $processStore.operations->concatenate(^FilterOperation(condition = $withFilterReq->cast(@FilterExpression))));
+  //             );
+  let res = ^$processStore(operations = $processStore.operations->concatenate(^FilterOperation(condition = $withFilterReq->cast(@FilterExpression))));
+  $res;
+}
+
+// function meta::external::store::deephaven::pureToDeephaven::processFilterLambda(vs : ValueSpecification[1], operation: DeephavenOperationElement[1], req: State[1]): DeephavenOperationElement[1]
+function meta::external::store::deephaven::pureToDeephaven::processFilterLambda(vs : ValueSpecification[1], operation: DeephavenOperationElement[*], req: State[1]): DeephavenOperationElement[1]
+{
+  $req.debug(|'-- processing filter lambda ' + $vs->type()->toString() + ': ' + $vs->printValueSpecification('\n'));
+  println('---------------------------------------------------------------------------------------------------------------- In process FilterLambda -------------------');
+  $vs->match([
+                fr: FunctionRoutedValueSpecification[1] | println('------------------ In process FilterLambda - FunctionRoutedValueSpecification -------------------');
+                                                          $fr.value->processFilterLambda($operation, $req);,
+                iv: InstanceValue[1] | $iv.values->match([
+                                                          f: FunctionDefinition<Any>[1] | println('------------------ In process FilterLambda - InstanceValue - FunctionDefinition -------------------');
+                                                                                          // $f.expressionSequence->at(0)->processFilterLambda($operation, $req);
+                                                                                          $req.supportedFilterFunctions->findAndEvalSupportedFunction($f.expressionSequence->at(0)->cast(@FunctionExpression), $operation, $req);
+                                                        ]),
+                fe: FunctionExpression[1] | println('------------------ In process FilterLambda - FunctionExpression -------------------');
+                                            $req.supportedFilterFunctions->findAndEvalSupportedFunction($fe, $operation, $req);
+                                            // let res = $req.supportedFilterFunctions->findAndEvalSupportedFunction($fe, $operation, $req);
+                                            // if($fe.func == meta::pure::functions::boolean::not_Boolean_1__Boolean_1_,
+                                            //       | let innerExpr = processFilterLambda($fe.parametersValues->at(0), $operation, $req);
+                                            //         ^NotOperatorExpression(expression = $innerExpr->cast(@FilterExpression));,
+                                            //       | $res;
+                                            //   );
+  ]);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::processTdsRestrict(vs : FunctionExpression[1], operation: DeephavenOperationElement[1], initReq: State[1]): DeephavenOperationElement[1]
+{
+  $initReq.debug(|'Processing -> select colSpec');
+  println('---------------------------------------------------------------------------------------------------------------- In process TdsRestrict - ColSpec Select -------------------');
+  let debug = $initReq.debug;
+
+  let relAccessor = processValueSpecification($vs.parametersValues->at(0), $operation, ^$initReq(debug = ^$debug(space = $debug.space + '\t')));
+  let projectColNames = $vs.parametersValues->at(1)->cast(@InstanceValue).values->match(
+                              [
+                                s:String[*]|$s,
+                                c:meta::pure::metamodel::relation::ColSpecArray<Any>[1]|$c.names,
+                                c:meta::pure::metamodel::relation::ColSpec<Any>[1]|$c.name
+                              ]
+                          );
+  let projectAliasNames = $projectColNames;
+  let origSelect = $relAccessor->cast(@DeephavenQuery)->toOne();
+  let origColumnsByName = $origSelect.operations->filter(o | $o->instanceOf(SelectOperation))->toOne()->cast(@SelectOperation).columns->map(column|
+         let name = $column->match([
+               c:meta::external::store::deephaven::metamodel::store::Column[1]|$c.name
+         ]);
+         pair($name, $column);
+      );
+  let origColumnsByNameAsMap = $origColumnsByName->newMap();
+  let newCols = $projectAliasNames->map(aliasName | let origCol = $origColumnsByNameAsMap->get($aliasName); 
+                                                    assertNotEmpty($origCol, | 'Failed to find column ' + $aliasName + ' in ' + $origColumnsByNameAsMap->keys()->joinStrings('[', ',', ']')); 
+                                                    $origCol->toOne();
+                                       );
+  let tmpSel = $origSelect.operations->map(o | if($o->instanceOf(SelectOperation),
+                                                    | let tmp = $o->cast(@SelectOperation);
+                                                      ^$tmp(columns = $newCols);,
+                                                    | $o));
+  let res = ^$origSelect(operations = $tmpSel, selectQueryExists = true);
+  $res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////// Supported Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function meta::external::store::deephaven::pureToDeephaven::findAndEvalSupportedFunction<P, T | n, m>(funcs: Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1], DeephavenOperationElement[1], P[n]->T[m]}>>[*], fe : FunctionExpression[1], req: P[n], state: State[1]): T[m]
+{
+  println('------------------ debug find SupFilterFunc for DD 1 -------------------'); 
+  println($fe.func.name);
+   eval($funcs->filter(x|$x.first->eval($fe.func, $state))->first()->toOne('function not supported yet: ' + $fe.func->elementToPath()).second, $fe, $req, $state);
+}
+
+function meta::external::store::deephaven::pureToDeephaven::supportedRoutingFunctions():Pair<LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>, Function<{FunctionExpression[1],DeephavenOperationElement[1],State[1]->DeephavenOperationElement[1]}>>[*]
+{
+  let supported = [
+    pair(supportedIfEqual(meta::pure::functions::relation::select_Relation_1__Relation_1_),                  processSelect_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
+    pair(supportedIfEqual(meta::pure::functions::relation::select_Relation_1__ColSpecArray_1__Relation_1_),  processTdsRestrict_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
+    pair(supportedIfEqual(meta::pure::functions::relation::sort_Relation_1__SortInfo_MANY__Relation_1_),     processSort_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
+    pair(supportedIfEqual(meta::pure::functions::relation::join_Relation_1__Relation_1__JoinKind_1__Function_1__Relation_1_),     processJoin_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
+    pair(supportedIfEqual(meta::pure::functions::relation::filter_Relation_1__Function_1__Relation_1_),      processFilter_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_)
+  ];
+}
+
+function meta::external::store::deephaven::pureToDeephaven::supportedFilterFunctions():Pair<LambdaFunction<{Function<Any>[1],State[1]->Boolean[1]}>, Function<{FunctionExpression[1],DeephavenOperationElement[1],State[1]->DeephavenOperationElement[1]}>>[*]
+{
+  let supported = [
+     pair(supportedIfEqual(meta::pure::functions::boolean::equal_Any_MANY__Any_MANY__Boolean_1_), processEqual_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
+     pair(supportedIfEqual(meta::pure::functions::boolean::and_Boolean_1__Boolean_1__Boolean_1_), processAnd_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
+     pair(supportedIfEqual(meta::pure::functions::boolean::or_Boolean_1__Boolean_1__Boolean_1_),  processOr_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
+     pair(supportedIfEqual(meta::pure::functions::collection::in_Any_1__Any_MANY__Boolean_1_),  processIn_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_),
+     pair(supportedIfEqual(meta::pure::functions::boolean::not_Boolean_1__Boolean_1_),            processNot_FunctionExpression_1__DeephavenOperationElement_1__State_1__DeephavenOperationElement_1_)
+  ]
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////// Helper Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function meta::external::store::deephaven::pureToDeephaven::addQuotesIfNecessary(s:String[1]):String[1]
+{
+   if($s->startsWith('"') && $s->endsWith('"'), | $s, | '"' + $s + '"');
+}
+
+function meta::external::store::deephaven::pureToDeephaven::supportedIfEqual(func: Function<Any>[1]):LambdaFunction<{Function<Any>[1],State[0..1]->Boolean[1]}>[1]
+{
+  {x: Function<Any>[1], req: State[0..1] | $x == $func}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////// Extra Functions ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function meta::external::store::deephaven::pureToDeephaven::supportedSimpleValueFunctions(): Pair<LambdaFunction<{Function<Any>[1],  State[1]->Boolean[1]}>, Function<{FunctionExpression[1],  State[1]->Pair<List<Any>, State>[1]}>>[*]
+{
+  let supported = [
+    // pair({x: Function<Any>[1], req: State[1] | $req.inFilter}, evaluateAsPureExpressionNode_FunctionExpression_1__State_1__Pair_1_),
+    // pair({x: Function<Any>[1], req: State[1] | $req.dhQuery.inFilter}, evaluateAsPureExpressionNode_FunctionExpression_1__State_1__Pair_1_),
+    pair({x: Function<Any>[1], req: State[1] | $req.inProject}, passthruForPainlessExpression_FunctionExpression_1__State_1__Pair_1_)
+  ];
+}
+
+function meta::external::store::deephaven::pureToDeephaven::passthruForPainlessExpression(fe: FunctionExpression[1], req: State[1]): Pair<List<Any>, State>[1]
+{
+  $req.debug(|'Passthru for painless: ' + $fe->printValueSpecification(''));
+  assert($req.inProject, |'Evaluation as runtime mapping expression only supported on project context');
+  pair(list($fe), $req);
+}
