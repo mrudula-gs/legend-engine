@@ -1,4 +1,5 @@
 ###Pure
+import meta::external::store::deephaven::metamodel::store::*;
 import meta::external::store::deephaven::metamodel::runtime::*;
 import meta::pure::mapping::*;
 import meta::pure::store::*;
@@ -35,12 +36,7 @@ function meta::external::store::deephaven::executionTest::testAdapterForDeephave
     let extensions = meta::external::store::deephaven::executionPlan::platformBinding::legendJava::deephavenOnlyLegendJavaPlatformBindingExtensions();
 
     // Generate raw execution plan
-    let rawPlan = meta::pure::executionPlan::executionPlan(
-        $newFunction->cast(@FunctionDefinition<{->Any[*]}>),
-        ^meta::pure::runtime::ExecutionContext(),
-        $extensions,
-        $debug
-    );
+    let rawPlan = meta::pure::executionPlan::executionPlan($newFunction->cast(@FunctionDefinition<{->Any[*]}>), ^meta::pure::runtime::ExecutionContext(), $extensions, $debug );
 
     // Bind and transform plan
     let planBindToJava = $rawPlan->meta::pure::executionPlan::platformBinding::localBinding::bindTestPlanToPlatformLocallyWithClasspathExtensions('LegendJava');
@@ -72,44 +68,166 @@ function meta::external::store::deephaven::executionTest::testAdapterForDeephave
 // function meta::external::store::deephaven::executionTest::reprocess(f:Function<Any>[1], dbc:URL[1], debug:DebugContext[1]):Pair<FunctionDefinition<Any>, ProcessingState>[1]
 function meta::external::store::deephaven::executionTest::reprocess(f:Function<Any>[1], dbc:DeephavenConnection[1], debug:DebugContext[1]):Pair<FunctionDefinition<Any>, ProcessingState>[1]
 {
-    let expr = $f;
-    let db = ^meta::external::store::deephaven::metamodel::store::DeephavenStore(
-        name = 'DeephavenTestStore',
-        package = meta::external::store::deephaven::executionTest,
-        tables = [^meta::external::store::deephaven::metamodel::store::Table(
-            name = 'dummy',
-            columns = [^meta::external::store::deephaven::metamodel::store::Column(
-                name = 'dummyCol',
-                type = ^meta::external::store::deephaven::metamodel::type::StringType()
-            )]
-        )]
-    );
-    let state = ^ProcessingState(
-        database = $db,
-        runtime = ^Runtime(
-            connectionStores = ^ConnectionStore(
-                connection = $dbc,
-                element = $db
-            )
-        )
-    );
+  let ext = ^meta::pure::metamodel::serialization::grammar::Configuration
+            (
+              fullPath = true,
+              extensions =   ^meta::pure::metamodel::serialization::grammar::GrammarExtension(
+                                extraConnectionHandlers =
+                                  [
+                                    x:meta::external::store::deephaven::metamodel::runtime::DeephavenConnection[0..1] |
+                                        $x->toOne()->reprocess(); 
+                                  ],
+                                extraInstanceValueHandlers = 
+                                  [
+                                    x:RelationStoreAccessor<Any>[1]|
+                                      let table = $x.sourceElement->cast(@Table);  
+                                      // let schema = $table.schema;
+                                      // let schemaName = if ($schema.name == 'default', |'', |$schema.name + '.');
+                                      // '#>{' + $x.store->elementToPath() + '.' + $schemaName + $table.name->toOne() + '}#';
+                                      '#>{' + $x.store->elementToPath() + '.' + $table.name->toOne() + '}#';
+                                      ,
+                                    t:meta::pure::metamodel::relation::TDS<Any>[1]|'#TDS\n'+$t.csv->replace(' ','')+'#'
+                                  ]
+                            )
+            );
 
-    // Reprocess the expression
-    let reprocessedExpr = $expr->evaluateAndDeactivate()->map(e | $e->reprocessExpr($state));
-    let newFunction = ^FunctionDefinition<Any>(
-        name = 'testFunction',
-        package = test,
-        expressionSequence = $reprocessedExpr->cast(@ValueSpecification)->toOneMany()
-    );
+    // let expr = $f;
+    // let db = ^meta::external::store::deephaven::metamodel::store::DeephavenStore(
+    //     name = 'DeephavenTestStore',
+    //     package = meta::external::store::deephaven::executionTest,
+    //     tables = [^meta::external::store::deephaven::metamodel::store::Table(
+    //         name = 'dummy',
+    //         columns = [^meta::external::store::deephaven::metamodel::store::Column(
+    //             name = 'dummyCol',
+    //             type = ^meta::external::store::deephaven::metamodel::type::StringType()
+    //         )]
+    //     )]
+    // );
+    // let state = ^ProcessingState(
+    //     database = $db,
+    //     runtime = ^Runtime(
+    //         connectionStores = ^ConnectionStore(
+    //             connection = $dbc,
+    //             element = $db
+    //         )
+    //     )
+    // );
 
-    // Setup tables from TDS and update store
-    // $reprocessedExpr->forEach(e | $e->setupTables($state));
-    $reprocessedExpr->map(e | $e->setupTables($state));
-    pair($newFunction->addWith($state.runtime->toOne()), $state);
+    // // Reprocess the expression
+    // let reprocessedExpr = $expr.expressionSequence->evaluateAndDeactivate()->map(e | $e->reprocessExpr($state));
+    // let newFunction = ^FunctionDefinition<Any>(
+    //     name = 'testFunction',
+    //     package = test,
+    //     expressionSequence = $reprocessedExpr->cast(@ValueSpecification)->toOneMany()
+    // );
+
+    // // Setup tables from TDS and update store
+    // // $reprocessedExpr->forEach(e | $e->setupTables($state));
+    // $reprocessedExpr->map(e | $e->setupTables($state));
+    // pair($newFunction->addWith($state.runtime->toOne()), $state);
+
+    
+  $f->match(
+            [
+              z:FunctionDefinition<Any>[1]|
+                                            let expr = $f;
+                                            let db = ^meta::external::store::deephaven::metamodel::store::DeephavenStore(
+                                                name = 'DeephavenTestStore',
+                                                package = meta::external::store::deephaven::executionTest,
+                                                tables = [^meta::external::store::deephaven::metamodel::store::Table(
+                                                    name = 'dummy',
+                                                    columns = [^meta::external::store::deephaven::metamodel::store::Column(
+                                                        name = 'dummyCol',
+                                                        type = ^meta::external::store::deephaven::metamodel::type::StringType()
+                                                    )]
+                                                )]
+                                            );
+                                            let state = ^ProcessingState(
+                                                database = $db,
+                                                runtime = ^Runtime(
+                                                    connectionStores = ^ConnectionStore(
+                                                        connection = $dbc,
+                                                        element = $db
+                                                    )
+                                                )
+                                            );
+
+                                            // Reprocess the expression
+                                            let allReprocessed = $z.expressionSequence->evaluateAndDeactivate()->map(e | $e->reprocessExpr($state));
+                                            // let newFunction = ^FunctionDefinition<Any>(
+                                            //     name = 'testFunction',
+                                            //     package = test,
+                                            //     expressionSequence = $reprocessedExpr->cast(@ValueSpecification)->toOneMany()
+                                            // );
+
+                                            let newFunction = ^$z(expressionSequence = $allReprocessed.current->cast(@ValueSpecification)->toOneMany());
+                                                  // ->addWith($allReprocessed.mapping, $runtime);
+                                                  
+                                            let otherFuncs = $allReprocessed.current->map(r | $r->meta::external::store::deephaven::executionTest::extractDependentFunctions())->distinct();
+                                            let reprocessed = $allReprocessed->tail()->fold({prev, reproc | meta::external::store::deephaven::executionTest::merge($prev, $reproc)}, $allReprocessed->head()->toOne());
+
+                                            // Setup tables from TDS and update store
+                                            // $reprocessedExpr->forEach(e | $e->setupTables($state));
+                                            $allReprocessed->map(e | $e->setupTables($state));
+                                            pair($newFunction->addWith($state.runtime->toOne()), $state);
+            ]
+  );
+}
+
+function meta::external::store::deephaven::executionTest::merge(s1:ProcessingState[1], s2:ProcessingState[1]):ProcessingState[1]
+{
+  ^$s1
+  (
+    // mapping += $s2.mapping,
+    // replaced += $s2.replaced,
+    csvs += $s2.csvs //,
+    // openVars = if($s1.openVars->isEmpty(),|$s1.openVars,|$s2.openVars)
+  );
+}
+
+function meta::external::store::deephaven::executionTest::extractDependentFunctions(f:Any[1]):Function<Any>[*]
+{
+  $f->match([
+    z:FunctionDefinition<Any>[1]|$z.expressionSequence->evaluateAndDeactivate()->map(x|$x->extractDependentFunctions()),
+    x:SimpleFunctionExpression[1]|let res = $x.parametersValues->map(p|$p->extractDependentFunctions());
+                                  $res->concatenate(if(!$x.func->hasStereotype('function', PCT),|$x.func,|[]));,
+    a:Any[1]|[]
+  ]);  
+}
+
+function meta::external::store::deephaven::executionTest::reprocess(connection:meta::external::store::deephaven::metamodel::runtime::DeephavenConnection[1]):String[1]
+{
+  '^meta::external::store::deephaven::metamodel::runtime::DeephavenConnection('+
+  // 'type='+$connection.type->meta::pure::metamodel::serialization::grammar::printValueSpecification([], '')+','+
+  'authenticationStrategy = '+$connection.authSpec->printNew()+','+ //^meta::pure::alloy::connections::alloy::authentication::TestDatabaseAuthenticationStrategy(),'+
+  'datasourceSpecification = '+$connection.sourceSpec->printNew()+ //^meta::pure::alloy::connections::alloy::specification::DuckDBDatasourceSpecification(path = \'\')'+
+  ')'
+}
+
+function meta::external::store::deephaven::executionTest::printNew(a:Any[1]):String[1]
+{  
+  $a->match(
+    [
+       i:Integer[1] | $i->toString(),
+       x:String[1] | '\''+$x+'\'',
+       a:Any[1] |
+         let _type = $a->type()->cast(@Class<Any>);
+         let properties = $_type->meta::pure::functions::meta::hierarchicalProperties();
+         '^'+$a->type()->elementToPath()+'('+
+          $properties->map(p| let value = $p->eval($a);
+                              if ($value->isEmpty(),
+                                |'',
+                                |$p.name->toOne() + '=' + $value->map(w|$w->printNew())->joinStrings(',')
+                              );
+                       )->filter(v|$v != '')->joinStrings(',')+
+        ')';
+    ]
+  );
 }
 
 // Expression Reprocessing
-function meta::external::store::deephaven::executionTest::reprocessExpr(expr:Any[1], state:ProcessingState[1]):Any[1]
+// function meta::external::store::deephaven::executionTest::reprocessExpr(expr:Any[1], state:ProcessingState[1]):Any[1]
+function meta::external::store::deephaven::executionTest::reprocessExpr(expr:Any[1], state:ProcessingState[1]):ProcessingState[1]
 {
     $expr->match([
         fe:FunctionExpression[1] |
@@ -213,4 +331,5 @@ Class meta::external::store::deephaven::executionTest::ProcessingState
     database: meta::external::store::deephaven::metamodel::store::DeephavenStore[1];
     runtime: Runtime[1];
     csvs: String[*];
+    current : Any[0..1];
 }
