@@ -1,0 +1,48 @@
+    @Override
+    public List<Procedure3<EngineRuntime, CompileContext, Root_meta_core_runtime_EngineRuntime>> getExtraPackageableRuntimeProcessors()
+    {
+        return Collections.singletonList((engineRuntime, context, pureRuntime) -> {
+            if(engineRuntime instanceof LakeRuntime)
+            {
+                LakeRuntime lakeRuntime = (LakeRuntime) engineRuntime;
+
+                Root_meta_external_store_relational_runtime_RelationalDatabaseConnection pureConnection = new Root_meta_external_store_relational_runtime_RelationalDatabaseConnection_Impl("", null, context.pureModel.getClass("meta::external::store::relational::runtime::RelationalDatabaseConnection"))
+                                                                                                   ._authenticationStrategy(new Root_meta_pure_alloy_connections_alloy_authentication_OAuthAuthenticationStrategy_Impl("", null, context.pureModel.getClass("meta::pure::alloy::connections::alloy::authentication::OAuthAuthenticationStrategy"))
+                                                                                                                             ._oauthKey("idfs")
+                                                                                                                             ._scopeName("SESSION:ROLE:PUBLIC"))
+                                                                                                   ._datasourceSpecification(new Root_meta_pure_alloy_connections_alloy_specification_LakehouseSnowflakeDataSourceSpecification_Impl("", null, context.pureModel.getClass("meta::pure::alloy::connections::alloy::specification::LakehouseSnowflakeDataSourceSpecification"))
+                                                                                                                             ._databaseName("LAKEHOUSE_PRODUCER_299788_DB")
+                                                                                                                             ._accountName("sfdlawseast1p02.goldman")
+                                                                                                                             ._warehouseName(lakeRuntime.warehouse)
+//                                                                                                                             ._warehouseName("LAKEHOUSE_PRODUCER_299788_QUERY_WH")
+                                                                                                                             ._region("us-east-1.aws"))
+                                                                                                   ._quoteIdentifiers(false)
+                                                                                                   ._type(context.pureModel.getEnumValue("meta::relational::runtime::DatabaseType", "Snowflake"));
+
+                Root_meta_core_runtime_ConnectionStore connectionStore = new Root_meta_core_runtime_ConnectionStore_Impl("", pureConnection.getSourceInformation(), context.pureModel.getClass("meta::core::runtime::ConnectionStore"))
+                                                                  ._connection(pureConnection)
+                                                                  ._element((new Root_meta_relational_metamodel_Database_Impl("Anonymous_NoCounter"))
+                                                                              ._classifierGenericType(new Root_meta_pure_metamodel_type_generics_GenericType_Impl("", null, context.pureModel.getClass("meta::pure::metamodel::type::generics::GenericType"))._rawType(context.pureModel.getType("meta::relational::metamodel::Database")))
+                                                                              ._name("placeHolderStore"));
+                pureRuntime._connectionStoresAdd(connectionStore);
+
+                ConcreteFunctionDefinition<?> func = (ConcreteFunctionDefinition<? extends Object>) context.pureModel.getExecutionSupport().getMetadata("meta::pure::metamodel::function::ConcreteFunctionDefinition", "Root::meta::external::catalog::dataProduct::transformation::preprocessLakehouseQuery_FunctionDefinition_1__Runtime_1__FunctionDefinition_1_");
+                pureRuntime._preprocessFunction(func);
+                context.pureModel.getWarnings().removeIf(w -> w.message.equals("Runtime must cover at least one mapping") && lakeRuntime.sourceInformation.equals(w.sourceInformation));
+            }
+            else
+            {
+                boolean isLakehouse = pureRuntime._connectionStores()
+                        .collect(c -> c._connection())
+                        .select(conn -> conn instanceof Root_meta_external_store_relational_runtime_RelationalDatabaseConnection)
+                        .collect(conn -> (Root_meta_external_store_relational_runtime_RelationalDatabaseConnection) conn)
+                        .anySatisfy(c -> c._datasourceSpecification() instanceof Root_meta_pure_alloy_connections_alloy_specification_LakehouseSnowflakeDataSourceSpecification_Impl);
+                if(isLakehouse)
+                {
+                    ConcreteFunctionDefinition<?> func = (ConcreteFunctionDefinition<? extends Object>) context.pureModel.getExecutionSupport().getMetadata("meta::pure::metamodel::function::ConcreteFunctionDefinition", "Root::meta::external::catalog::dataProduct::transformation::preprocessLakehouseQuery_FunctionDefinition_1__Runtime_1__FunctionDefinition_1_");
+                    pureRuntime._preprocessFunction(func);
+                }
+            }
+        }
+        );
+    }
