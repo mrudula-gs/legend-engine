@@ -1,187 +1,84 @@
+H:\Projects\Alloy\legend-studio>yarn check:update
+ Press <up>/<down> to select packages.            Press <enter> to install.
+ Press <left>/<right> to select versions.         Press <ctrl+c> to abort.
+
+? Pick the packages you want to upgrade.          Current          Range            Latest
+
+   @fontsource/roboto-mono --------------------- ◉ 5.2.5 -------- ◯ 5.2.6 --------
+   @jest/globals ------------------------------- ◉ 29.7.0 -------                  ◯ 30.0.0 -------
+   @manypkg/get-packages ----------------------- ◉ 2.2.2 --------                  ◯ 3.0.0 --------
+   @mui/lab ------------------------------------ ◉ 6.0.1-beta.34  ◯ 6.0.1 -------- ◯ 7.0.0 --------
+   @mui/material ------------------------------- ◯ 6.4.7 -------- ◉ 6.4.12 ------- ◯ 7.1.1 --------
+   @mui/system --------------------------------- ◯ 6.4.7 -------- ◉ 6.4.12 ------- ◯ 7.1.1 --------
+   @mui/x-date-pickers ------------------------- ◉ 7.27.3 ------- ◯ 7.29.4 ------- ◯ 8.5.0 --------
+   @pmmmwh/react-refresh-webpack-plugin -------- ◉ 0.5.15 ------- ◯ 0.5.16 ------- ◯ 0.6.0 --------
+   @testing-library/react ---------------------- ◉ 16.2.0 ------- ◯ 16.3.0 -------
+   @types/node --------------------------------- ◉ 22.13.10 ----- ◯ 22.15.29 -----
+   @types/papaparse ---------------------------- ◉ 5.3.15 ------- ◯ 5.3.16 -------
+ > @types/react-dom ---------------------------- ◉ 19.0.4 ------- ◯ 19.1.5 -------
+   @types/react -------------------------------- ◉ 19.0.10 ------ ◯ 19.1.6 -------
+   @typescript-eslint/eslint-plugin ------------ ◉ 8.26.1 ------- ◯ 8.33.1 -------
+   @typescript-eslint/parser ------------------- ◉ 8.26.1 ------- ◯ 8.33.1 -------
+   ag-grid-community --------------------------- ◉ 33.1.1 ------- ◯ 33.3.1 -------
+   ag-grid-enterprise -------------------------- ◉ 33.1.1 ------- ◯ 33.3.1 -------
+   ag-grid-react ------------------------------- ◉ 33.1.1 ------- ◯ 33.3.1 -------
+   apache-arrow -------------------------------- ◉ 19.0.1 -------                  ◯ 20.0.0 -------
+   axios --------------------------------------- ◉ 1.8.2 -------- ◯ 1.9.0 --------
+   babel-jest ---------------------------------- ◉ 29.7.0 -------                  ◯ 30.0.0 -------
+   chart.js ------------------------------------ ◉ 4.4.8 -------- ◯ 4.4.9 --------
+   copy-webpack-plugin ------------------------- ◉ 12.0.2 -------                  ◯ 13.0.0 -------
+➤ YN0000: · Yarn 4.7.0
+➤ YN0000: ┌ Resolution step
+➤ YN0085: │ + @mui/material@npm:6.4.12::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40mui%2Fmaterial%2F-%2Fmaterial-6.4.12.tgz
+➤ YN0085: │ - @mui/material@npm:6.4.7::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40mui%2Fmaterial%2F-%2Fmaterial-6.4.7.tgz, and 2 more.
+➤ YN0000: └ Completed in 0s 731ms
+➤ YN0000: ┌ Post-resolution validation
+➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.
+➤ YN0000: └ Completed
+➤ YN0000: ┌ Fetch step
+➤ YN0013: │ A package was added to the project (+ 2.28 MiB).
+➤ YN0000: └ Completed in 1s 524ms
+➤ YN0000: ┌ Link step
+➤ YN0000: └ Completed in 9s 737ms
+➤ YN0000: · Done with warnings in 12s 401ms
+
 H:\Projects\Alloy\legend-studio>yarn install
 ➤ YN0000: · Yarn 4.7.0
 ➤ YN0000: ┌ Resolution step
-➤ YN0085: │ + @actions/core@npm:1.11.1::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40actions%2Fcore%2F-%2Fcore-1.11.1.tgz, @actions/github@npm:6.0.0::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40actions%2Fgithub%2F-%2Fgithub-6.0.0.tgz, and 1936 more.
-➤ YN0000: └ Completed in 4s 784ms
+➤ YN0085: │ + @actions/core@npm:1.11.1::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40actions%2Fcore%2F-%2Fcore-1.11.1.tgz, and 1936 more.
+➤ YN0000: └ Completed in 7s 403ms
 ➤ YN0000: ┌ Post-resolution validation
 ➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.
 ➤ YN0000: └ Completed
 ➤ YN0000: ┌ Fetch step
-➤ YN0000: └ Completed in 1s 261ms
+➤ YN0000: └ Completed in 0s 834ms
 ➤ YN0000: ┌ Link step
-➤ YN0000: └ Completed in 12s 967ms
-➤ YN0000: · Done with warnings in 19s 524ms
+➤ YN0000: └ Completed in 1s 224ms
+➤ YN0000: · Done with warnings in 9s 851ms
 
-H:\Projects\Alloy\legend-studio>yarn setup
-➤ YN0000: · Yarn 4.7.0
-➤ YN0000: ┌ Resolution step
-➤ YN0000: └ Completed in 0s 567ms
-➤ YN0000: ┌ Post-resolution validation
-➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.
-➤ YN0000: └ Completed
-➤ YN0000: ┌ Fetch step
-➤ YN0000: └ Completed in 0s 844ms
-➤ YN0000: ┌ Link step
-➤ YN0000: └ Completed in 1s 240ms
-➤ YN0000: · Done with warnings in 2s 836ms
-[@finos/legend-application-data-cube-deployment]: Process started
-[@finos/legend-application-marketplace-deployment]: Process started
-[@finos/legend-application-marketplace-deployment]: Process exited (exit code 0), completed in 13s 299ms
-[@finos/legend-application-pure-ide-deployment]: Process started
-[@finos/legend-application-data-cube-deployment]: Process exited (exit code 0), completed in 13s 577ms
-[@finos/legend-application-query-deployment]: Process started
-[@finos/legend-application-query-deployment]: Process exited (exit code 0), completed in 12s 540ms
-[@finos/legend-application-repl-deployment]: Process started
-[@finos/legend-application-pure-ide-deployment]: Process exited (exit code 0), completed in 13s 88ms
-[@finos/legend-application-studio-deployment]: Process started
-[@finos/legend-application-studio-deployment]: Process exited (exit code 0), completed in 12s 21ms
-[@finos/legend-server-showcase-deployment]: Process started
-[@finos/legend-application-repl-deployment]: Process exited (exit code 0), completed in 12s 655ms
-[@finos/legend-server-showcase-deployment]: Process exited (exit code 0), completed in 14s 795ms
-Done in 53s 238ms
-Clean completed!
-packages/legend-art/src/card/Box.tsx:19:14 - error TS2742: The inferred type of 'BaseBox' cannot be named without a reference to '@mui/material/node_modules/@mui/system'. This is likely not portable. A type annotation is necessary.
+H:\Projects\Alloy\legend-studio>yarn build:ts
+packages/legend-art/src/autocomplete/CustomSelectorInput.tsx:101:8 - error TS2786: 'FixedSizeList' cannot be used as a JSX component.
+  Its type 'typeof FixedSizeList' is not a valid JSX element type.
+    Types of construct signatures are incompatible.
+      Type 'new <T = any>(props: FixedSizeListProps<T>) => FixedSizeList<T>' is not assignable to type 'new (props: any) => Component<any, any, any>'.
+        Construct signature return types 'FixedSizeList<any>' and 'Component<any, any, any>' are incompatible.
+          The types returned by 'render()' are incompatible between these types.
+            Type 'import("C:/Developer/Projects/Alloy/legend-studio/node_modules/@types/react-window/node_modules/@types/react/index").ReactNode' is not assignable to type 'React.ReactNode'.
+              Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'ReactNode'.
+                Property 'children' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type 'ReactPortal'.
 
-19 export const BaseBox = MuiBox;
-                ~~~~~~~
+101       <FixedSizeList
+           ~~~~~~~~~~~~~
+
+  C:/Developer/Projects/Alloy/legend-studio/node_modules/@types/react/index.d.ts:387:9
+    387         children: ReactNode;
+                ~~~~~~~~
+    'children' is declared here.
 
 packages/legend-art/src/card/Box.tsx:19:14 - error TS2742: The inferred type of 'BaseBox' cannot be named without a reference to 'C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/types/index.js'. This is likely not portable. A type annotation is necessary.
 
 19 export const BaseBox = MuiBox;
                 ~~~~~~~
 
-packages/legend-art/src/utils/LegendStyleProvider.tsx:60:9 - error TS2353: Object literal may only specify known properties, and 'xxl' does not exist in type '{ sm: number; md: number; lg: number; xs: number; xl: number; }'.
 
-60         xxl: 1800,
-           ~~~
-
-packages/legend-application-marketplace/src/components/Header/LegendMarketplaceHeader.tsx:119:20 - error TS2769: No overload matches this call.
-  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<any, "className" | ... 6 more ... | "disableGutters">): Element | null', gave the following error.
-    Type '"xxl"' is not assignable to type 'false | Breakpoint'.
-  Overload 2 of 2, '(props: DefaultComponentProps<ContainerTypeMap<{}, "div">>): Element | null', gave the following error.
-    Type '"xxl"' is not assignable to type 'false | Breakpoint'.
-
-119         <Container maxWidth="xxl">
-                       ~~~~~~~~
-
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Container/Container.d.ts:32:3
-    32   maxWidth?: Breakpoint | false;
-         ~~~~~~~~
-    The expected type comes from property 'maxWidth' which is declared here on type 'IntrinsicAttributes & { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<...>'
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Container/Container.d.ts:32:3
-    32   maxWidth?: Breakpoint | false;
-         ~~~~~~~~
-    The expected type comes from property 'maxWidth' which is declared here on type 'IntrinsicAttributes & ContainerOwnProps & CommonProps & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "className" | ... 6 more ... | "disableGutters">'
-
-packages/legend-application-marketplace/src/pages/Lakehouse/entitlements/EntitlementsDashboard.tsx:489:9 - error TS2769: No overload matches this call.
-  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<any, "className" | ... 6 more ... | "disableGutters">): Element | null', gave the following error.
-    Type '"xxl"' is not assignable to type 'false | Breakpoint'.
-  Overload 2 of 2, '(props: DefaultComponentProps<ContainerTypeMap<{}, "div">>): Element | null', gave the following error.
-    Type '"xxl"' is not assignable to type 'false | Breakpoint'.
-
-489         maxWidth="xxl"
-            ~~~~~~~~
-
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Container/Container.d.ts:32:3
-    32   maxWidth?: Breakpoint | false;
-         ~~~~~~~~
-    The expected type comes from property 'maxWidth' which is declared here on type 'IntrinsicAttributes & { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<...>'
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Container/Container.d.ts:32:3
-    32   maxWidth?: Breakpoint | false;
-         ~~~~~~~~
-    The expected type comes from property 'maxWidth' which is declared here on type 'IntrinsicAttributes & ContainerOwnProps & CommonProps & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "className" | ... 6 more ... | "disableGutters">'
-
-packages/legend-application-marketplace/src/pages/Lakehouse/MarketplaceLakehouseHome.tsx:505:11 - error TS2769: No overload matches this call.
-  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<any, "className" | ... 6 more ... | "disableGutters">): Element | null', gave the following error.
-    Type '"xxxl"' is not assignable to type 'false | Breakpoint'.
-  Overload 2 of 2, '(props: DefaultComponentProps<ContainerTypeMap<{}, "div">>): Element | null', gave the following error.
-    Type '"xxxl"' is not assignable to type 'false | Breakpoint'.
-
-505           maxWidth="xxxl"
-              ~~~~~~~~
-
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Container/Container.d.ts:32:3
-    32   maxWidth?: Breakpoint | false;
-         ~~~~~~~~
-    The expected type comes from property 'maxWidth' which is declared here on type 'IntrinsicAttributes & { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<...>'
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Container/Container.d.ts:32:3
-    32   maxWidth?: Breakpoint | false;
-         ~~~~~~~~
-    The expected type comes from property 'maxWidth' which is declared here on type 'IntrinsicAttributes & ContainerOwnProps & CommonProps & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "className" | ... 6 more ... | "disableGutters">'
-
-packages/legend-application-marketplace/src/pages/Lakehouse/MarketplaceLakehouseHome.tsx:511:12 - error TS2769: No overload matches this call.
-  Overload 2 of 2, '(props: DefaultComponentProps<Grid2TypeMap<{}, "div">>): Element | null', gave the following error.
-    Object literal may only specify known properties, and 'xxl' does not exist in type '(GridSpacing | null)[] | { xs?: GridSpacing | null; sm?: GridSpacing | null; md?: GridSpacing | null; lg?: GridSpacing | null; xl?: GridSpacing | null; }'.
-  Overload 2 of 2, '(props: DefaultComponentProps<Grid2TypeMap<{}, "div">>): Element | null', gave the following error.
-    Object literal may only specify known properties, and 'xxl' does not exist in type '(number | null)[] | { xs?: number | null; sm?: number | null; md?: number | null; lg?: number | null; xl?: number | null; }'.
-
-511           <Grid
-               ~~~~
-
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Grid2/Grid2.d.ts:85:5
-    85     spacing?: ResponsiveStyleValue<GridSpacing> | undefined;
-           ~~~~~~~
-    The expected type comes from property 'spacing' which is declared here on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme>; } & SystemProps<Theme> & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "sx" | ... 1 more ... | keyof GridBaseProps>'
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Grid2/Grid2.d.ts:21:5
-    21     columns?: ResponsiveStyleValue<number>;
-           ~~~~~~~
-    The expected type comes from property 'columns' which is declared here on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme>; } & SystemProps<Theme> & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "sx" | ... 1 more ... | keyof GridBaseProps>'
-
-packages/legend-application-marketplace/src/pages/Lakehouse/subscriptions/LakehouseSubscriptions.tsx:231:9 - error TS2769: No overload matches this call.
-  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<any, "className" | ... 6 more ... | "disableGutters">): Element | null', gave the following error.
-    Type '"xxl"' is not assignable to type 'false | Breakpoint'.
-  Overload 2 of 2, '(props: DefaultComponentProps<ContainerTypeMap<{}, "div">>): Element | null', gave the following error.
-    Type '"xxl"' is not assignable to type 'false | Breakpoint'.
-
-231         maxWidth="xxl"
-            ~~~~~~~~
-
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Container/Container.d.ts:32:3
-    32   maxWidth?: Breakpoint | false;
-         ~~~~~~~~
-    The expected type comes from property 'maxWidth' which is declared here on type 'IntrinsicAttributes & { component: ElementType<any, keyof IntrinsicElements>; } & ContainerOwnProps & CommonProps & Omit<...>'
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Container/Container.d.ts:32:3
-    32   maxWidth?: Breakpoint | false;
-         ~~~~~~~~
-    The expected type comes from property 'maxWidth' which is declared here on type 'IntrinsicAttributes & ContainerOwnProps & CommonProps & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "className" | ... 6 more ... | "disableGutters">'
-
-packages/legend-application-marketplace/src/pages/SearchResults/LegendMarketplaceSearchResults.tsx:107:45 - error TS2769: No overload matches this call.
-  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme>; } & SystemProps<Theme> & Omit<...>): Element | null', gave the following error.
-    Object literal may only specify known properties, and 'xxl' does not exist in type '(number | null)[] | { xs?: number | null; sm?: number | null; md?: number | null; lg?: number | null; xl?: number | null; }'.
-  Overload 2 of 2, '(props: DefaultComponentProps<Grid2TypeMap<{}, "div">>): Element | null', gave the following error.
-    Object literal may only specify known properties, and 'xxl' does not exist in type '(number | null)[] | { xs?: number | null; sm?: number | null; md?: number | null; lg?: number | null; xl?: number | null; }'.
-
-107             columns={{ xs: 1, sm: 2, lg: 3, xxl: 4, xxxl: 5, xxxxl: 6 }}
-                                                ~~~
-
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Grid2/Grid2.d.ts:21:5
-    21     columns?: ResponsiveStyleValue<number>;
-           ~~~~~~~
-    The expected type comes from property 'columns' which is declared here on type 'IntrinsicAttributes & { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { ...; } & SystemProps<...> & Omit<...>'
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Grid2/Grid2.d.ts:21:5
-    21     columns?: ResponsiveStyleValue<number>;
-           ~~~~~~~
-    The expected type comes from property 'columns' which is declared here on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme>; } & SystemProps<Theme> & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "sx" | ... 1 more ... | keyof GridBaseProps>'
-
-packages/legend-application-marketplace/src/pages/VendorData/LegendMarketplaceVendorData.tsx:127:43 - error TS2769: No overload matches this call.
-  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme>; } & SystemProps<Theme> & Omit<...>): Element | null', gave the following error.
-    Object literal may only specify known properties, and 'xxl' does not exist in type '(number | null)[] | { xs?: number | null; sm?: number | null; md?: number | null; lg?: number | null; xl?: number | null; }'.
-  Overload 2 of 2, '(props: DefaultComponentProps<Grid2TypeMap<{}, "div">>): Element | null', gave the following error.
-    Object literal may only specify known properties, and 'xxl' does not exist in type '(number | null)[] | { xs?: number | null; sm?: number | null; md?: number | null; lg?: number | null; xl?: number | null; }'.
-
-127           columns={{ xs: 1, sm: 2, lg: 3, xxl: 4, xxxl: 5, xxxxl: 6 }}
-                                              ~~~
-
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Grid2/Grid2.d.ts:21:5
-    21     columns?: ResponsiveStyleValue<number>;
-           ~~~~~~~
-    The expected type comes from property 'columns' which is declared here on type 'IntrinsicAttributes & { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { ...; } & SystemProps<...> & Omit<...>'
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/material/Grid2/Grid2.d.ts:21:5
-    21     columns?: ResponsiveStyleValue<number>;
-           ~~~~~~~
-    The expected type comes from property 'columns' which is declared here on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme>; } & SystemProps<Theme> & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "sx" | ... 1 more ... | keyof GridBaseProps>'
-
-
-Found 10 errors.
-
-ERROR: "build:ts" exited with 2.
+Found 2 errors.
