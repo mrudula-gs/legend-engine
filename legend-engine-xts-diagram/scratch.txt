@@ -1,58 +1,51 @@
-H:\Projects\Alloy\legend-studio>yarn setup
+H:\Projects\Alloy\legend-studio>yarn install
 ➤ YN0000: · Yarn 4.7.0
 ➤ YN0000: ┌ Resolution step
-➤ YN0000: └ Completed in 0s 579ms
+➤ YN0085: │ + @actions/core@npm:1.11.1::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40actions%2Fcore%2F-%2Fcore-1.11.1.tgz, @actions/github@npm:6.0.0::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40actions%2Fgithub%2F-%2Fgithub-6.0.0.tgz, and 1936 more.
+➤ YN0000: └ Completed in 4s 784ms
 ➤ YN0000: ┌ Post-resolution validation
-➤ YN0060: │ @mui/material is listed by your project with version 6.4.7 (p97492), which doesn't satisfy what @mui/lab requests (^6.4.11).
-➤ YN0060: │ @mui/material is listed by your project with version 6.4.7 (pefb3f), which doesn't satisfy what @mui/lab requests (^6.4.11).
-➤ YN0086: │ Some peer dependencies are incorrectly met by your project; run yarn explain peer-requirements <hash> for details, where <hash> is the six-letter p-prefixed code.
 ➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.
 ➤ YN0000: └ Completed
 ➤ YN0000: ┌ Fetch step
-➤ YN0000: └ Completed in 0s 923ms
+➤ YN0000: └ Completed in 1s 261ms
 ➤ YN0000: ┌ Link step
-➤ YN0000: └ Completed in 1s 725ms
-➤ YN0000: · Done with warnings in 3s 444ms
+➤ YN0000: └ Completed in 12s 967ms
+➤ YN0000: · Done with warnings in 19s 524ms
+
+H:\Projects\Alloy\legend-studio>yarn setup
+➤ YN0000: · Yarn 4.7.0
+➤ YN0000: ┌ Resolution step
+➤ YN0000: └ Completed in 0s 567ms
+➤ YN0000: ┌ Post-resolution validation
+➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.
+➤ YN0000: └ Completed
+➤ YN0000: ┌ Fetch step
+➤ YN0000: └ Completed in 0s 844ms
+➤ YN0000: ┌ Link step
+➤ YN0000: └ Completed in 1s 240ms
+➤ YN0000: · Done with warnings in 2s 836ms
 [@finos/legend-application-data-cube-deployment]: Process started
 [@finos/legend-application-marketplace-deployment]: Process started
-[@finos/legend-application-marketplace-deployment]: Process exited (exit code 0), completed in 12s 543ms
+[@finos/legend-application-marketplace-deployment]: Process exited (exit code 0), completed in 13s 299ms
 [@finos/legend-application-pure-ide-deployment]: Process started
-[@finos/legend-application-data-cube-deployment]: Process exited (exit code 0), completed in 12s 837ms
+[@finos/legend-application-data-cube-deployment]: Process exited (exit code 0), completed in 13s 577ms
 [@finos/legend-application-query-deployment]: Process started
-[@finos/legend-application-query-deployment]: Process exited (exit code 0), completed in 13s 493ms
+[@finos/legend-application-query-deployment]: Process exited (exit code 0), completed in 12s 540ms
 [@finos/legend-application-repl-deployment]: Process started
-[@finos/legend-application-pure-ide-deployment]: Process exited (exit code 0), completed in 14s 126ms
+[@finos/legend-application-pure-ide-deployment]: Process exited (exit code 0), completed in 13s 88ms
 [@finos/legend-application-studio-deployment]: Process started
-[@finos/legend-application-studio-deployment]: Process exited (exit code 0), completed in 12s 675ms
+[@finos/legend-application-studio-deployment]: Process exited (exit code 0), completed in 12s 21ms
 [@finos/legend-server-showcase-deployment]: Process started
-[@finos/legend-application-repl-deployment]: Process exited (exit code 0), completed in 13s 466ms
-[@finos/legend-server-showcase-deployment]: Process exited (exit code 0), completed in 13s 46ms
-Done in 52s 486ms
+[@finos/legend-application-repl-deployment]: Process exited (exit code 0), completed in 12s 655ms
+[@finos/legend-server-showcase-deployment]: Process exited (exit code 0), completed in 14s 795ms
+Done in 53s 238ms
 Clean completed!
-packages/legend-art/src/autocomplete/CustomSelectorInput.tsx:101:8 - error TS2786: 'FixedSizeList' cannot be used as a JSX component.
-  Its type 'typeof FixedSizeList' is not a valid JSX element type.
-    Types of construct signatures are incompatible.
-      Type 'new <T = any>(props: FixedSizeListProps<T>) => FixedSizeList<T>' is not assignable to type 'new (props: any) => Component<any, any, any>'.
-        Construct signature return types 'FixedSizeList<any>' and 'Component<any, any, any>' are incompatible.
-          The types returned by 'render()' are incompatible between these types.
-            Type 'import("C:/Developer/Projects/Alloy/legend-studio/node_modules/@types/react-window/node_modules/@types/react/index").ReactNode' is not assignable to type 'React.ReactNode'.
-              Type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not assignable to type 'ReactNode'.
-                Property 'children' is missing in type 'ReactElement<unknown, string | JSXElementConstructor<any>>' but required in type 'ReactPortal'.
-
-101       <FixedSizeList
-           ~~~~~~~~~~~~~
-
-  C:/Developer/Projects/Alloy/legend-studio/node_modules/@types/react/index.d.ts:387:9
-    387         children: ReactNode;
-                ~~~~~~~~
-    'children' is declared here.
-
-packages/legend-art/src/card/Box.tsx:19:14 - error TS2742: The inferred type of 'BaseBox' cannot be named without a reference to '../../../../node_modules/@mui/material/node_modules/@mui/types/index.js'. This is likely not portable. A type annotation is necessary.
+packages/legend-art/src/card/Box.tsx:19:14 - error TS2742: The inferred type of 'BaseBox' cannot be named without a reference to '@mui/material/node_modules/@mui/system'. This is likely not portable. A type annotation is necessary.
 
 19 export const BaseBox = MuiBox;
                 ~~~~~~~
 
-packages/legend-art/src/card/Box.tsx:19:14 - error TS2742: The inferred type of 'BaseBox' cannot be named without a reference to '@mui/material/node_modules/@mui/system'. This is likely not portable. A type annotation is necessary.
+packages/legend-art/src/card/Box.tsx:19:14 - error TS2742: The inferred type of 'BaseBox' cannot be named without a reference to 'C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/types/index.js'. This is likely not portable. A type annotation is necessary.
 
 19 export const BaseBox = MuiBox;
                 ~~~~~~~
@@ -189,6 +182,6 @@ packages/legend-application-marketplace/src/pages/VendorData/LegendMarketplaceVe
     The expected type comes from property 'columns' which is declared here on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme>; } & SystemProps<Theme> & Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "sx" | ... 1 more ... | keyof GridBaseProps>'
 
 
-Found 11 errors.
+Found 10 errors.
 
 ERROR: "build:ts" exited with 2.
