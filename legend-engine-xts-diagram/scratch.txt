@@ -1,60 +1,35 @@
-H:\Projects\Alloy\legend-studio>yarn check:update
- Press <up>/<down> to select packages.            Press <enter> to install.
- Press <left>/<right> to select versions.         Press <ctrl+c> to abort.
+H:\Projects\Alloy\legend-studio>cd packages/legend-art
 
-? Pick the packages you want to upgrade.          Current          Range            Latest
-
-   @fontsource/roboto-mono --------------------- ◉ 5.2.5 -------- ◯ 5.2.6 --------
-   @jest/globals ------------------------------- ◉ 29.7.0 -------                  ◯ 30.0.0 -------
-   @manypkg/get-packages ----------------------- ◉ 2.2.2 --------                  ◯ 3.0.0 --------
-   @mui/lab ------------------------------------ ◉ 6.0.1-beta.34  ◯ 6.0.1 -------- ◯ 7.0.0 --------
-   @mui/material ------------------------------- ◯ 6.4.7 -------- ◉ 6.4.12 ------- ◯ 7.1.1 --------
-   @mui/system --------------------------------- ◯ 6.4.7 -------- ◉ 6.4.12 ------- ◯ 7.1.1 --------
-   @mui/x-date-pickers ------------------------- ◉ 7.27.3 ------- ◯ 7.29.4 ------- ◯ 8.5.0 --------
-   @pmmmwh/react-refresh-webpack-plugin -------- ◉ 0.5.15 ------- ◯ 0.5.16 ------- ◯ 0.6.0 --------
-   @testing-library/react ---------------------- ◉ 16.2.0 ------- ◯ 16.3.0 -------
-   @types/node --------------------------------- ◉ 22.13.10 ----- ◯ 22.15.29 -----
-   @types/papaparse ---------------------------- ◉ 5.3.15 ------- ◯ 5.3.16 -------
- > @types/react-dom ---------------------------- ◉ 19.0.4 ------- ◯ 19.1.5 -------
-   @types/react -------------------------------- ◉ 19.0.10 ------ ◯ 19.1.6 -------
-   @typescript-eslint/eslint-plugin ------------ ◉ 8.26.1 ------- ◯ 8.33.1 -------
-   @typescript-eslint/parser ------------------- ◉ 8.26.1 ------- ◯ 8.33.1 -------
-   ag-grid-community --------------------------- ◉ 33.1.1 ------- ◯ 33.3.1 -------
-   ag-grid-enterprise -------------------------- ◉ 33.1.1 ------- ◯ 33.3.1 -------
-   ag-grid-react ------------------------------- ◉ 33.1.1 ------- ◯ 33.3.1 -------
-   apache-arrow -------------------------------- ◉ 19.0.1 -------                  ◯ 20.0.0 -------
-   axios --------------------------------------- ◉ 1.8.2 -------- ◯ 1.9.0 --------
-   babel-jest ---------------------------------- ◉ 29.7.0 -------                  ◯ 30.0.0 -------
-   chart.js ------------------------------------ ◉ 4.4.8 -------- ◯ 4.4.9 --------
-   copy-webpack-plugin ------------------------- ◉ 12.0.2 -------                  ◯ 13.0.0 -------
+H:\Projects\Alloy\legend-studio\packages\legend-art>yarn add react-window@latest @types/react-window@latest
 ➤ YN0000: · Yarn 4.7.0
 ➤ YN0000: ┌ Resolution step
-➤ YN0085: │ + @mui/material@npm:6.4.12::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40mui%2Fmaterial%2F-%2Fmaterial-6.4.12.tgz
-➤ YN0085: │ - @mui/material@npm:6.4.7::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40mui%2Fmaterial%2F-%2Fmaterial-6.4.7.tgz, and 2 more.
-➤ YN0000: └ Completed in 0s 731ms
+➤ YN0000: └ Completed in 0s 715ms
 ➤ YN0000: ┌ Post-resolution validation
 ➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.
 ➤ YN0000: └ Completed
 ➤ YN0000: ┌ Fetch step
-➤ YN0013: │ A package was added to the project (+ 2.28 MiB).
-➤ YN0000: └ Completed in 1s 524ms
+➤ YN0000: └ Completed in 0s 827ms
 ➤ YN0000: ┌ Link step
-➤ YN0000: └ Completed in 9s 737ms
-➤ YN0000: · Done with warnings in 12s 401ms
+➤ YN0000: └ Completed in 1s 321ms
+➤ YN0000: · Done with warnings in 3s 290ms
+
+H:\Projects\Alloy\legend-studio\packages\legend-art>cd ..
+
+H:\Projects\Alloy\legend-studio\packages>cd ..
 
 H:\Projects\Alloy\legend-studio>yarn install
 ➤ YN0000: · Yarn 4.7.0
 ➤ YN0000: ┌ Resolution step
-➤ YN0085: │ + @actions/core@npm:1.11.1::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40actions%2Fcore%2F-%2Fcore-1.11.1.tgz, and 1936 more.
-➤ YN0000: └ Completed in 7s 403ms
+➤ YN0085: │ + @actions/core@npm:1.11.1::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40actions%2Fcore%2F-%2Fcore-1.11.1.tgz, @actions/github@npm:6.0.0::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40actions%2Fgithub%2F-%2Fgithub-6.0.0.tgz, @babel/core@npm:7.26.10::__archiveUrl=http%3A%2F%2Fnpmscopes.site.gs.com%2Frepository%2Fnpm%2F%40babel%2Fcore%2F-%2Fcore-7.26.10.tgz, and 1934 more.
+➤ YN0000: └ Completed in 6s 337ms
 ➤ YN0000: ┌ Post-resolution validation
 ➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.
 ➤ YN0000: └ Completed
 ➤ YN0000: ┌ Fetch step
-➤ YN0000: └ Completed in 0s 834ms
+➤ YN0000: └ Completed in 1s 64ms
 ➤ YN0000: ┌ Link step
-➤ YN0000: └ Completed in 1s 224ms
-➤ YN0000: · Done with warnings in 9s 851ms
+➤ YN0000: └ Completed in 1s 457ms
+➤ YN0000: · Done with warnings in 9s 350ms
 
 H:\Projects\Alloy\legend-studio>yarn build:ts
 packages/legend-art/src/autocomplete/CustomSelectorInput.tsx:101:8 - error TS2786: 'FixedSizeList' cannot be used as a JSX component.
@@ -75,10 +50,5 @@ packages/legend-art/src/autocomplete/CustomSelectorInput.tsx:101:8 - error TS278
                 ~~~~~~~~
     'children' is declared here.
 
-packages/legend-art/src/card/Box.tsx:19:14 - error TS2742: The inferred type of 'BaseBox' cannot be named without a reference to 'C:/Developer/Projects/Alloy/legend-studio/node_modules/@mui/types/index.js'. This is likely not portable. A type annotation is necessary.
 
-19 export const BaseBox = MuiBox;
-                ~~~~~~~
-
-
-Found 2 errors.
+Found 1 error.
