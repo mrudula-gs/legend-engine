@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.pure.runtime.java.extension.functions.compiled.natives.runtime;
+package org.finos.legend.pure.runtime.java.extension.functions.standard.compiled.natives.tbd;
 
 import org.finos.legend.pure.runtime.java.compiled.generation.processors.natives.AbstractNativeFunctionGeneric;
 
-public class Guid extends AbstractNativeFunctionGeneric
+public class BitOr extends AbstractNativeFunctionGeneric
 {
-    public Guid()
+    public BitOr()
     {
-        super("FunctionsGen.guid", new Class[]{}, "generateGuid__String_1_");
+        super("StandardFunctionGen.bitOr", new Class[]{Long.class, Long.class}, "bitOr_Integer_1__Integer_1__Integer_1_");
     }
 }

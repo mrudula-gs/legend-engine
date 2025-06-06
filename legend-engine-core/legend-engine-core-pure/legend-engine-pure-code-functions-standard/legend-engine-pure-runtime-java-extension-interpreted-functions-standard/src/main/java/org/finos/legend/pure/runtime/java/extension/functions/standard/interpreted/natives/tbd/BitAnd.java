@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,32 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.pure.runtime.java.extension.functions.interpreted.natives.runtime;
+package org.finos.legend.pure.runtime.java.extension.functions.standard.interpreted.natives.tbd;
 
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.stack.MutableStack;
-import org.finos.legend.pure.m3.exception.PureExecutionException;
 import org.finos.legend.pure.m3.compiler.Context;
-import org.finos.legend.pure.m3.navigation.ValueSpecificationBootstrap;
+import org.finos.legend.pure.m3.exception.PureExecutionException;
+import org.finos.legend.pure.m3.navigation.Instance;
+import org.finos.legend.pure.m3.navigation.M3Properties;
 import org.finos.legend.pure.m3.navigation.ProcessorSupport;
-import org.finos.legend.pure.m4.coreinstance.CoreInstance;
 import org.finos.legend.pure.m4.ModelRepository;
+import org.finos.legend.pure.m4.coreinstance.CoreInstance;
 import org.finos.legend.pure.runtime.java.interpreted.ExecutionSupport;
 import org.finos.legend.pure.runtime.java.interpreted.FunctionExecutionInterpreted;
 import org.finos.legend.pure.runtime.java.interpreted.VariableContext;
 import org.finos.legend.pure.runtime.java.interpreted.natives.InstantiationContext;
 import org.finos.legend.pure.runtime.java.interpreted.natives.NativeFunction;
+import org.finos.legend.pure.runtime.java.interpreted.natives.NumericUtilities;
 import org.finos.legend.pure.runtime.java.interpreted.profiler.Profiler;
 
 import java.util.Stack;
-import java.util.UUID;
 
-public class Guid extends NativeFunction
+public class BitAnd extends NativeFunction
 {
     private final ModelRepository repository;
 
-    public Guid(FunctionExecutionInterpreted functionExecution, ModelRepository repository)
+    public BitAnd(FunctionExecutionInterpreted functionExecution, ModelRepository repository)
     {
         this.repository = repository;
     }
@@ -45,7 +46,16 @@ public class Guid extends NativeFunction
     @Override
     public CoreInstance execute(ListIterable<? extends CoreInstance> params, Stack<MutableMap<String, CoreInstance>> resolvedTypeParameters, Stack<MutableMap<String, CoreInstance>> resolvedMultiplicityParameters, VariableContext variableContext, MutableStack<CoreInstance> functionExpressionCallStack, Profiler profiler, InstantiationContext instantiationContext, ExecutionSupport executionSupport, Context context, ProcessorSupport processorSupport) throws PureExecutionException
     {
-        String res = UUID.randomUUID().toString();
-        return ValueSpecificationBootstrap.newStringLiteral(this.repository, res, processorSupport);
+        try
+        {
+            Long arg1 = NumericUtilities.toJavaNumber(Instance.getValueForMetaPropertyToOneResolved(params.get(0), M3Properties.values, processorSupport), processorSupport).longValue();
+            Long arg2 = NumericUtilities.toJavaNumber(Instance.getValueForMetaPropertyToOneResolved(params.get(1), M3Properties.values, processorSupport), processorSupport).longValue();
+            Long result = arg1 & arg2;
+            return NumericUtilities.toPureNumberValueExpression(result, false, this.repository, processorSupport);
+        }
+        catch (Exception e)
+        {
+            throw new PureExecutionException(e.getMessage(), e.getCause(), functionExpressionCallStack);
+        }
     }
 }
