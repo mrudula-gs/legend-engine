@@ -1,17 +1,19 @@
 <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>
-            <version>4.12.0</version>
+            <version>4.11.0</version>
         </dependency>
 
-
-Dependency convergence error for org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10 paths to dependency are:
-+-platform.alloy:legend-engine-language-pure-store-relational-gs:master-SNAPSHOT
-  +-com.squareup.okhttp3:okhttp:4.12.0
-    +-com.squareup.okio:okio:3.6.0
-      +-com.squareup.okio:okio-jvm:3.6.0
-        +-org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10
+Dependency convergence error for org.jetbrains:annotations:13.0 paths to dependency are:
++-platform.alloy:alloy-execution-server-full:master-SNAPSHOT
+  +-platform.alloy:legend-engine-language-pure-store-relational-gs:master-SNAPSHOT
+    +-com.squareup.okhttp3:okhttp:4.11.0
+      +-org.jetbrains.kotlin:kotlin-stdlib:1.6.20
+        +-org.jetbrains:annotations:13.0
 and
-+-platform.alloy:legend-engine-language-pure-store-relational-gs:master-SNAPSHOT
-  +-com.squareup.okhttp3:okhttp:4.12.0
-    +-org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.21
++-platform.alloy:alloy-execution-server-full:master-SNAPSHOT
+  +-org.finos.legend.engine:legend-engine-server-http-server:4.87.4
+    +-org.finos.legend.engine:legend-engine-xt-relationalStore-postgres-PCT:4.87.4
+      +-org.testcontainers:testcontainers:1.18.3
+        +-org.rnorth.duct-tape:duct-tape:1.0.8
+          +-org.jetbrains:annotations:17.0.0
