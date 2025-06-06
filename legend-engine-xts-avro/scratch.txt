@@ -3,6 +3,7 @@ import com.github.scribejava.core.builder.ServiceBuilder;
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.oauth.OAuth20Service;
 import com.github.scribejava.core.pkce.PKCE;
+import com.github.scribejava.core.pkce.PKCECodeChallengeMethod;
 import com.github.scribejava.core.pkce.PKCEService;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -19,21 +20,31 @@ public class ApiClient {
         String apiUrl = "https://dataeng.cft.abc/api/ingest/catalog-state/environment";
 
         try {
-            // Set up OAuth2 service with PKCE
+            // Set up OAuth2 service
             OAuth20Service service = new ServiceBuilder(clientId)
                     .callback(redirectUri)
                     .build(new CustomOAuth2Api(tokenUrl));
 
-            // Set up PKCE with the code verifier
+            // Set up PKCE with the code verifier using PKCEService
+            PKCEService pkceService = new PKCEService(); // Default constructor (32 octets)
             PKCE pkce = new PKCE();
             pkce.setCodeVerifier(codeVerifier);
+            pkce.setCodeChallengeMethod(PKCECodeChallengeMethod.S256); // Matches typical PKCE setup
+            // Note: We don’t generate a new code_challenge since we’re using a hardcoded code_verifier
+            // If needed, compute code_challenge manually (see PKCE Notes)
+            try {
+                pkce.setCodeChallenge(pkce.getCodeChallengeMethod().transform2CodeChallenge(codeVerifier));
+            } catch (Exception e) {
+                System.err.println("Failed to compute code_challenge: " + e.getMessage());
+                throw e;
+            }
 
             // Exchange code for access token
             System.out.println("Exchanging code: " + authorizationCode);
             OAuth2AccessToken accessToken;
             try {
-                // Use PKCEService to include code_verifier in the token request
-                accessToken = new PKCEService(service).getAccessToken(authorizationCode, pkce, redirectUri);
+                // Use OAuth20Service for PKCE token exchange
+                accessToken = service.getAccessToken(authorizationCode, pkce, redirectUri);
             } catch (Exception e) {
                 System.err.println("Token exchange failed: " + e.getMessage());
                 if (e.getCause() != null) {
