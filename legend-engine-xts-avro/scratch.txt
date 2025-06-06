@@ -1,0 +1,93 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.scribejava.core.builder.ServiceBuilder;
+import com.github.scribejava.core.model.OAuth2AccessToken;
+import com.github.scribejava.core.oauth.OAuth20Service;
+import com.github.scribejava.core.pkce.PKCE;
+import com.github.scribejava.core.pkce.PKCEService;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+public class ApiClient {
+    public static void main(String[] args) {
+        // OAuth2 configuration
+        String clientId = "123"; // Replace with your old clientId
+        String tokenUrl = "https://dataeng.cft.abc/oauth/token";
+        String redirectUri = "https://dataeng.cft.abc/webjarsswagger-ui/5.18.3/oauth2-redirect.html";
+        String authorizationCode = "qwe"; // Replace with your authorization code
+        String codeVerifier = "asd"; // Replace with your code verifier
+        String apiUrl = "https://dataeng.cft.abc/api/ingest/catalog-state/environment";
+
+        try {
+            // Set up OAuth2 service with PKCE
+            OAuth20Service service = new ServiceBuilder(clientId)
+                    .callback(redirectUri)
+                    .build(new CustomOAuth2Api(tokenUrl));
+
+            // Set up PKCE with the code verifier
+            PKCE pkce = new PKCE();
+            pkce.setCodeVerifier(codeVerifier);
+
+            // Exchange code for access token
+            System.out.println("Exchanging code: " + authorizationCode);
+            OAuth2AccessToken accessToken;
+            try {
+                // Use PKCEService to include code_verifier in the token request
+                accessToken = new PKCEService(service).getAccessToken(authorizationCode, pkce, redirectUri);
+            } catch (Exception e) {
+                System.err.println("Token exchange failed: " + e.getMessage());
+                if (e.getCause() != null) {
+                    System.err.println("Cause: " + e.getCause().getMessage());
+                }
+                throw e;
+            }
+            String bearerToken = accessToken.getAccessToken();
+            System.out.println("Access Token: " + bearerToken);
+
+            // Make API request
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url(apiUrl)
+                    .addHeader("Authorization", "Bearer " + bearerToken)
+                    .get()
+                    .build();
+
+            try (Response response = client.newCall(request).execute()) {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    ObjectMapper mapper = new ObjectMapper();
+                    Object json = mapper.readValue(responseBody, Object.class);
+                    String formattedJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+                    System.out.println("Response: \n" + formattedJson);
+                } else {
+                    System.out.println("API Error: " + response.code() + " - " + response.message());
+                    if (response.body() != null) {
+                        System.out.println("Error Details: " + response.body().string());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Custom OAuth2 API
+    static class CustomOAuth2Api extends com.github.scribejava.core.builder.api.DefaultApi20 {
+        private final String tokenUrl;
+
+        public CustomOAuth2Api(String tokenUrl) {
+            this.tokenUrl = tokenUrl;
+        }
+
+        @Override
+        public String getAccessTokenEndpoint() {
+            return tokenUrl;
+        }
+
+        @Override
+        public String getAuthorizationBaseUrl() {
+            return null; // Not needed since code is hardcoded
+        }
+    }
+}
