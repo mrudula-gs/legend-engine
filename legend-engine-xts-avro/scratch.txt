@@ -25,154 +25,143 @@ import org.apache.http.util.EntityUtils;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.logging.Logger;
 
-public class ApiClient
-{
+public class ApiClientUtil {
+    private static final Logger LOGGER = Logger.getLogger(ApiClientUtil.class.getName());
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Pattern AUTHORIZATION_CODE_REDIRECT_URL_PATTERN = Pattern.compile("https?://.*\\?.*code=(.*)");
     private static final CodeChallengeMethod CODE_CHALLENGE_METHOD = CodeChallengeMethod.S256;
-    private final String environment;
-    private static final String tokenUrl = "https://dummy.com/as/token.oauth2";
-    private static final String authEndpoint = "https://dummy.com/as/authorization.oauth2";
-    private static final String clientId = "abcClientID";
-    private final String redirectUri;
-    private final String apiUrl;
+    private static final String CLIENT_ID = "abcClientID"; // Replace with actual clientId
 
-    public ApiClient(String environment)
-    {
-        this.environment = environment;
-        this.redirectUri = "https://" + environment + "-dummy.cd/webjars/swagger-ui/5.18.2/oauth2-redirect.html";
-        this.apiUrl = "https://" + environment + "-dummy.cd/api/ingest/catalog-state/environment";
+    // Data class to hold snowflakeAccount and awsRegion
+    public static class CatalogState {
+        public final String snowflakeAccount;
+        public final String awsRegion;
+
+        public CatalogState(String snowflakeAccount, String awsRegion) {
+            this.snowflakeAccount = snowflakeAccount;
+            this.awsRegion = awsRegion;
+        }
     }
 
-    public String getAccessToken()
-    {
-        try
-        {
+    public static CatalogState getCatalogState(String environment, String clientSecret) {
+        try {
+            // Build URLs dynamically
+            String tokenUrl = String.format("https://%s-dummy.cd/as/token.oauth2", environment);
+            String authUrl = String.format("https://%s-dummy.cd/as/authorization.oauth2", environment);
+            String redirectUri = String.format("https://%s-dummy.cd/webjars/swagger-ui/5.18.2/oauth2-redirect.html", environment);
+            String apiUrl = String.format("https://%s-dummy.cd/api/ingest/catalog-state/environment", environment);
+
+            // Get access token
             CodeVerifier codeVerifier = new CodeVerifier();
             CodeChallenge codeChallenge = CodeChallenge.compute(CODE_CHALLENGE_METHOD, codeVerifier);
-            String authCode = getAuthorizationCode(codeChallenge);
-            String bearerToken =  getAccessTokenInternal(authCode, codeVerifier);
+            String authCode = getAuthorizationCode(authUrl, redirectUri, codeChallenge);
+            String bearerToken = getAccessTokenInternal(tokenUrl, redirectUri, authCode, codeVerifier, clientSecret);
 
-            System.out.println("Access Token: " + bearerToken);
+            LOGGER.info("Access Token: " + bearerToken);
 
+            // Make API request
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
-                    .url(this.apiUrl)
+                    .url(apiUrl)
                     .addHeader("Authorization", "Bearer " + bearerToken)
                     .get()
                     .build();
 
-            try (okhttp3.Response response = client.newCall(request).execute())
-            {
-                if (response.isSuccessful())
-                {
+            try (okhttp3.Response response = client.newCall(request).execute()) {
+                if (response.isSuccessful()) {
                     String responseBody = response.body().string();
-                    ObjectMapper mapper = new ObjectMapper();
-                    Map<String, Object> jsonmap = mapper.readValue(responseBody, Map.class);
-                    String awsRegion = (String) jsonmap.get("awsRegion");
-                    String snowflakeAccount = (String) jsonmap.get("snowflakeAccount");
-                    System.out.println("awsRegion: " + awsRegion);
-                    System.out.println("snowflakeAccount: " + snowflakeAccount);
-                }
-                else
-                {
-                    System.out.println("API Error: " + response.code() + " - " + response.message());
-                    if (response.body() != null)
-                    {
-                        System.out.println("Error Details: " + response.body().string());
+                    Map<String, Object> jsonMap = OBJECT_MAPPER.readValue(responseBody, Map.class);
+
+                    // Extract snowflakeAccount and awsRegion
+                    String snowflakeAccount = (String) jsonMap.get("snowflakeAccount");
+                    String awsRegion = (String) jsonMap.get("awsRegion");
+
+                    if (snowflakeAccount == null || awsRegion == null) {
+                        throw new IllegalStateException("Missing required fields: snowflakeAccount=" + snowflakeAccount + ", awsRegion=" + awsRegion);
                     }
+
+                    return new CatalogState(snowflakeAccount, awsRegion);
+                } else {
+                    String errorDetails = response.body() != null ? response.body().string() : "";
+                    throw new IllegalStateException("API Error: " + response.code() + " - " + response.message() + " Details: " + errorDetails);
                 }
             }
-        }
-        catch (Exception e)
-        {
-            System.err.println("Error: " + e.getMessage());
-            e.printStackTrace();
+        } catch (Exception e) {
+            LOGGER.severe("Error fetching catalog state: " + e.getMessage());
+            throw new RuntimeException(e);
         }
     }
-    private String getAccessTokenInternal(String authCode, CodeVerifier codeVerifier)
-    {
-        try (CloseableHttpClient httpClient = httpClient())
-        {
+
+    private static String getAccessTokenInternal(String tokenUrl, String redirectUri, String authCode, CodeVerifier codeVerifier, String clientSecret) {
+        try (CloseableHttpClient httpClient = httpClient()) {
             HttpPost request = new HttpPost(tokenUrl);
             request.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
 
             List<BasicNameValuePair> nameValuePairs = new ArrayList<>();
-            nameValuePairs.add(new BasicNameValuePair("client_id", clientId));
+            nameValuePairs.add(new BasicNameValuePair("client_id", CLIENT_ID));
             nameValuePairs.add(new BasicNameValuePair("grant_type", "authorization_code"));
-            nameValuePairs.add(new BasicNameValuePair("redirect_uri", this.redirectUri));
+            nameValuePairs.add(new BasicNameValuePair("redirect_uri", redirectUri));
             nameValuePairs.add(new BasicNameValuePair("code", authCode));
             nameValuePairs.add(new BasicNameValuePair("access_token_manager_id", "JwtOneGs"));
             nameValuePairs.add(new BasicNameValuePair("code_verifier", codeVerifier.getValue()));
+            if (clientSecret != null) {
+                nameValuePairs.add(new BasicNameValuePair("client_secret", clientSecret));
+            }
 
             request.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 
-            try (CloseableHttpResponse response = httpClient.execute(request))
-            {
-                if (response.getStatusLine().getStatusCode() != Response.Status.OK.getStatusCode())
-                {
+            try (CloseableHttpResponse response = httpClient.execute(request)) {
+                if (response.getStatusLine().getStatusCode() != Response.Status.OK.getStatusCode()) {
                     throw new RuntimeException("Unable to get access token. Http code: " + response.getStatusLine() + ", response: " + EntityUtils.toString(response.getEntity()));
                 }
                 JsonNode json = OBJECT_MAPPER.readTree(response.getEntity().getContent());
-                if (json == null || !json.has("access_token"))
-                {
+                if (json == null || !json.has("access_token")) {
                     throw new RuntimeException("Unable to get access token. HTTP code: " + response.getStatusLine());
                 }
                 return json.get("access_token").asText();
             }
-        }
-        catch (IOException error)
-        {
-            throw new RuntimeException(error);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private String getAuthorizationCode(CodeChallenge codeChallenge)
-    {
-        try (CloseableHttpClient httpClient = httpClient())
-        {
-            URI uri = new URIBuilder(authEndpoint)
+    private static String getAuthorizationCode(String authUrl, String redirectUri, CodeChallenge codeChallenge) {
+        try (CloseableHttpClient httpClient = httpClient()) {
+            URI uri = new URIBuilder(authUrl)
                     .addParameter("response_type", "code")
-                    .addParameter("client_id", clientId)
-                    .addParameter("redirect_uri", this.redirectUri)
+                    .addParameter("client_id", CLIENT_ID)
+                    .addParameter("redirect_uri", redirectUri)
                     .addParameter("scope", "openid")
                     .addParameter("code_challenge", codeChallenge.getValue())
                     .addParameter("code_challenge_method", CODE_CHALLENGE_METHOD.getValue())
                     .build();
 
-            String redirectLocation = processGet(httpClient, new HttpGet(uri), response ->
-            {
-                if (response.getStatusLine().getStatusCode() != Response.Status.FOUND.getStatusCode())
-                {
+            String redirectLocation = processGet(httpClient, new HttpGet(uri), response -> {
+                if (response.getStatusLine().getStatusCode() != Response.Status.FOUND.getStatusCode()) {
                     throw new RuntimeException("Unable to navigate from initial auth code request. Http code: " + response.getStatusLine() + ", response: " + EntityUtils.toString(response.getEntity()));
                 }
                 Header locationHeader = response.getFirstHeader("Location");
-                if (locationHeader == null || locationHeader.getValue() == null)
-                {
+                if (locationHeader == null || locationHeader.getValue() == null) {
                     throw new RuntimeException("Unable to get redirected from initial auth code request");
                 }
                 return locationHeader.getValue();
             });
 
-            while (!matchRedirectLocation(redirectLocation).matches())
-            {
-                redirectLocation = processGet(httpClient, new HttpGet(redirectLocation), response ->
-                {
-                    if (response.getStatusLine().getStatusCode() != Response.Status.FOUND.getStatusCode())
-                    {
+            while (!matchRedirectLocation(redirectLocation).matches()) {
+                redirectLocation = processGet(httpClient, new HttpGet(redirectLocation), response -> {
+                    if (response.getStatusLine().getStatusCode() != Response.Status.FOUND.getStatusCode()) {
                         throw new RuntimeException("Unable to navigate from second auth code interaction. Http code: " + response.getStatusLine() + ", response: " + EntityUtils.toString(response.getEntity()));
                     }
                     Header locationHeader = response.getFirstHeader("Location");
-                    if (locationHeader == null || locationHeader.getValue() == null)
-                    {
+                    if (locationHeader == null || locationHeader.getValue() == null) {
                         throw new RuntimeException("Unable to get redirected from second auth code interaction");
                     }
                     return locationHeader.getValue();
@@ -180,38 +169,29 @@ public class ApiClient
             }
 
             Matcher matcher = matchRedirectLocation(redirectLocation);
-            if (!matcher.matches())
-            {
+            if (!matcher.matches()) {
                 throw new RuntimeException("Unable to fetch authorization code from redirected url");
             }
 
             return matcher.group(1);
-        }
-        catch (Exception error)
-        {
-            throw new RuntimeException(error.getMessage(), error);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    private static <ReturnType> ReturnType processGet(CloseableHttpClient httpClient, HttpGet request, FunctionEx<CloseableHttpResponse, ReturnType> handler)
-    {
-        try (CloseableHttpResponse response = httpClient.execute(request))
-        {
+    private static <ReturnType> ReturnType processGet(CloseableHttpClient httpClient, HttpGet request, FunctionEx<CloseableHttpResponse, ReturnType> handler) {
+        try (CloseableHttpResponse response = httpClient.execute(request)) {
             return handler.apply(response);
-        }
-        catch (Exception error)
-        {
-            throw new RuntimeException(error);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
-    protected static Matcher matchRedirectLocation(String redirectLocation)
-    {
+    protected static Matcher matchRedirectLocation(String redirectLocation) {
         return AUTHORIZATION_CODE_REDIRECT_URL_PATTERN.matcher(redirectLocation);
     }
 
-    protected static CloseableHttpClient httpClient()
-    {
+    protected static CloseableHttpClient httpClient() {
         SafeguardClient safeguardClient = safeguardClient();
         return safeguardClient.create(HttpClientBuilder.class)
                 .withKerberos()
@@ -221,8 +201,7 @@ public class ApiClient
                 .build();
     }
 
-    private static SafeguardClient safeguardClient()
-    {
+    private static SafeguardClient safeguardClient() {
         return SafeguardClients.forCurrentUser();
     }
 }
