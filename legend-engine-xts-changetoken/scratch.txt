@@ -1,0 +1,62 @@
+index.js:1158765 [1749834086075] editor.service-editor.test-setup.failure : Unsupported Operation Error: Can't deserialize value specification of type 'undefined': no compatible deserializer available from plugins
+    at V1_deserializeClassInstanceValue (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:1074485:19)
+    at https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:1074251:135
+    at Object.deserializer (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803672:27)
+    at deserializeProp (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803269:17)
+    at callbackDeserialize (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803294:17)
+    at onBeforeDeserialize (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803252:9)
+    at _loop_2 (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803297:9)
+    at deserializePropsWithSchema (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803301:23)
+    at deserializeObjectWithSchema (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803243:5)
+    at deserialize (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803227:16)
+_error @ index.js:1158765
+error @ index.js:1158659
+(anonymous) @ index.js:1158678
+error @ index.js:1158678
+resolveRuntimesFromQuery @ index.js:894803
+get associatedRuntimes @ index.js:895181
+createSuite @ index.js:895200
+create @ index.js:859442
+processDispatchQueue @ index.js:589915
+(anonymous) @ index.js:590518
+batchedUpdates$1 @ index.js:576922
+dispatchEventForPluginEventSystem @ index.js:590074
+dispatchEvent @ index.js:594146
+dispatchDiscreteEvent @ index.js:594114
+index.js:1158765 [1749834086075] editor.service-editor.test-setup.failure : Unsupported Operation Error: Can't deserialize value specification of type 'undefined': no compatible deserializer available from plugins
+    at V1_deserializeClassInstanceValue (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:1074485:19)
+    at https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:1074251:135
+    at Object.deserializer (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803672:27)
+    at deserializeProp (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803269:17)
+    at callbackDeserialize (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803294:17)
+    at onBeforeDeserialize (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803252:9)
+    at _loop_2 (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803297:9)
+    at deserializePropsWithSchema (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803301:23)
+    at deserializeObjectWithSchema (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803243:5)
+    at deserialize (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:803227:16)
+_error @ index.js:1158765
+error @ index.js:1158659
+(anonymous) @ index.js:1158678
+error @ index.js:1158678
+resolveRuntimesFromQuery @ index.js:894803
+get associatedRuntimes @ index.js:895181
+get containsRuntime @ index.js:895184
+createSuite @ index.js:895240
+create @ index.js:859442
+processDispatchQueue @ index.js:589915
+(anonymous) @ index.js:590518
+batchedUpdates$1 @ index.js:576922
+dispatchEventForPluginEventSystem @ index.js:590074
+dispatchEvent @ index.js:594146
+dispatchDiscreteEvent @ index.js:594114
+index.js:1149627 Uncaught Unsupported Operation Error: Can't get default value for edited type 'meta::pure::metamodel::relation::Relation'
+    at buildDefaultInstanceValue (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:1149627:23)
+    at createFunctionTest (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:895083:112)
+    at FunctionTestableState.createSuite (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:895240:9)
+    at create (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:859442:41)
+    at processDispatchQueue (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:589915:17)
+    at https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:590518:9
+    at batchedUpdates$1 (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:576922:40)
+    at dispatchEventForPluginEventSystem (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:590074:7)
+    at dispatchEvent (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:594146:11)
+    at dispatchDiscreteEvent (https://9001--main--peach-alpaca-19--anumam.laia-prod.workspaces.gs/static/index.js:594114:11)
