@@ -67,7 +67,9 @@ function meta::external::query::graphQL::binding::customGraphQLScalarsToPrimitiv
     pair('StrictDate', 'String'),
     pair('DateTime', 'String'),
     pair('BigDecimal', 'Float'),
-    pair('Number', 'Float')
+    pair('Number', 'Float'),
+    // Treat Byte/Binary as base64-encoded string in input comparisons
+    pair('Byte', 'String')
   ])
 }
 
