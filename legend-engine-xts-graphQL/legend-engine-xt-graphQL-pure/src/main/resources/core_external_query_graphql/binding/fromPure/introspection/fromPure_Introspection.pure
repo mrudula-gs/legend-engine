@@ -115,7 +115,9 @@ function <<access.private>> meta::external::query::graphQL::binding::fromPure::i
       pair('DateTime',^__Type(kind = __TypeKind.SCALAR,name = 'DateTime')),
       pair('Decimal',^__Type(kind = __TypeKind.SCALAR,name = 'BigDecimal')),
       pair('StrictDate',^__Type(kind = __TypeKind.SCALAR,name = 'StrictDate')),
-      pair('Number',^__Type(kind = __TypeKind.SCALAR,name = 'Number'))
+      pair('Number',^__Type(kind = __TypeKind.SCALAR,name = 'Number')),
+      // Map Pure Byte/Binary to GraphQL String for introspection output
+      pair('Byte',^__Type(kind = __TypeKind.SCALAR,name = 'String'))
     ]
   )->newMap();
 
