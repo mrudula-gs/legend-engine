@@ -1,0 +1,38 @@
+###Pure
+import meta::external::query::graphQL::metamodel::introspection::*;
+import meta::external::query::graphQL::transformation::introspection::*;
+import meta::external::query::graphQL::transformation::queryToPure::tests::*;
+
+// Minimal model to reproduce reachability of Byte-typed property via association
+Class meta::external::query::graphQL::binding::fromPure::introspection::tests::binary::DepositAccount
+{
+  currency: String[0..1];
+  virtualAccountIndicator: Byte[0..1];
+}
+
+Class meta::external::query::graphQL::binding::fromPure::introspection::tests::binary::Owner
+{
+}
+
+Association meta::external::query::graphQL::binding::fromPure::introspection::tests::binary::Owner_DepositAccount
+{
+  owner: meta::external::query::graphQL::binding::fromPure::introspection::tests::binary::Owner[1];
+  account: meta::external::query::graphQL::binding::fromPure::introspection::tests::binary::DepositAccount[*];
+}
+
+Class meta::external::query::graphQL::binding::fromPure::introspection::tests::binary::Query
+{
+  owners() {meta::external::query::graphQL::binding::fromPure::introspection::tests::binary::Owner.all()}: meta::external::query::graphQL::binding::fromPure::introspection::tests::binary::Owner[*];
+}
+
+// Pre-fix (without Byte scalar mapping), the call below would throw at fromPure_Introspection.pure line 278
+// due to missing map entry for 'Byte'. With the mapping present, it should succeed and include the field.
+function <<test.Test>> meta::external::query::graphQL::binding::fromPure::introspection::tests::testGraphQLIntrospection_BinaryFieldReachable(): Boolean[1]
+{
+  let doc = meta::external::query::graphQL::transformation::queryToPure::tests::buildIntrospectionQuery();
+  let result = meta::external::query::graphQL::transformation::introspection::graphQLIntrospectionQuery(meta::external::query::graphQL::binding::fromPure::introspection::tests::binary::Query, $doc);
+
+  // Sanity: ensure the reachable Byte-typed field is present in the introspection output
+  assert($result->contains('virtualAccountIndicator'), 'Expected virtualAccountIndicator in introspection result');
+}
+
