@@ -1,0 +1,17 @@
+###Relational
+Database store::relational::db
+(
+  include Ingest store::lakehouse::PersonIngest
+  Join SelfPerson([store::lakehouse::PersonIngest]ALLOY_PERSON_GROUP.Person.id = {target}.firm_id)
+)
+
+###Lakehouse
+Ingest store::lakehouse::PersonIngest BatchMilestoned Snapshot<CSV> deploymentId=1 group=ALLOY_PERSON_GROUP
+[
+   Person(
+      id: Int[1],
+      firm_id: Int[1]
+   )
+   DP10
+   pk=[id];
+]
