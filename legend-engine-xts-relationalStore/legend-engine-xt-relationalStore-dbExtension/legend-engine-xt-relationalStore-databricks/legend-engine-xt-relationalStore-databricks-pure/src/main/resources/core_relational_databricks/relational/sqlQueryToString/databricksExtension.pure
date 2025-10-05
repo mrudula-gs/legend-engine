@@ -48,10 +48,11 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::datab
       isBooleanLiteralSupported = true,
       isDbReservedIdentifier = {str:String[1]| $str->in($reservedWords)},
       literalProcessor = $literalProcessor,
-      windowColumnProcessor = processWindowColumn_WindowColumn_1__SqlGenerationContext_1__String_1_,
+      windowColumnProcessor = processWindowColumnForDatabricks_WindowColumn_1__SqlGenerationContext_1__String_1_,
       joinStringsProcessor = processJoinStringsOperationWithConcatCall_JoinStrings_1__SqlGenerationContext_1__String_1_,
       selectSQLQueryProcessor = processSelectSQLQueryForDatabricks_SelectSQLQuery_1__SqlGenerationContext_1__Boolean_1__String_1_,
       schemaNameToIdentifier = schemaNameToIdentifierForDatabricks_String_1__DbConfig_1__String_1_,
+      commonTableExpressionsProcessor = processCommonTableExpressionsProcessorDefault_CommonTableExpression_MANY__SqlGenerationContext_1__Boolean_1__String_1_,
       columnNameToIdentifier = columnNameToIdentifierDefault_String_1__DbConfig_1__String_1_,
       identifierProcessor = processIdentifierWithBackTicks_String_1__DbConfig_1__String_1_,
       dynaFuncDispatch = $dynaFuncDispatch,
@@ -87,6 +88,7 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::datab
     dynaFnToSql('dayOfMonth',             $allStates,            ^ToSql(format='dayofmonth(%s)')),
     dynaFnToSql('dayOfWeekNumber',        $allStates,            ^ToSql(format='dayofweek(%s)')),
     dynaFnToSql('dayOfYear',              $allStates,            ^ToSql(format='dayofyear(%s)')),
+    dynaFnToSql('dayOfWeek',              $allStates,            ^ToSql(format='DECODE(EXTRACT(dayofweek FROM %s), 2, \'Monday\', 3, \'Tuesday\', 4, \'Wednesday\', 5, \'Thursday\', 6, \'Friday\', 7, \'Saturday\', 1, \'Sunday\')')),
     dynaFnToSql('decodeBase64',           $allStates,            ^ToSql(format='cast(unbase64(%s) AS STRING)')),
     dynaFnToSql('encodeBase64',           $allStates,            ^ToSql(format='base64(%s)')),
     dynaFnToSql('firstDayOfMonth',        $allStates,            ^ToSql(format='trunc(%s, \'MONTH\')')),
@@ -117,7 +119,7 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::datab
     dynaFnToSql('mostRecentDayOfWeek',    $allStates,            ^ToSql(format='date_sub(%s, case when dayofweek(%s) = %s then 0 else dayofweek(%s) - %s end)', transform={p:String[1..2] | $p->formatMostRecentDatabricks('current_date()')}, parametersWithinWhenClause = [false, false])),
     dynaFnToSql('now',                    $allStates,            ^ToSql(format='current_timestamp')),
     dynaFnToSql('parseDate',              $allStates,            ^ToSql(format='to_date(%s,%s)')),
-    dynaFnToSql('parseDecimal',           $allStates,            ^ToSql(format='cast(%s as double)')),
+    dynaFnToSql('parseDecimal',           $allStates,            ^ToSql(format='%s', transform={p:String[*] |$p->transformParseDecimal()})),
     dynaFnToSql('parseFloat',             $allStates,            ^ToSql(format='cast(%s as float)')),
     dynaFnToSql('parseInteger',           $allStates,            ^ToSql(format='cast(%s as int)')),
     dynaFnToSql('position',               $allStates,            ^ToSql(format='position(%s, %s)')),
@@ -139,6 +141,23 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::datab
     dynaFnToSql('weekOfYear',             $allStates,            ^ToSql(format='weekofyear(%s)')),
     dynaFnToSql('year',                   $allStates,            ^ToSql(format='year(%s)'))
   ];
+}
+
+function <<access.private>> meta::relational::functions::sqlQueryToString::databricks::processWindowColumnForDatabricks(w:WindowColumn[1], sgc:SqlGenerationContext[1]):String[1]
+{
+   let partitionTranslation = if($w.window.partition->isNotEmpty(),
+        |'Partition By ' + $w.window.partition->map(f|$f->processOperation($sgc))->joinStrings(','),
+        |'');
+   let orderByTranslation = if($w.window.sortBy->isNotEmpty(),
+        |'Order By '+ $w.window.sortBy->map(s|$s.sortByElement->toOne()->processOperation($sgc) + if($s.sortDirection->isNotEmpty(), | ' ' +$s.sortDirection->toOne().name + if($s.sortDirection == meta::relational::metamodel::SortDirection.ASC, | ' NULLS LAST', | ' NULLS FIRST') , | ''))->joinStrings(', '),
+        |'');
+   let windowFrameTranslation = if($w.window.frame->isNotEmpty(),
+        |$w.window.frame->toOne()->processWindowFrame($sgc),
+        |'');
+   $w.func->processOperation($sgc) +
+   ' OVER (' +
+   [$partitionTranslation, $orderByTranslation, $windowFrameTranslation]->filter(s | $s != '')->joinStrings(' ') +
+   + ')';
 }
 
 function <<access.private>> meta::relational::functions::sqlQueryToString::databricks::processSelectSQLQueryForDatabricks(s:SelectSQLQuery[1], sgc:SqlGenerationContext[1], isSubSelect:Boolean[1]):String[1]
@@ -333,3 +352,4 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::datab
   // pct databricks does not support constraint on tables until we get unity catalog enabled...
   translateCreateTableStatementDefault(^$createTableSQL(applyConstraints = false), $dbConfig);
 }
+

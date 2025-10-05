@@ -33,7 +33,7 @@ import org.finos.legend.engine.protocol.pure.m3.extension.TaggedValue;
 import org.finos.legend.engine.protocol.pure.m3.type.Unit;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.function.FunctionTest;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.function.FunctionTestSuite;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.function.StoreTestData;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.function.FunctionTestData;
 import org.finos.legend.engine.protocol.pure.v1.model.test.assertion.EqualTo;
 import org.finos.legend.engine.protocol.pure.v1.model.test.assertion.EqualToJson;
 import org.finos.legend.engine.protocol.pure.v1.model.test.assertion.TestAssertion;
@@ -181,6 +181,7 @@ public class HelperDomainGrammarComposer
             if (constraint.messageFunction != null)
             {
                 appendTabString(builder, 2);
+                constraint.messageFunction.parameters = Collections.emptyList();
                 String messageString = constraint.messageFunction.accept(transformer).replaceFirst("\\|", "");
                 builder.append("~message: ").append(messageString).append('\n');
             }
@@ -235,12 +236,12 @@ public class HelperDomainGrammarComposer
         return str.toString();
     }
 
-    public static String renderFunctionTestData(StoreTestData storeTestData, int currentInt, PureGrammarComposerContext context)
+    public static String renderFunctionTestData(FunctionTestData functionTestData, int currentInt, PureGrammarComposerContext context)
     {
         StringBuilder dataStrBuilder = new StringBuilder();
         dataStrBuilder.append(getTabString(currentInt));
-        dataStrBuilder.append(HelperRuntimeGrammarComposer.renderStoreProviderPointer(storeTestData.store)).append(":");
-        EmbeddedData embeddedData = storeTestData.data;
+        dataStrBuilder.append(HelperRuntimeGrammarComposer.renderPackageableElementPointer(functionTestData.packageableElementPointer)).append(":");
+        EmbeddedData embeddedData = functionTestData.data;
         if (embeddedData instanceof DataElementReference)
         {
             dataStrBuilder.append(" ");
@@ -254,7 +255,7 @@ public class HelperDomainGrammarComposer
         else
         {
             dataStrBuilder.append("\n");
-            dataStrBuilder.append(HelperEmbeddedDataGrammarComposer.composeEmbeddedData(storeTestData.data, PureGrammarComposerContext.Builder.newInstance(context).withIndentationString(getTabString(currentInt + 2)).build()));
+            dataStrBuilder.append(HelperEmbeddedDataGrammarComposer.composeEmbeddedData(functionTestData.data, PureGrammarComposerContext.Builder.newInstance(context).withIndentationString(getTabString(currentInt + 2)).build()));
         }
         dataStrBuilder.append(";");
         return dataStrBuilder.toString();

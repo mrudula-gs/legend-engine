@@ -19,7 +19,7 @@
     <parent>
         <artifactId>legend-engine-config</artifactId>
         <groupId>org.finos.legend.engine</groupId>
-        <version>4.96.2-SNAPSHOT</version>
+        <version>4.102.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -668,6 +668,11 @@
         <!-- GraphQL -->
 
         <!-- SQL -->
+        <dependency>
+            <groupId>org.finos.legend.engine</groupId>
+            <artifactId>legend-engine-xt-sql-expression-pure</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-xt-sql-expression-grammar</artifactId>

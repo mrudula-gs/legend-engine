@@ -99,7 +99,7 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::snowf
         |'Partition By ' + $w.window.partition->map(f|$f->processOperation($sgc))->joinStrings(','),
         |'');
    let orderByTranslation = if($w.window.sortBy->isNotEmpty(),
-        |'Order By '+ $w.window.sortBy->map(s|$s.sortByElement->toOne()->processOperation($sgc) + if($s.sortDirection->isNotEmpty(), | ' ' +$s.sortDirection->toOne().name, | ''))->joinStrings(', '),
+        |'Order By '+ $w.window.sortBy->map(s|$s.sortByElement->toOne()->processOperation($sgc) + if($s.sortDirection->isNotEmpty(), | ' ' +$s.sortDirection->toOne().name + if($s.sortDirection == meta::relational::metamodel::SortDirection.ASC, | ' NULLS LAST', | ' NULLS FIRST'), | ''))->joinStrings(', '),
         |'');
    let windowFrameTranslation = if($w.window.frame->isNotEmpty(),
         |$w.window.frame->toOne()->processWindowFrameForSnowflake($sgc),
@@ -259,28 +259,30 @@ function meta::relational::functions::sqlQueryToString::snowflake::translateDrop
   'Drop table if exists ' + $d.table->tableToString($dbConfig) + ';';
 }
 
-function <<access.private>> meta::relational::functions::sqlQueryToString::snowflake::getDynaFunctionVariantTransformer(vars: String[*]): String[1]
-{
-  $vars->match([
-    zero:String[0] | 'null',
-    one:String[1]  | $one,
-    many:String[*] | $many->joinStrings('array_construct(', ',', ')')
-  ]);
-}
-
-
 function <<access.private>> meta::relational::functions::sqlQueryToString::snowflake::getDynaFunctionToSqlForSnowflake(): DynaFunctionToSql[*]
 {
   let allStates = allGenerationStates();
 
   [
-    dynaFnToSql('array_max',              $allStates,            ^ToSql(format='array_max(%s)', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_min',              $allStates,            ^ToSql(format='array_min(%s)', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_sum',              $allStates,            ^ToSql(format='reduce(%s, 0::DOUBLE, (acc, x) -> acc + x)', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_sort',             $allStates,            ^ToSql(format='array_sort(%s)', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_reverse',          $allStates,            ^ToSql(format='array_reverse(%s)', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_size',             $allStates,            ^ToSql(format='ifnull(array_size(%s), 0)', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_append',           $allStates,            ^ToSql(format='array_append(%s, %s)', transform= {vals:String[*] | $vals->init()->getDynaFunctionVariantTransformer()->concatenate($vals->last())})),
+    dynaFnToSql('array_max',              $allStates,            ^ToSql(format='array_max(%s)')),
+    dynaFnToSql('array_min',              $allStates,            ^ToSql(format='array_min(%s)')),
+    dynaFnToSql('array_sum',              $allStates,            ^ToSql(format='reduce(%s, 0::DOUBLE, (acc, x) -> acc + x)')),
+    dynaFnToSql('array_sort',             $allStates,            ^ToSql(format='array_sort(%s)')),
+    dynaFnToSql('array_reverse',          $allStates,            ^ToSql(format='array_reverse(%s)')),
+    dynaFnToSql('array_size',             $allStates,            ^ToSql(format='ifnull(array_size(%s), 0)')),
+    dynaFnToSql('array_append',           $allStates,            ^ToSql(format='array_append(%s, %s)')),
+    dynaFnToSql('array_position',         $allStates,            ^ToSql(format='ifnull(array_position(%s, %s), -1)', transform= {vals:String[*] | $vals->reverse()})),
+    dynaFnToSql('array_slice',            $allStates,            ^ToSql(format='array_slice(%s, greatest(%s, 0), greatest(%s, 0))')),
+    dynaFnToSql('array_drop',             $allStates,            ^ToSql(format='array_slice(%s, greatest(%s, 0), array_size(%s))', transform= {vals:String[*] | $vals->concatenate($vals->at(0))})),
+    dynaFnToSql('array_take',             $allStates,            ^ToSql(format='array_slice(%s, 0, greatest(%s, 0))')),
+    dynaFnToSql('array_first',            $allStates,            ^ToSql(format='(%s[0])')),
+    dynaFnToSql('array_last',             $allStates,            ^ToSql(format='(%s[array_size(%s) - 1])', transform= {vals:String[*] | $vals->concatenate($vals->at(0))})),
+    dynaFnToSql('array_init',             $allStates,            ^ToSql(format='array_slice(%s, 0, array_size(%s) - 1)', transform= {vals:String[*] | $vals->concatenate($vals->at(0))})),
+    dynaFnToSql('array_tail',             $allStates,            ^ToSql(format='array_slice(%s, 1, array_size(%s))', transform= {vals:String[*] | $vals->concatenate($vals->at(0))})),
+    dynaFnToSql('array_concatenate',      $allStates,            ^ToSql(format='array_cat(%s, %s)')),
+    dynaFnToSql('range',                  $allStates,            ^ToSql(format='array_generate_range(%s, %s, %s)')),
+    dynaFnToSql('array_contains',         $allStates,            ^ToSql(format='ifnull(array_contains(%s, %s), false)', transform= {vals:String[*] | $vals->reverse()})),
+    dynaFnToSql('array_distinct',         $allStates,            ^ToSql(format='array_distinct(%s)')),
     dynaFnToSql('adjust',                 $allStates,            ^ToSql(format='dateadd(%s)', transform={p:String[3] | $p->at(2)->mapToDBUnitType() + ', ' + $p->at(1) + ', ' + $p->at(0)})),
     dynaFnToSql('bitAnd',                 $allStates,            ^ToSql(format='BITAND(%s, %s)')),
     dynaFnToSql('bitNot',                 $allStates,            ^ToSql(format='BITNOT(%s)')),
@@ -296,11 +298,12 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::snowf
     dynaFnToSql('convertDateTime',        $allStates,            ^ToSql(format='%s' , transform={p:String[*] | $p->convertToDateTimeSnowflake()})),
     dynaFnToSql('convertVarchar128',      $allStates,            ^ToSql(format='to_char(%s)')),
     dynaFnToSql('contains',               $allStates,            ^ToSql(format='contains(%s,%s)', transform={p:String[2]|$p})),
+    dynaFnToSql('currentUserId',          $allStates,            ^ToSql(format='COALESCE( SYS_CONTEXT(\'SNOWFLAKE$ORGANIZATION_SESSION\',\'PRINCIPAL_NAME\'), SYS_CONTEXT(\'SNOWFLAKE$SESSION\',\'PRINCIPAL_NAME\')) ')),
     dynaFnToSql('date',                   $allStates,            ^ToSql(format='%s', transform={p:String[*] | $p->transformDateConstructionForSnowflake()})),
     dynaFnToSql('dateDiff',               $allStates,            ^ToSql(format='datediff(%s,%s,%s)', transform={p:String[*]|[$p->at(2)->replace('\'', '')->processDateDiffDurationUnitForSnowflake(),$p->at(0),$p->at(1)]})),
     dynaFnToSql('datePart',               $allStates,            ^ToSql(format='Date(%s)')),
     dynaFnToSql('dayOfMonth',             $allStates,            ^ToSql(format='DAYOFMONTH(%s)')),
-    dynaFnToSql('dayOfWeek',              $allStates,            ^ToSql(format='to_char(%s, \'DYDY\')')),
+    dynaFnToSql('dayOfWeek',              $allStates,            ^ToSql(format='DECODE(EXTRACT(dayofweek FROM %s), 1, \'Monday\', 2, \'Tuesday\', 3, \'Wednesday\', 4, \'Thursday\', 5, \'Friday\', 6, \'Saturday\', 7, \'Sunday\')')),
     dynaFnToSql('dayOfWeekNumber',        $allStates,            ^ToSql(format='DAYOFWEEKISO(%s)')),
     dynaFnToSql('dayOfYear',              $allStates,            ^ToSql(format='DAYOFYEAR(%s)')),
     dynaFnToSql('endsWith',               $allStates,            ^ToSql(format='endswith(%s,%s)', transform={p:String[2]|$p})),
@@ -339,13 +342,17 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::snowf
     dynaFnToSql('mostRecentDayOfWeek',    $allStates,            ^ToSql(format='DATE_TRUNC(\'WEEK\', CURRENT_DATE)%s', transform={p:String[*] | ''})),
     dynaFnToSql('now',                    $allStates,            ^ToSql(format='current_timestamp')),
     dynaFnToSql('parseDate',              $allStates,            ^ToSql(format='%s', transform={p:String[*] | $p->convertToDateSnowflake()})),
+    dynaFnToSql('parseDecimal',           $allStates,            ^ToSql(format='%s', transform={p:String[*] |$p->transformParseDecimal()})),
     dynaFnToSql('parseFloat',             $allStates,            ^ToSql(format='cast(%s as float)')),
     dynaFnToSql('parseInteger',           $allStates,            ^ToSql(format='cast(%s as integer)')),
     dynaFnToSql('parseJson',              $allStates,            ^ToSql(format='parse_json(%s)')),
     dynaFnToSql('toJson',                 $allStates,            ^ToSql(format='to_json(%s)')),
     dynaFnToSql('toVariant',              $allStates,            ^ToSql(format='%s', transform={p:String[*] | $p->toVariantForSnowflake()})),
     dynaFnToSql('toVariantList',          $allStates,            ^ToSql(format='array_construct(%s)', transform={p:String[*] | $p->joinStrings(',')})),
-    dynaFnToSql('toVariantObject',        $allStates,            ^ToSql(format='object_construct_keep_null(%s)', transform={p:String[*] | $p->joinStrings(',')})),
+    dynaFnToSql('toVariantObject',        $allStates,            ^ToSql(format='{%s}', transform={p:String[*] | range(0, $p->size(), 2)->map(i | $p->at($i) + ': ' + $p->at($i + 1))->joinStrings(', ')})),
+    dynaFnToSql('keys',                   $allStates,            ^ToSql(format='map_keys(%s)')),
+    dynaFnToSql('values',                 $allStates,            ^ToSql(format='transform(map_keys(%s), k -> GET(%s, k))', transform = {p:String[1] | $p->concatenate($p)})),
+    dynaFnToSql('mapConcatenate',         $allStates,            ^ToSql(format='map_cat(%s, %s)')), 
     dynaFnToSql('parseBoolean',           $allStates,            ^ToSql(format='to_boolean(%s)')),
     dynaFnToSql('position',               $allStates,            ^ToSql(format='position(%s in %s)')),
     dynaFnToSql('previousDayOfWeek',      $allStates,            ^ToSql(format='dateadd(DAY, case when %s - DAYOFWEEK(%s) +1  >= 0 then %s  - DAYOFWEEK(%s) -1 - 7 else %s - DAYOFWEEK(%s) -1 end, %s)', transform={p:String[1..2] | $p->formatMostRecentSnowflake('current_date')}, parametersWithinWhenClause = [false, false])),
@@ -528,14 +535,13 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::snowf
 function <<access.private>> meta::relational::functions::sqlQueryToString::snowflake::processSemiStructuredArrayFlattenForSnowflake(s:SemiStructuredArrayFlatten[1], sgc:SqlGenerationContext[1]): String[1]
 {
    // https://docs.snowflake.com/en/sql-reference/functions/flatten.html
-
    let processedNavigation = $s.navigation->processOperation($sgc);
-   'flatten(input => ' + $processedNavigation + ', outer => true, recursive => false, mode => \'array\')';
+   'flatten(input => (' + $processedNavigation + ')::ARRAY, outer => true, recursive => false, mode => \'array\')';
 }
 
 function <<access.private>> meta::relational::functions::sqlQueryToString::snowflake::processSemiStructuredArrayFlattenRelationForSnowflake(s:SemiStructuredArrayFlattenRelation[1], sgc:SqlGenerationContext[1]): String[1]
 {
-   let processedNavigation = $s.param;
+   let processedNavigation = $s.navigation->processOperation($sgc);
    'Table(Flatten(input => ' + $processedNavigation + '))';
 }
 
@@ -600,7 +606,7 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::snowf
 
 function <<access.private>> meta::relational::functions::sqlQueryToString::snowflake::processPivotForSnowflake(p:Pivot[1], dbConfig : DbConfig[1], format:Format[1], config:Config[1], extensions:Extension[*]):String[1]
 {
-  let pivotColumnName = $p.pivotColumns->toOne()->cast(@ColumnName).name;
+  let pivotColumnName = $dbConfig.identifierProcessor($p.pivotColumns->toOne()->cast(@ColumnName).name);
   let aggregateColumn = processSelectColumns($p.aggColumns->toOne(), $dbConfig, $format->indent(), $config, true, $extensions);
   ' ' + $format.separator + 'pivot (' + $aggregateColumn +
   ' ' + $format.separator + 'for ' +  $pivotColumnName +
@@ -610,10 +616,6 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::snowf
 function <<access.private>> meta::relational::functions::sqlQueryToString::snowflake::processJoinTreeNodeWithLateralJoinForSnowflake(j:JoinTreeNode[1], dbConfig : DbConfig[1], format:Format[1], extensions:Extension[*]):String[1]
 {
    // https://docs.snowflake.com/release-notes/bcr-bundles/2023_04/bcr-1057
-   assert(processOperation($j.join.operation, $dbConfig, $format->indent(), ^Config(), $extensions) == '1 = 1', | 'Filter in column projections is not supported. Use a Post Filter if filtering is necessary');
-
-   assert($j.alias.relationalElement->instanceOf(SemiStructuredArrayFlatten), | 'Lateral join in Snowflake should be followed by flatten operation');
-
    // https://docs.snowflake.com/en/sql-reference/constructs/join-lateral#usage-notes
    ' ' + $format.separator() + 'inner join lateral '
    + $j.alias

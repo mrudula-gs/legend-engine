@@ -147,6 +147,7 @@ function meta::relational::milestoning::applyMilestoningFilters(e:RelationalOper
                     s:SemiStructuredPropertyAccess[1] | ^$s(operand = $s.operand->applyMilestoningFilters($tableToFilterOp, $tableToTable, $shouldProcessViewSubSelect, $extensions), property = $s.property->applyMilestoningFilters($tableToFilterOp, $tableToTable, $shouldProcessViewSubSelect, $extensions), index = $s.index->map(i | $i->applyMilestoningFilters($tableToFilterOp, $tableToTable, $shouldProcessViewSubSelect, $extensions))),
                     s:SemiStructuredArrayElementAccess[1] | ^$s(operand = $s.operand->applyMilestoningFilters($tableToFilterOp, $tableToTable, $shouldProcessViewSubSelect, $extensions), index = $s.index->applyMilestoningFilters($tableToFilterOp, $tableToTable, $shouldProcessViewSubSelect, $extensions)),
                     s:SemiStructuredArrayFlatten[1] | ^$s(navigation = $s.navigation->applyMilestoningFilters($tableToFilterOp, $tableToTable, $shouldProcessViewSubSelect, $extensions)),
+                    s:SemiStructuredArrayFlattenRelation[1] | ^$s(navigation = $s.navigation->applyMilestoningFilters($tableToFilterOp, $tableToTable, $shouldProcessViewSubSelect, $extensions)),
                     s:SemiStructuredArrayFlattenOutput[1] | ^$s(tableAliasColumn = $s.tableAliasColumn->applyMilestoningFilters($tableToFilterOp, $tableToTable, $shouldProcessViewSubSelect, $extensions)->cast(@TableAliasColumn)),
                     t:TableFunctionParamPlaceHolder[1] | $t,
                     dt:DataTypeInfo[1] | $dt
@@ -167,7 +168,8 @@ function meta::relational::milestoning::applyMilestoningFilters(j:RelationalTree
                                            c:CommonTableExpressionReference[1] | $join,
                                            u:Union[1] | $join,
                                            s:SelectSQLQuery[1] | $join,
-                                           s:SemiStructuredArrayFlatten[1] | $join
+                                           s:SemiStructuredArrayFlatten[1] | $join,
+                                           s:SemiStructuredArrayFlattenRelation[1] | $join
                                      ]);
                                      let newAlias = $j.alias->applyMilestoningFilters($tableToFilterOp, $tableToTable, $shouldProcessViewSubSelect, $extensions)->cast(@TableAlias);
                                      let joinWithAliasProcessed = reprocessJoin($newJoin, ^OldAliasToNewAlias(first=$j.alias.name, second=$newAlias), []);
@@ -644,8 +646,8 @@ function <<access.private>> meta::relational::milestoning::resolveMilestoningDat
                                                                                           a: Any[*]                | resolveMilestoningDateParams($temporalStrategy, $i.values->cast(@ValueSpecification), $currentMilestoningContext, $state, $vars, $context, $extensions)
                                                                                        ]),
                                                                  f: FunctionExpression[1] | let singleTemporalStrategy = $dp.first;
-                                                                                            let isMilestonedGeneratedDateProperty = $f->isMilestonedGeneratedDateProperty($singleTemporalStrategy);
-                                                                                            if($isMilestonedGeneratedDateProperty && $currentMilestoningContext->isNotEmpty(),| let tp = TemporalMilestoningContext.properties->filter(p|$p.name->toOne() == $f.func.name)->toOne();
+                                                                                            let isThisMilestonedGeneratedDateProperty = $f->isThisMilestonedGeneratedDateProperty();
+                                                                                            if($isThisMilestonedGeneratedDateProperty && $currentMilestoningContext->isNotEmpty(),| let tp = TemporalMilestoningContext.properties->filter(p|$p.name->toOne() == $f.func.name)->toOne();
                                                                                                                                                                                     $tp->eval($currentMilestoningContext)->map(d|^DateWrapper(date=$d->cast(@RelationalOperationElement)));
                                                                                                                                                                                  ,|if($f->isNonThisRootVariableExpression(),| 
                                                                                                                                                                                           if($state.functionExpressionStack->last()->evaluateAndDeactivate().func->in([
@@ -690,6 +692,12 @@ function <<access.private>> meta::relational::milestoning::replaceThisMilestonin
                i:InstanceValue[1]|^$i(values = $i.values->map(v|$v->match([e:ValueSpecification[1]|$e->replaceThisMilestoningPropertyVariableExpression($new, $t),a:Any[1]|$a]))),
                v:ValueSpecification[1]|$v
             ])
+}
+
+function <<access.private>> meta::relational::milestoning::isThisMilestonedGeneratedDateProperty(f:FunctionExpression[1]):Boolean[1]
+{
+   if($f.parametersValues->size() > 0 ,| $f->isMilestonedGeneratedDateProperty()
+                                      ,| false)
 }
 
 function <<access.private>> meta::relational::milestoning::referencesVariableExpression(v:ValueSpecification[1]):Boolean[1]

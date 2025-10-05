@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.finos.legend.engine</groupId>
         <artifactId>legend-engine-shared-vault</artifactId>
-        <version>4.96.2-SNAPSHOT</version>
+        <version>4.102.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>legend-engine-shared-vault-aws</artifactId>
@@ -50,10 +50,6 @@
         <dependency>
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections-api</artifactId>
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>software.amazon.awssdk</groupId>-->

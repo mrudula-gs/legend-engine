@@ -172,6 +172,11 @@ public class Handlers
         variable2.multiplicity = new org.finos.legend.engine.protocol.pure.m3.multiplicity.Multiplicity(1, 1);
     }
 
+    public static Map<String, MutableSet<String>> getTaxoMap()
+    {
+        return taxoMap.asUnmodifiable();
+    }
+
     public static void aggInference(Object obj, GenericType gt, int mapOffset, int aggOffset, ValueSpecificationBuilder valueSpecificationBuilder)
     {
         LambdaFunction aggFirstLambda = null;
@@ -491,6 +496,36 @@ public class Handlers
                 parameters.get(0).accept(valueSpecificationBuilder),
                 vs
         );
+    };
+
+    public static final ParametersInference LateralInference = (parameters, valueSpecificationBuilder) ->
+    {
+        ValueSpecification toLateral = parameters.get(0).accept(valueSpecificationBuilder);
+        GenericType genericType = toLateral._genericType();
+        GenericType relationType = genericType._typeArguments().getOnly();
+
+        if (parameters.get(1) instanceof LambdaFunction)
+        {
+            LambdaFunction lambdaFunction = (LambdaFunction) parameters.get(1);
+            lambdaFunction.parameters.get(0).genericType = CompileContext.convertGenericType(relationType);
+            lambdaFunction.parameters.get(0).multiplicity = new org.finos.legend.engine.protocol.pure.m3.multiplicity.Multiplicity(1, 1);
+        }
+
+        return Lists.mutable.with(toLateral, parameters.get(1).accept(valueSpecificationBuilder));
+    };
+
+    public static final ParametersInference FlattenColInference = (parameters, valueSpecificationBuilder) ->
+    {
+        ValueSpecification toFlatten = parameters.get(0).accept(valueSpecificationBuilder);
+
+        ColSpec colSpec = (ColSpec) ((ClassInstance) parameters.get(1)).value;
+
+        Column<?, ?> columnInstance = _Column.getColumnInstance(colSpec.name, false, toFlatten._genericType(), valueSpecificationBuilder.getContext().pureModel.getMultiplicity("one"), SourceInformationHelper.toM3SourceInformation(parameters.get(1).sourceInformation), valueSpecificationBuilder.getContext().pureModel.getExecutionSupport().getProcessorSupport());
+
+        colSpec.genericType = CompileContext.convertGenericType(_Column.getColumnType(columnInstance));
+        colSpec.multiplicity = CompileContext.convertMultiplicity(_Column.getColumnMultiplicity(columnInstance));
+
+        return Lists.mutable.with(toFlatten, parameters.get(1).accept(valueSpecificationBuilder));
     };
 
     public static final ParametersInference RenameColInference = (parameters, valueSpecificationBuilder) ->
@@ -1165,6 +1200,9 @@ public class Handlers
         register("meta::pure::functions::boolean::equalJsonStrings_String_1__String_1__Boolean_1_", true, ps -> res("Boolean", "one"));
 
         register("meta::pure::functions::constraints::warn_Boolean_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"));
+        register("meta::pure::constraints::functions::evaluateConstraint_Z_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"));
+        register("meta::pure::constraints::functions::evaluateConstraintMessageFunction_Z_1__String_1__String_1_", false, ps -> res("String", "one"));
+        register("meta::pure::constraints::functions::createConstraintFailureMessage_X_1__String_1__String_$0_1$_", false, ps -> res("String", "zeroOne"));
 
         register("meta::pure::functions::lang::subType_Any_m__T_1__T_m_", false, ps -> res(ps.get(1)._genericType(), ps.get(0)._multiplicity()));
         register(h("meta::pure::functions::lang::whenSubType_Any_1__T_1__T_$0_1$_", false, ps -> res(ps.get(1)._genericType(), "zeroOne"), ps -> isOne(ps.get(0)._multiplicity())),
@@ -1188,7 +1226,10 @@ public class Handlers
         register(h("meta::pure::tds::take_TabularDataSet_1__Integer_1__TabularDataSet_1_", false, ps -> res("meta::pure::tds::TabularDataSet", "one"), ps -> typeOne(ps.get(0), "TabularDataSet")),
                 h("meta::pure::functions::collection::take_T_MANY__Integer_1__T_MANY_", true, ps -> res(ps.get(0)._genericType(), "zeroMany"), ps -> true));
 
-        register(h("meta::pure::functions::lang::if_Boolean_1__Function_1__Function_1__T_m_", true, ps -> res(MostCommonType.mostCommon(Lists.fixedSize.of(funcReturnType(ps.get(1)), funcReturnType(ps.get(2))), this.pureModel), MostCommonMultiplicity.mostCommon(Lists.fixedSize.of(funcReturnMul(ps.get(1)), funcReturnMul(ps.get(2))), this.pureModel)), ps -> Lists.immutable.of(MostCommonType.mostCommon(Lists.fixedSize.of(funcReturnType(ps.get(1)), funcReturnType(ps.get(2))), this.pureModel)), ps -> true));
+        register(m(m(h("meta::pure::functions::lang::if_Boolean_1__Function_1__Function_1__T_m_", true, ps -> res(MostCommonType.mostCommon(Lists.fixedSize.of(funcReturnType(ps.get(1)), funcReturnType(ps.get(2))), this.pureModel),
+                        MostCommonMultiplicity.mostCommon(Lists.fixedSize.of(funcReturnMul(ps.get(1)), funcReturnMul(ps.get(2))), this.pureModel)),
+                        ps -> Lists.immutable.of(MostCommonType.mostCommon(Lists.fixedSize.of(funcReturnType(ps.get(1)), funcReturnType(ps.get(2))), this.pureModel)), ps -> ps.size() == 3)),
+                m(h("meta::pure::functions::lang::if_Pair_MANY__Function_1__T_m_", false, ps -> res(funcReturnType(ps.get(1)), funcReturnMul(ps.get(1))), ps -> ps.size() == 2))));
 
         register(m(m(h("meta::pure::functions::boolean::and_Boolean_1__Boolean_1__Boolean_1_", true, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
                 m(h("meta::pure::functions::collection::and_Boolean_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> true))));
@@ -1257,7 +1298,7 @@ public class Handlers
                             );
                         },
                         ps -> true),
-                h("meta::pure::functions::collection::concatenate_T_MANY__T_MANY__T_MANY_", true, ps -> res(ps.get(0)._genericType(), "zeroMany"), ps -> true));
+                h("meta::pure::functions::collection::concatenate_T_MANY__T_MANY__T_MANY_", true, ps -> res(MostCommonType.mostCommon(Lists.fixedSize.of(ps.get(0)._genericType(), ps.get(1)._genericType()), pureModel), "zeroMany"), ps -> Lists.fixedSize.of(MostCommonType.mostCommon(Lists.fixedSize.of(ps.get(0)._genericType(), ps.get(1)._genericType()), pureModel)), ps -> true));
 
         register(m(h("meta::pure::functions::collection::greatest_X_$1_MANY$__X_1_", false, ps -> res(ps.get(0)._genericType(), "one"), ps -> matchOneMany(ps.get(0)._multiplicity())),
                 h("meta::pure::functions::collection::greatest_X_MANY__X_$0_1$_", false, ps -> res(ps.get(0)._genericType(), "zeroOne"), ps -> true)));
@@ -1266,16 +1307,18 @@ public class Handlers
                 h("meta::pure::functions::collection::least_X_MANY__X_$0_1$_", false, ps -> res(ps.get(0)._genericType(), "zeroOne"), ps -> true)));
 
         register(m(
-                        m(h("meta::pure::functions::collection::first_T_MANY__T_$0_1$_", true, ps -> res(ps.get(0)._genericType(), "zeroOne"))),
+                        m(h("meta::pure::functions::collection::first_T_MANY__T_$0_1$_", true, ps -> res(ps.get(0)._genericType(), "zeroOne"), ps -> Lists.fixedSize.with(ps.get(0)._genericType()), ps -> true)),
                         m(h("meta::pure::functions::relation::first_Relation_1___Window_1__T_1__T_$0_1$_", true, ps -> res(ps.get(2)._genericType(), "zeroOne")))
                 )
         );
 
         register(m(
-                        m(h("meta::pure::functions::collection::last_T_MANY__T_$0_1$_", true, ps -> res(ps.get(0)._genericType(), "zeroOne"))),
+                        m(h("meta::pure::functions::collection::last_T_MANY__T_$0_1$_", true, ps -> res(ps.get(0)._genericType(), "zeroOne"), ps -> Lists.fixedSize.with(ps.get(0)._genericType()), ps -> true)),
                         m(h("meta::pure::functions::relation::last_Relation_1___Window_1__T_1__T_$0_1$_", true, ps -> res(ps.get(2)._genericType(), "zeroOne")))
                 )
         );
+
+        register(h("meta::pure::functions::collection::init_T_MANY__T_MANY_", true, ps -> res(ps.get(0)._genericType(), "zeroMany"), ps -> Lists.fixedSize.with(ps.get(0)._genericType()), ps -> true));
 
         register("meta::pure::functions::meta::enumName_Enumeration_1__String_1_", true, ps -> res("String", "one"));
         register("meta::pure::functions::lang::extractEnumValue_Enumeration_1__String_1__T_1_", true, ps -> res(ps.get(0)._genericType()._typeArguments().getFirst(), "one"));
@@ -1369,10 +1412,14 @@ public class Handlers
         register("meta::pure::graphFetch::execution::graphFetchUnexpanded_T_MANY__RootGraphFetchTree_1__T_MANY_", false, ps -> res(ps.get(0)._genericType(), "zeroMany"));
         register("meta::pure::graphFetch::execution::graphFetchCheckedUnexpanded_T_MANY__RootGraphFetchTree_1__Checked_MANY_", false, ps -> res(CompileContext.newGenericType(this.pureModel.getType("meta::pure::dataQuality::Checked"), ps.get(0)._genericType(), pureModel), "zeroMany"));
         register(m(
-                        m(h("meta::pure::graphFetch::execution::serialize_Checked_MANY__RootGraphFetchTree_1__String_1_", false, ps -> res("String", "one"), ps -> ps.size() == 2 && "Checked".equals(ps.get(0)._genericType()._rawType()._name()))),
-                        m(h("meta::pure::graphFetch::execution::serialize_T_MANY__RootGraphFetchTree_1__String_1_", false, ps -> res("String", "one"), ps -> ps.size() == 2)),
-                        m(h("meta::pure::graphFetch::execution::serialize_Checked_MANY__RootGraphFetchTree_1__AlloySerializationConfig_1__String_1_", false, ps -> res("String", "one"), ps -> ps.size() == 3 && "Checked".equals(ps.get(0)._genericType()._rawType()._name()) && "AlloySerializationConfig".equals(ps.get(2)._genericType()._rawType()._name()))),
-                        m(h("meta::pure::graphFetch::execution::serialize_T_MANY__RootGraphFetchTree_1__AlloySerializationConfig_1__String_1_", false, ps -> res("String", "one"), ps -> ps.size() == 3))
+                        m(
+                                h("meta::pure::graphFetch::execution::serialize_Checked_MANY__RootGraphFetchTree_1__String_1_", false, ps -> res("String", "one"), ps -> ps.size() == 2 && "Checked".equals(ps.get(0)._genericType()._rawType()._name())),
+                                h("meta::pure::graphFetch::execution::serialize_T_MANY__RootGraphFetchTree_1__String_1_", false, ps -> res("String", "one"), ps -> ps.size() == 2)
+                        ),
+                        m(
+                                h("meta::pure::graphFetch::execution::serialize_Checked_MANY__RootGraphFetchTree_1__AlloySerializationConfig_1__String_1_", false, ps -> res("String", "one"), ps -> ps.size() == 3 && "Checked".equals(ps.get(0)._genericType()._rawType()._name()) && "AlloySerializationConfig".equals(ps.get(2)._genericType()._rawType()._name())),
+                                h("meta::pure::graphFetch::execution::serialize_T_MANY__RootGraphFetchTree_1__AlloySerializationConfig_1__String_1_", false, ps -> res("String", "one"), ps -> ps.size() == 3)
+                        )
                 )
         );
 
@@ -1384,10 +1431,12 @@ public class Handlers
         register("meta::pure::functions::collection::reverse_T_m__T_m_", true, ps -> res(ps.get(0)._genericType(), ps.get(0)._multiplicity()));
         register(
                 m(
-                        m(h("meta::pure::functions::date::add_StrictDate_1__Duration_1__StrictDate_1_", false, ps -> res("StrictDate", "one"), ps -> typeOne(ps.get(1), "Duration") && typeOne(ps.get(0), "StrictDate"))),
                         m(
-                                m(h("meta::pure::functions::collection::add_T_MANY__T_1__T_$1_MANY$_", true, ps -> res(ps.get(0)._genericType(), "oneMany"), ps -> ps.size() == 2)),
-                                m(h("meta::pure::functions::collection::add_T_MANY__Integer_1__T_1__T_$1_MANY$_", true, ps -> res(ps.get(0)._genericType(), "oneMany"), ps -> ps.size() == 3))
+                                h("meta::pure::functions::date::add_StrictDate_1__Duration_1__StrictDate_1_", false, ps -> res("StrictDate", "one"), ps -> ps.size() == 2 && typeOne(ps.get(1), "Duration") && typeOne(ps.get(0), "StrictDate")),
+                                h("meta::pure::functions::collection::add_T_MANY__T_1__T_$1_MANY$_", true, ps -> res(MostCommonType.mostCommon(Lists.fixedSize.of(ps.get(0)._genericType(), ps.get(1)._genericType()), pureModel), "oneMany"), ps -> ps.size() == 2)
+                        ),
+                        m(
+                                h("meta::pure::functions::collection::add_T_MANY__Integer_1__T_1__T_$1_MANY$_", true, ps -> res(MostCommonType.mostCommon(Lists.fixedSize.of(ps.get(0)._genericType(), ps.get(1)._genericType()), pureModel), "oneMany"), ps -> ps.size() == 3)
                         )
                 )
         );
@@ -1406,13 +1455,13 @@ public class Handlers
         register("meta::pure::functions::meta::type_Any_MANY__Type_1_", false, ps -> res("meta::pure::metamodel::type::Type", "one"));
         register("meta::pure::functions::lang::compare_T_1__T_1__Integer_1_", true, ps -> res("Integer", "one"));
         // meta::pure::functions::collection::fold<T,V|m>(value:T[*], func:Function<{T[1],V[m]->V[m]}>[1], accumulator:V[m]):V[m], note return type is V and not T
-        register(m(grp(TwoParameterLambdaInferenceDiffTypes, h("meta::pure::functions::collection::fold_T_MANY__Function_1__V_m__V_m_", true, ps -> res(ps.get(2)._genericType(), ps.get(2)._multiplicity()), p -> true))));
+        register(m(grp(TwoParameterLambdaInferenceDiffTypes, h("meta::pure::functions::collection::fold_T_MANY__Function_1__V_m__V_m_", true, ps -> res(funcReturnType(ps.get(1)), funcReturnMul(ps.get(1))), p -> true))));
 
         register(m(m(h("meta::pure::functions::collection::range_Integer_1__Integer_1__Integer_1__Integer_MANY_", true, ps -> res("Integer", "zeroMany"), ps -> ps.size() == 3)),
                 m(h("meta::pure::functions::collection::range_Integer_1__Integer_1__Integer_MANY_", false, ps -> res("Integer", "zeroMany"), ps -> ps.size() == 2)),
                 m(h("meta::pure::functions::collection::range_Integer_1__Integer_MANY_", false, ps -> res("Integer", "zeroMany"), ps -> ps.size() == 1))));
-        register("meta::pure::functions::collection::tail_T_MANY__T_MANY_", true, ps -> res(ps.get(0)._genericType(), "zeroMany"));
-        register("meta::pure::functions::collection::head_T_MANY__T_$0_1$_", false, ps -> res(ps.get(0)._genericType(), "zeroOne"));
+        register(h("meta::pure::functions::collection::tail_T_MANY__T_MANY_", true, ps -> res(ps.get(0)._genericType(), "zeroMany"), ps -> Lists.fixedSize.with(ps.get(0)._genericType()), ps -> true));
+        register(h("meta::pure::functions::collection::head_T_MANY__T_$0_1$_", false, ps -> res(ps.get(0)._genericType(), "zeroOne"), ps -> Lists.fixedSize.with(ps.get(0)._genericType()), ps -> true));
         register("meta::pure::functions::collection::oneOf_Boolean_MANY__Boolean_1_", false, ps -> res("Boolean", "one"));
         register("meta::pure::functions::collection::defaultIfEmpty_T_MANY__T_$1_MANY$__T_$1_MANY$_", false, ps -> res(MostCommonType.mostCommon(Lists.fixedSize.of(ps.get(0)._genericType(), ps.get(1)._genericType()), pureModel), "oneMany"));
 
@@ -1439,32 +1488,101 @@ public class Handlers
             )
         );
 
-        register("meta::pure::functions::collection::newMap_Pair_MANY__Map_1_", true, ps -> res(CompileContext.newGenericType(this.pureModel.getType(M3Paths.Map), ListIterate.collect(ps, ValueSpecificationAccessor::_genericType), pureModel), "one"));
+        register("meta::pure::functions::collection::newMap_Pair_MANY__Map_1_", true, ps -> res(CompileContext.newGenericType(this.pureModel.getType(M3Paths.Map), ps.get(0)._genericType()._typeArguments(), pureModel), "one"));
+        register(h("meta::pure::functions::collection::keys_Map_1__U_MANY_", true, ps -> res(ps.get(0)._genericType()._typeArguments().getFirst(), "zeroMany"), ps -> typeOne(ps.get(0), "Map")));
+        register(h("meta::pure::functions::collection::values_Map_1__V_MANY_", true, ps -> res(ps.get(0)._genericType()._typeArguments().getLast(), "zeroMany"), ps -> typeOne(ps.get(0), "Map")));
+        register(h("meta::pure::functions::collection::put_Map_1__U_1__V_1__Map_1_", true, ps -> res(ps.get(0)._genericType(), "one"), ps -> typeOne(ps.get(0), "Map")
+                                                                                                                                                                                                                    && typeOne(ps.get(1), ps.get(0)._genericType()._typeArguments().getFirst()._rawType()._name())
+                                                                                                                                                                                                                    && typeOne(ps.get(2), ps.get(0)._genericType()._typeArguments().getLast()._rawType()._name()))
+        );
+        register(m(
+                    h("meta::pure::functions::collection::putAll_Map_1__Pair_MANY__Map_1_", true, ps -> res(ps.get(0)._genericType(), "one"), ps -> typeOne(ps.get(0), "Map")
+                                                                                                                                                                                                                    && typeMany(ps.get(1), "Pair")
+                                                                                                                                                                                                                    && ps.get(0)._genericType()._typeArguments().getFirst()._rawType()._name().equals(ps.get(1)._genericType()._typeArguments().getFirst()._rawType()._name())
+                                                                                                                                                                                                                    && ps.get(0)._genericType()._typeArguments().getLast()._rawType()._name().equals(ps.get(1)._genericType()._typeArguments().getLast()._rawType()._name())
+                    ),
+                    h("meta::pure::functions::collection::putAll_Map_1__Map_1__Map_1_", true, ps -> res(ps.get(0)._genericType(), "one"), ps -> typeOne(ps.get(0), "Map")
+                                                                                                                                                                                                                && typeOne(ps.get(1), "Map")
+                                                                                                                                                                                                                && ps.get(0)._genericType()._typeArguments().getFirst()._rawType()._name().equals(ps.get(1)._genericType()._typeArguments().getFirst()._rawType()._name())
+                                                                                                                                                                                                                && ps.get(0)._genericType()._typeArguments().getLast()._rawType()._name().equals(ps.get(1)._genericType()._typeArguments().getLast()._rawType()._name())
+                    )
+                )
+        );
+
         register("meta::pure::functions::collection::list_U_MANY__List_1_", false, ps -> res(CompileContext.newGenericType(this.pureModel.getType(M3Paths.List), ps.get(0)._genericType(), pureModel), "one"));
 
         // Extensions
         CompileContext context = this.pureModel.getContext();
         ListIterate.flatCollect(context.getCompilerExtensions().getExtraFunctionExpressionBuilderRegistrationInfoCollectors(), collector -> collector.valueOf(this)).forEach(this::register);
         ListIterate.flatCollect(context.getCompilerExtensions().getExtraFunctionHandlerRegistrationInfoCollectors(), collector -> collector.valueOf(this)).forEach(this::register);
+        validateHandlers();
     }
 
+    private void validateHandlers()
+    {
+        for (Map.Entry<String, FunctionExpressionBuilder> entry : map.entrySet())
+        {
+            HashSet<Integer> uniqueParametersSizeSet = new HashSet<>();
+            FunctionExpressionBuilder builder = entry.getValue();
+            if (builder instanceof CompositeFunctionExpressionBuilder)
+            {
+                CompositeFunctionExpressionBuilder compositeBuilder = (CompositeFunctionExpressionBuilder) builder;
+                for (FunctionExpressionBuilder nestedBuilder : compositeBuilder.getBuilders())
+                {
+                    if (nestedBuilder instanceof MultiHandlerFunctionExpressionBuilder)
+                    {
+                        MultiHandlerFunctionExpressionBuilder multiHandlerBuilder = (MultiHandlerFunctionExpressionBuilder) nestedBuilder;
+                        Integer parametersSize = multiHandlerBuilder.getParametersSize().orElseThrow(() -> new EngineException("FunctionExpressionBuilder should have a parameters size: " + entry.getKey(), EngineErrorType.COMPILATION));
+                        if (!uniqueParametersSizeSet.add(parametersSize))
+                        {
+                            throw new EngineException("Duplicate parameter size found for function: " + entry.getKey() + ", size: " + parametersSize, EngineErrorType.COMPILATION);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     private void registerAsserts()
     {
-        register(m(m(h("meta::pure::functions::asserts::assert_Boolean_1__Function_1__Boolean_1_", true, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && !typeOne(ps.get(1), "String"))),
-                m(h("meta::pure::functions::asserts::assert_Boolean_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && typeOne(ps.get(1), "String"))),
-                m((h("meta::pure::functions::asserts::assert_Boolean_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1))),
-                m(h("meta::pure::functions::asserts::assert_Boolean_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assert_Boolean_1__Function_1__Boolean_1_", true, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && !typeOne(ps.get(1), "String")),
+                            h("meta::pure::functions::asserts::assert_Boolean_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && typeOne(ps.get(1), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assert_Boolean_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assert_Boolean_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertContains_Any_MANY__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertContains_Any_MANY__Any_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertContains_Any_MANY__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertContains_Any_MANY__Any_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertContains_Any_MANY__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertContains_Any_MANY__Any_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertContains_Any_MANY__Any_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertContains_Any_MANY__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertEmpty_Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1)),
-                m(h("meta::pure::functions::asserts::assertEmpty_Any_MANY__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && typeOne(ps.get(1), "String"))),
-                m(h("meta::pure::functions::asserts::assertEmpty_Any_MANY__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3)),
-                m(h("meta::pure::functions::asserts::assertEmpty_Any_MANY__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && !typeOne(ps.get(1), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertEmpty_Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertEmpty_Any_MANY__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && typeOne(ps.get(1), "String")),
+                            h("meta::pure::functions::asserts::assertEmpty_Any_MANY__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && !typeOne(ps.get(1), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertEmpty_Any_MANY__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3)
+                    )
+                ));
 
         register(m(
                 m(h("meta::pure::functions::asserts::assertEq_Any_1__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
@@ -1472,75 +1590,187 @@ public class Handlers
                 m(h("meta::pure::functions::asserts::assertEq_Any_1__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4))
         ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertEqWithinTolerance_Number_1__Number_1__Number_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3)),
-                m(h("meta::pure::functions::asserts::assertEqWithinTolerance_Number_1__Number_1__Number_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4 && typeOne(ps.get(3), "String"))),
-                m(h("meta::pure::functions::asserts::assertEqWithinTolerance_Number_1__Number_1__Number_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 5)),
-                m(h("meta::pure::functions::asserts::assertEqWithinTolerance_Number_1__Number_1__Number_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4 && !typeOne(ps.get(3), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertEqWithinTolerance_Number_1__Number_1__Number_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertEqWithinTolerance_Number_1__Number_1__Number_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4 && typeOne(ps.get(3), "String")),
+                            h("meta::pure::functions::asserts::assertEqWithinTolerance_Number_1__Number_1__Number_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4 && !typeOne(ps.get(3), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertEqWithinTolerance_Number_1__Number_1__Number_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 5)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertEquals_Any_MANY__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertEquals_Any_MANY__Any_MANY__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertEquals_Any_MANY__Any_MANY__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertEquals_Any_MANY__Any_MANY__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertEquals_Any_MANY__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertEquals_Any_MANY__Any_MANY__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertEquals_Any_MANY__Any_MANY__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertEquals_Any_MANY__Any_MANY__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertFalse_Boolean_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1)),
-                m(h("meta::pure::functions::asserts::assertFalse_Boolean_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && typeOne(ps.get(1), "String"))),
-                m(h("meta::pure::functions::asserts::assertFalse_Boolean_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3)),
-                m(h("meta::pure::functions::asserts::assertFalse_Boolean_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && !typeOne(ps.get(1), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertFalse_Boolean_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertFalse_Boolean_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && typeOne(ps.get(1), "String")),
+                            h("meta::pure::functions::asserts::assertFalse_Boolean_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && !typeOne(ps.get(1), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertFalse_Boolean_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertInstanceOf_Any_1__Type_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertInstanceOf_Any_1__Type_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertInstanceOf_Any_1__Type_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertInstanceOf_Any_1__Type_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertInstanceOf_Any_1__Type_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertInstanceOf_Any_1__Type_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertInstanceOf_Any_1__Type_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertInstanceOf_Any_1__Type_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertIs_Any_1__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertIs_Any_1__Any_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertIs_Any_1__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertIs_Any_1__Any_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertIs_Any_1__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertIs_Any_1__Any_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertIs_Any_1__Any_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertIs_Any_1__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertIsNot_Any_1__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertIsNot_Any_1__Any_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertIsNot_Any_1__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertIsNot_Any_1__Any_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertIsNot_Any_1__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertIsNot_Any_1__Any_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertIsNot_Any_1__Any_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertIsNot_Any_1__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertNotContains_Any_MANY__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertNotContains_Any_MANY__Any_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertNotContains_Any_MANY__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertNotContains_Any_MANY__Any_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertNotContains_Any_MANY__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertNotContains_Any_MANY__Any_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertNotContains_Any_MANY__Any_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertNotContains_Any_MANY__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertNotEmpty_Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1)),
-                m(h("meta::pure::functions::asserts::assertNotEmpty_Any_MANY__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && typeOne(ps.get(1), "String"))),
-                m(h("meta::pure::functions::asserts::assertNotEmpty_Any_MANY__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3)),
-                m(h("meta::pure::functions::asserts::assertNotEmpty_Any_MANY__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && !typeOne(ps.get(1), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertNotEmpty_Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertNotEmpty_Any_MANY__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && typeOne(ps.get(1), "String")),
+                            h("meta::pure::functions::asserts::assertNotEmpty_Any_MANY__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2 && !typeOne(ps.get(1), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertNotEmpty_Any_MANY__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertNotEq_Any_1__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertNotEq_Any_1__Any_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertNotEq_Any_1__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertNotEq_Any_1__Any_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertNotEq_Any_1__Any_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertNotEq_Any_1__Any_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertNotEq_Any_1__Any_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertNotEq_Any_1__Any_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertNotEquals_Any_MANY__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertNotEquals_Any_MANY__Any_MANY__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertNotEquals_Any_MANY__Any_MANY__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertNotEquals_Any_MANY__Any_MANY__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertNotEquals_Any_MANY__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertNotEquals_Any_MANY__Any_MANY__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertNotEquals_Any_MANY__Any_MANY__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertNotEquals_Any_MANY__Any_MANY__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertNotSize_Any_MANY__Integer_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertNotSize_Any_MANY__Integer_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertNotSize_Any_MANY__Integer_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertNotSize_Any_MANY__Integer_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertNotSize_Any_MANY__Integer_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertNotSize_Any_MANY__Integer_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertNotSize_Any_MANY__Integer_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertNotSize_Any_MANY__Integer_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertSameElements_Any_MANY__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertSameElements_Any_MANY__Any_MANY__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertSameElements_Any_MANY__Any_MANY__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertSameElements_Any_MANY__Any_MANY__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertSameElements_Any_MANY__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertSameElements_Any_MANY__Any_MANY__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertSameElements_Any_MANY__Any_MANY__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertSameElements_Any_MANY__Any_MANY__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::assertSize_Any_MANY__Integer_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::assertSize_Any_MANY__Integer_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String"))),
-                m(h("meta::pure::functions::asserts::assertSize_Any_MANY__Integer_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)),
-                m(h("meta::pure::functions::asserts::assertSize_Any_MANY__Integer_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::assertSize_Any_MANY__Integer_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertSize_Any_MANY__Integer_1__String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && typeOne(ps.get(2), "String")),
+                            h("meta::pure::functions::asserts::assertSize_Any_MANY__Integer_1__Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 3 && !typeOne(ps.get(2), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::assertSize_Any_MANY__Integer_1__String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 4)
+                    )
+                ));
 
-        register(m(m(h("meta::pure::functions::asserts::fail__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 0)),
-                m(h("meta::pure::functions::asserts::fail_String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1 && typeOne(ps.get(0), "String"))),
-                m(h("meta::pure::functions::asserts::fail_String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)),
-                m(h("meta::pure::functions::asserts::fail_Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1 && !typeOne(ps.get(0), "String")))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::asserts::fail__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 0)
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::fail_String_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1 && typeOne(ps.get(0), "String")),
+                            h("meta::pure::functions::asserts::fail_Function_1__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 1 && !typeOne(ps.get(0), "String"))
+                    ),
+                    m(
+                            h("meta::pure::functions::asserts::fail_String_1__Any_MANY__Boolean_1_", false, ps -> res("Boolean", "one"), ps -> ps.size() == 2)
+                    )
+                ));
     }
 
     private void registerTDS()
@@ -1577,6 +1807,15 @@ public class Handlers
         register(grp(SelectColInference,
                         h("meta::pure::functions::relation::select_Relation_1__ColSpec_1__Relation_1_", true, ps -> getTypeAndMultiplicity(Lists.mutable.with((RelationType<?>) ps.get(1)._genericType()._typeArguments().getLast()._rawType()), pureModel), ps -> true),
                         h("meta::pure::functions::relation::select_Relation_1__ColSpecArray_1__Relation_1_", true, ps -> getTypeAndMultiplicity(Lists.mutable.with((RelationType<?>) ps.get(1)._genericType()._typeArguments().getLast()._rawType()), pureModel), ps -> true)
+                )
+        );
+
+        register(grp(LateralInference,
+                h("meta::pure::functions::relation::lateral_Relation_1__Function_1__Relation_1_", true, ps -> getTypeAndMultiplicity(Lists.mutable.with((RelationType<?>) ps.get(0)._genericType()._typeArguments().getOnly()._rawType(), (RelationType<?>) funcReturnType(ps.get(1))._typeArguments().getOnly()._rawType()), pureModel), ps -> Lists.mutable.with(ps.get(0)._genericType()._typeArguments().getOnly(), funcReturnType(ps.get(1))._typeArguments().getOnly()), ps -> true)
+        ));
+
+        register(grp(FlattenColInference,
+                    h("meta::pure::functions::relation::variant::flatten_T_MANY__ColSpec_1__Relation_1_", true, ps -> getTypeAndMultiplicity(Lists.mutable.with((RelationType<?>) ps.get(1)._genericType()._typeArguments().getOnly()._rawType()), pureModel), ps -> Lists.mutable.with(ps.get(0)._genericType(), ps.get(1)._genericType()._typeArguments().getOnly()), ps -> true)
                 )
         );
 
@@ -1631,17 +1870,13 @@ public class Handlers
                 m(
                         m(
                                 h("meta::pure::mapping::from_FunctionDefinition_1__Runtime_1__T_m_", false, ps -> res(funcReturnType(ps.get(0)), funcReturnMul(ps.get(0))), ps -> ps.size() == 2 && typeOne(ps.get(0), taxoMap.get("cov_function_FunctionDefinition")) && typeOne(ps.get(1), taxoMap.get("cov_runtime_Runtime"))),
-                                h("meta::pure::mapping::from_FunctionDefinition_1__PackageableRuntime_1__T_m_", false, ps -> res(funcReturnType(ps.get(0)), funcReturnMul(ps.get(0))), ps -> ps.size() == 2 && typeOne(ps.get(0), taxoMap.get("cov_function_FunctionDefinition")) && typeOne(ps.get(1), taxoMap.get("cov_runtime_PackageableRuntime")))
-                        ),
-                        m(
+                                h("meta::pure::mapping::from_FunctionDefinition_1__PackageableRuntime_1__T_m_", false, ps -> res(funcReturnType(ps.get(0)), funcReturnMul(ps.get(0))), ps -> ps.size() == 2 && typeOne(ps.get(0), taxoMap.get("cov_function_FunctionDefinition")) && typeOne(ps.get(1), taxoMap.get("cov_runtime_PackageableRuntime"))),
                                 h("meta::pure::mapping::from_T_m__Runtime_1__T_m_", false, ps -> res(ps.get(0)._genericType(), ps.get(0)._multiplicity()), ps -> ps.size() == 2 && typeOne(ps.get(1), taxoMap.get("cov_runtime_Runtime"))),
                                 h("meta::pure::mapping::from_T_m__PackageableRuntime_1__T_m_", false, ps -> res(ps.get(0)._genericType(), ps.get(0)._multiplicity()), ps -> ps.size() == 2 && typeOne(ps.get(1), taxoMap.get("cov_runtime_PackageableRuntime")))
                         ),
                         m(
                                 h("meta::pure::mapping::from_FunctionDefinition_1__Mapping_1__Runtime_1__T_m_", false, ps -> res(funcReturnType(ps.get(0)), funcReturnMul(ps.get(0))), ps -> ps.size() == 3 && typeOne(ps.get(0), taxoMap.get("cov_function_FunctionDefinition")) && typeOne(ps.get(2), taxoMap.get("cov_runtime_Runtime"))),
-                                h("meta::pure::mapping::from_FunctionDefinition_1__Mapping_1__PackageableRuntime_1__T_m_", false, ps -> res(funcReturnType(ps.get(0)), funcReturnMul(ps.get(0))), ps -> ps.size() == 3 && typeOne(ps.get(0), taxoMap.get("cov_function_FunctionDefinition")) && typeOne(ps.get(2), taxoMap.get("cov_runtime_PackageableRuntime")))
-                        ),
-                        m(
+                                h("meta::pure::mapping::from_FunctionDefinition_1__Mapping_1__PackageableRuntime_1__T_m_", false, ps -> res(funcReturnType(ps.get(0)), funcReturnMul(ps.get(0))), ps -> ps.size() == 3 && typeOne(ps.get(0), taxoMap.get("cov_function_FunctionDefinition")) && typeOne(ps.get(2), taxoMap.get("cov_runtime_PackageableRuntime"))),
                                 h("meta::pure::mapping::from_TabularDataSet_1__Mapping_1__Runtime_1__TabularDataSet_1_", false, ps -> res("meta::pure::tds::TabularDataSet", "one"), ps -> ps.size() == 3 && "TabularDataSet".equals(ps.get(0)._genericType()._rawType()._name()) && typeOne(ps.get(2), taxoMap.get("cov_runtime_Runtime"))),
                                 h("meta::pure::mapping::from_TabularDataSet_1__Mapping_1__PackageableRuntime_1__TabularDataSet_1_", false, ps -> res("meta::pure::tds::TabularDataSet", "one"), ps -> ps.size() == 3 && "TabularDataSet".equals(ps.get(0)._genericType()._rawType()._name()) && typeOne(ps.get(2), taxoMap.get("cov_runtime_PackageableRuntime"))),
                                 h("meta::pure::mapping::from_T_m__Mapping_1__Runtime_1__T_m_", false, ps -> res(ps.get(0)._genericType(), ps.get(0)._multiplicity()), ps -> ps.size() == 3 && typeOne(ps.get(2), taxoMap.get("cov_runtime_Runtime"))),
@@ -1840,7 +2075,8 @@ public class Handlers
         register("meta::pure::functions::string::parseDate_String_1__Date_1_", true, ps -> res("Date", "one"));
         register("meta::pure::functions::string::parseFloat_String_1__Float_1_", true, ps -> res("Float", "one"));
         register("meta::pure::functions::string::parseInteger_String_1__Integer_1_", true, ps -> res("Integer", "one"));
-        register("meta::pure::functions::string::parseDecimal_String_1__Decimal_1_", true, ps -> res("Decimal", "one"));
+        register(m(m(h("meta::pure::functions::string::parseDecimal_String_1__Integer_1__Integer_1__Decimal_1_", true, ps -> res("Decimal", "one"), ps  -> ps.size() == 3)),
+                m(h("meta::pure::functions::string::parseDecimal_String_1__Decimal_1_", true, ps -> res("Decimal", "one")))));
         register("meta::pure::functions::string::repeatString_String_$0_1$__Integer_1__String_$0_1$_", false, ps -> res("String", "zeroOne"));
         register("meta::pure::functions::string::replace_String_1__String_1__String_1__String_1_", true, ps -> res("String", "one"));
         register("meta::pure::functions::string::reverseString_String_1__String_1_", true, ps -> res("String", "one"));
@@ -2072,13 +2308,17 @@ public class Handlers
         register("meta::pure::functions::math::rem_Number_1__Number_1__Number_1_", true, ps -> res("Number", "one"));
         register("meta::pure::functions::math::sqrt_Number_1__Float_1_", true, ps -> res("Float", "one"));
 
-        register(m(m(h("meta::pure::functions::math::round_Float_1__Integer_1__Float_1_", true, ps -> res("Float", "one"), ps -> ps.size() == 2 && typeOne(ps.get(0), "Float"))),
-                m(h("meta::pure::functions::math::round_Decimal_1__Integer_1__Decimal_1_", true, ps -> res("Decimal", "one"), ps -> ps.size() == 2 && typeOne(ps.get(0), "Decimal"))),
-                m(h("meta::pure::functions::math::round_Number_1__Integer_1_", true, ps -> res("Integer", "one"), ps -> true))));
+        register(m(
+                    m(
+                            h("meta::pure::functions::math::round_Float_1__Integer_1__Float_1_", true, ps -> res("Float", "one"), ps -> ps.size() == 2 && typeOne(ps.get(0), "Float")),
+                            h("meta::pure::functions::math::round_Decimal_1__Integer_1__Decimal_1_", true, ps -> res("Decimal", "one"), ps -> ps.size() == 2 && typeOne(ps.get(0), "Decimal"))
+                    ),
+                    m(
+                            h("meta::pure::functions::math::round_Number_1__Integer_1_", true, ps -> res("Integer", "one"), ps -> true)
+                    )
+                ));
         register("meta::pure::functions::math::toFloat_Number_1__Float_1_", true, ps -> res("Float", "one"));
         register("meta::pure::functions::math::toDecimal_Number_1__Decimal_1_", true, ps -> res("Decimal", "one"));
-
-
     }
 
     private void registerOlapMath()
@@ -2203,7 +2443,7 @@ public class Handlers
                 h("meta::core::runtime::getRuntimeWithModelQueryConnection_Class_1__String_1__Byte_MANY__Runtime_1_", false, ps -> res("meta::core::runtime::Runtime", "one"), ps -> typeOne(ps.get(1), "String") && typeMany(ps.get(2), "Byte")),
                 h("meta::core::runtime::getRuntimeWithModelQueryConnection_Class_1__Binding_1__Byte_MANY__Runtime_1_", false, ps -> res("meta::core::runtime::Runtime", "one"), ps -> typeMany(ps.get(2), "Byte")),
                 h("meta::core::runtime::getRuntimeWithModelQueryConnection_Class_1__Binding_1__String_1__Runtime_1_", false, ps -> res("meta::core::runtime::Runtime", "one"), ps -> typeOne(ps.get(2), "String")));
-        register(h("meta::core::runtime::currentUserId__String_1_", true, ps -> res("String", "one"), ps -> true));
+        register(h("meta::pure::functions::runtime::currentUserId__String_1_", false, ps -> res("String", "one"), ps -> true));
     }
 
     private void registerUnitFunctions()
@@ -2334,9 +2574,30 @@ public class Handlers
         insertInMap(handler);
     }
 
-    private void register(FunctionExpressionBuilder handler)
+    public void register(FunctionExpressionBuilder handler)
     {
-        insertInMap(handler);
+        String functionName = handler.getFunctionName();
+        FunctionExpressionBuilder existingBuilder = map.get(functionName);
+        if (existingBuilder == null || existingBuilder instanceof RequiredInferenceSimilarSignatureFunctionExpressionBuilder || handler instanceof RequiredInferenceSimilarSignatureFunctionExpressionBuilder)
+        {
+            insertInMap(handler);
+        }
+        else
+        {
+            for (FunctionHandler h : handler.handlers())
+            {
+                registerMetaPackage(h);
+                if (existingBuilder.supportFunctionHandler(h))
+                {
+                    existingBuilder.addFunctionHandler(h);
+                }
+                else
+                {
+                    this.addFunctionHandler(h, existingBuilder);
+                }
+                existingBuilder = map.get(functionName);
+            }
+        }
     }
 
     private void insertInMap(FunctionExpressionBuilder handler)
@@ -2360,36 +2621,12 @@ public class Handlers
 
     private void register(FunctionHandlerRegistrationInfo info)
     {
-        if (info.coordinates == null || info.coordinates.isEmpty())
-        {
-            register(info.functionHandler);
-        }
-        else
-        {
-            FunctionExpressionBuilder functionExpressionBuilder = Objects.requireNonNull(this.map.get(info.functionHandler.getFunctionName()), "Can't find expression builder for function '" + info.functionHandler.getFunctionName() + "'");
-            for (int i = 0; i < info.coordinates.size() - 1; ++i)
-            {
-                functionExpressionBuilder = functionExpressionBuilder.getFunctionExpressionBuilderAtIndex(info.coordinates.get(i));
-            }
-            functionExpressionBuilder.insertFunctionHandlerAtIndex(info.coordinates.get(info.coordinates.size() - 1), info.functionHandler);
-        }
+        register(info.functionHandler);
     }
 
     private void register(FunctionExpressionBuilderRegistrationInfo info)
     {
-        if (info.coordinates == null || info.coordinates.isEmpty())
-        {
-            register(info.functionExpressionBuilder);
-        }
-        else
-        {
-            FunctionExpressionBuilder functionExpressionBuilder = Objects.requireNonNull(this.map.get(info.functionExpressionBuilder.getFunctionName()), "Can't find expression builder for function '" + info.functionExpressionBuilder.getFunctionName() + "'");
-            for (int i = 0; i < info.coordinates.size() - 1; ++i)
-            {
-                functionExpressionBuilder = functionExpressionBuilder.getFunctionExpressionBuilderAtIndex(info.coordinates.get(i));
-            }
-            functionExpressionBuilder.insertFunctionExpressionBuilderAtIndex(info.coordinates.get(info.coordinates.size() - 1), info.functionExpressionBuilder);
-        }
+        register(info.functionExpressionBuilder);
     }
 
     private void mayReplace(FunctionHandler handler)
@@ -2457,8 +2694,7 @@ public class Handlers
 
     private void addFunctionHandler(FunctionHandler handler, CompositeFunctionExpressionBuilder compositeFunctionExpressionBuilder)
     {
-        compositeFunctionExpressionBuilder.getBuilders().add(new MultiHandlerFunctionExpressionBuilder(this.pureModel, handler));
-
+        compositeFunctionExpressionBuilder.addBuilder(new MultiHandlerFunctionExpressionBuilder(this.pureModel, handler));
     }
 
     // --------------------------------------------- Function expression builder ----------------------------------
@@ -2591,7 +2827,7 @@ public class Handlers
 
     private <T> boolean check(T val, Function<T, Boolean> func)
     {
-        return func.apply(val);
+        return val != null && func.apply(val);
     }
 
     private static FunctionType funcType(GenericType gt, PureModel pm)
@@ -2602,7 +2838,12 @@ public class Handlers
             Multiplicity m = gt._multiplicityArguments().getFirst();
             return (FunctionType) PureModel.buildFunctionType(FastList.newListWith(new Root_meta_pure_metamodel_valuespecification_VariableExpression_Impl("", null, pm.getClass("meta::pure::metamodel::valuespecification::VariableExpression"))._genericType(g.getFirst())._multiplicity(pm.getMultiplicity("one"))), g.getLast(), m, pm)._rawType();
         }
-        return (FunctionType) gt._typeArguments().getFirst()._rawType();
+        GenericType genericType = gt._typeArguments().getFirst();
+        if (genericType == null || !(genericType._rawType() instanceof FunctionType))
+        {
+            return null;
+        }
+        return (FunctionType) genericType._rawType();
     }
 
     private FunctionType funcType(GenericType gt)
@@ -2749,7 +2990,6 @@ public class Handlers
         map.put("cov_tds_SortInformation", Sets.mutable.with("SortInformation", "Nil"));
         map.put("cov_tds_ColumnSpecification", Sets.mutable.with("ColumnSpecification", "BasicColumnSpecification", "WindowColumnSpecification", "Nil"));
         map.put("cov_path_Path", Sets.mutable.with("Path", "Nil"));
-        map.put("cov_mapping_TableTDS", Sets.mutable.with("TableTDS", "Nil"));
         map.put("cov_tds_SortDirection", Sets.mutable.with("SortDirection", "Nil"));
         map.put("cov_relation_Table", Sets.mutable.with("Table", "ViewSelectSQLQuery", "VarCrossSetPlaceHolder", "Nil"));
         return map;
@@ -2976,6 +3216,7 @@ public class Handlers
         map.put("meta::pure::functions::collection::pair_U_1__V_1__Pair_1_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && isOne(ps.get(1)._multiplicity()));
         map.put("meta::pure::functions::collection::range_Integer_1__Integer_1__Integer_1__Integer_MANY_", (List<ValueSpecification> ps) -> ps.size() == 3 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(1)._genericType()._rawType()._name()) && isOne(ps.get(2)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(2)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::collection::range_Integer_1__Integer_1__Integer_MANY_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(1)._genericType()._rawType()._name()));
+        map.put("meta::pure::functions::collection::range_Integer_1__Integer_MANY_", (List<ValueSpecification> ps) -> ps.size() == 1 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(0)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::collection::removeDuplicatesBy_T_MANY__Function_1__T_MANY_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(1)._multiplicity()) && ("Nil".equals(ps.get(1)._genericType()._rawType()._name()) || check(funcType(ps.get(1)._genericType()), (FunctionType ft) -> isOne(ft._returnMultiplicity()) && check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.size() == 1 && isOne(nps.get(0)._multiplicity())))));
         map.put("meta::pure::functions::collection::removeDuplicates_T_MANY__Function_$0_1$__Function_$0_1$__T_MANY_", (List<ValueSpecification> ps) -> ps.size() == 3 && matchZeroOne(ps.get(1)._multiplicity()) && ("Nil".equals(ps.get(1)._genericType()._rawType()._name()) || check(funcType(ps.get(1)._genericType()), (FunctionType ft) -> isOne(ft._returnMultiplicity()) && check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.size() == 1 && isOne(nps.get(0)._multiplicity())))) && matchZeroOne(ps.get(2)._multiplicity()) && ("Nil".equals(ps.get(2)._genericType()._rawType()._name()) || check(funcType(ps.get(2)._genericType()), (FunctionType ft) -> isOne(ft._returnMultiplicity()) && taxoMap.get("cov_Boolean").contains(ft._returnType()._rawType()._name()) && check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.size() == 2 && isOne(nps.get(0)._multiplicity()) && isOne(nps.get(1)._multiplicity())))));
         map.put("meta::pure::functions::collection::removeDuplicates_T_MANY__Function_1__T_MANY_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(1)._multiplicity()) && ("Nil".equals(ps.get(1)._genericType()._rawType()._name()) || check(funcType(ps.get(1)._genericType()), (FunctionType ft) -> isOne(ft._returnMultiplicity()) && taxoMap.get("cov_Boolean").contains(ft._returnType()._rawType()._name()) && check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.size() == 2 && isOne(nps.get(0)._multiplicity()) && isOne(nps.get(1)._multiplicity())))));
@@ -2994,6 +3235,9 @@ public class Handlers
         map.put("meta::pure::functions::collection::uniqueValueOnly_T_MANY__T_$0_1$__T_$0_1$_", (List<ValueSpecification> ps) -> ps.size() == 2 && matchZeroOne(ps.get(1)._multiplicity()));
         map.put("meta::pure::functions::collection::zip_T_MANY__U_MANY__Pair_MANY_", (List<ValueSpecification> ps) -> ps.size() == 2);
         map.put("meta::pure::functions::constraints::warn_Boolean_1__String_1__Boolean_1_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_Boolean").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(1)._genericType()._rawType()._name()));
+        map.put("meta::pure::constraints::functions::evaluateConstraint_Z_1__String_1__Boolean_1_", (List<ValueSpecification> ps) -> ps.size() == 2);
+        map.put("meta::pure::constraints::functions::evaluateConstraintMessageFunction_Z_1__String_1__String_1_", (List<ValueSpecification> ps) -> ps.size() == 2);
+        map.put("meta::pure::constraints::functions::createConstraintFailureMessage_X_1__String_1__String_$0_1$_", (List<ValueSpecification> ps) -> ps.size() == 2);
         map.put("meta::pure::functions::date::add_StrictDate_1__Duration_1__StrictDate_1_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_StrictDate").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && taxoMap.get("cov_date_Duration").contains(ps.get(1)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::date::adjust_Date_1__Integer_1__DurationUnit_1__Date_1_", (List<ValueSpecification> ps) -> ps.size() == 3 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_Date").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(1)._genericType()._rawType()._name()) && isOne(ps.get(2)._multiplicity()) && taxoMap.get("cov_date_DurationUnit").contains(ps.get(2)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::date::timeBucket_DateTime_1__Integer_1__DurationUnit_1__DateTime_1_", (List<ValueSpecification> ps) -> ps.size() == 3 && isOne(ps.get(0)._multiplicity()) && Sets.immutable.with("Nil", "DateTime").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && ("Nil".equals(ps.get(1)._genericType()._rawType()._name()) || "Integer".equals(ps.get(1)._genericType()._rawType()._name())) && isOne(ps.get(2)._multiplicity()) && ("Nil".equals(ps.get(2)._genericType()._rawType()._name()) || "DurationUnit".equals(ps.get(2)._genericType()._rawType()._name())));
@@ -3099,6 +3343,7 @@ public class Handlers
         map.put("meta::pure::functions::lang::eval_Function_1__T_n__V_m_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && ("Nil".equals(ps.get(0)._genericType()._rawType()._name()) || check(funcType(ps.get(0)._genericType()), (FunctionType ft) -> check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.size() == 1))));
         map.put("meta::pure::functions::lang::eval_Function_1__V_m_", (List<ValueSpecification> ps) -> ps.size() == 1 && isOne(ps.get(0)._multiplicity()) && ("Nil".equals(ps.get(0)._genericType()._rawType()._name()) || check(funcType(ps.get(0)._genericType()), (FunctionType ft) -> check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.isEmpty()))));
         map.put("meta::pure::functions::lang::if_Boolean_1__Function_1__Function_1__T_m_", (List<ValueSpecification> ps) -> ps.size() == 3 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_Boolean").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && ("Nil".equals(ps.get(1)._genericType()._rawType()._name()) || check(funcType(ps.get(1)._genericType()), (FunctionType ft) -> check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.isEmpty()))) && isOne(ps.get(2)._multiplicity()) && ("Nil".equals(ps.get(2)._genericType()._rawType()._name()) || check(funcType(ps.get(2)._genericType()), (FunctionType ft) -> check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.isEmpty()))));
+        map.put("meta::pure::functions::lang::if_Pair_MANY__Function_1__T_m_", (List<ValueSpecification> ps) -> ps.size() == 2 && typeMany(ps.get(0), "Pair") && isOne(ps.get(1)._multiplicity()) && ("Nil".equals(ps.get(1)._genericType()._rawType()._name()) || check(funcType(ps.get(1)._genericType()), (FunctionType ft) -> check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.isEmpty()))));
         map.put("meta::pure::functions::lang::letFunction_String_1__T_m__T_m_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(0)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::lang::match_Any_MANY__Function_$1_MANY$__T_m_", (List<ValueSpecification> ps) -> ps.size() == 2 && matchOneMany(ps.get(1)._multiplicity()) && ("Nil".equals(ps.get(1)._genericType()._rawType()._name()) || check(funcType(ps.get(1)._genericType()), (FunctionType ft) -> check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.size() == 1))));
         map.put("meta::pure::functions::lang::new_Class_1__String_1__KeyExpression_MANY__T_1_", (List<ValueSpecification> ps) -> ps.size() == 3 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_type_Class").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(1)._genericType()._rawType()._name()) && taxoMap.get("cov_function_KeyExpression").contains(ps.get(2)._genericType()._rawType()._name()));
@@ -3299,6 +3544,7 @@ public class Handlers
         map.put("meta::pure::functions::relation::size_Relation_1__Integer_1_", (List<ValueSpecification> ps) -> ps.size() == 1 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_relation_Relation").contains(ps.get(0)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::relation::slice_Relation_1__Integer_1__Integer_1__Relation_1_", (List<ValueSpecification> ps) -> ps.size() == 3 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_relation_Relation").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(1)._genericType()._rawType()._name()) && isOne(ps.get(2)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(2)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::relation::sort_Relation_1__SortInfo_MANY__Relation_1_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_relation_Relation").contains(ps.get(0)._genericType()._rawType()._name()) && taxoMap.get("cov_relation_SortInfo").contains(ps.get(1)._genericType()._rawType()._name()));
+        map.put("meta::pure::functions::runtime::currentUserId__String_1_", (List<ValueSpecification> ps) -> ps.isEmpty());
         map.put("meta::pure::functions::string::ascii_String_1__Integer_1_", (List<ValueSpecification> ps) -> ps.size() == 1 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(0)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::string::char_Integer_1__String_1_", (List<ValueSpecification> ps) -> ps.size() == 1 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(0)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::string::chunk_String_1__Integer_1__String_MANY_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(1)._genericType()._rawType()._name()));
@@ -3348,6 +3594,7 @@ public class Handlers
         map.put("meta::pure::functions::string::parseBoolean_String_1__Boolean_1_", (List<ValueSpecification> ps) -> ps.size() == 1 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(0)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::string::parseDate_String_1__Date_1_", (List<ValueSpecification> ps) -> ps.size() == 1 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(0)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::string::parseDecimal_String_1__Decimal_1_", (List<ValueSpecification> ps) -> ps.size() == 1 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(0)._genericType()._rawType()._name()));
+        map.put("meta::pure::functions::string::parseDecimal_String_1__Integer_1__Integer_1__Decimal_1_", (List<ValueSpecification> ps) -> ps.size() == 3 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(0)._genericType()._rawType()._name()) && isOne(ps.get(1)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(1)._genericType()._rawType()._name()) && isOne(ps.get(2)._multiplicity()) && taxoMap.get("cov_Integer").contains(ps.get(2)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::string::parseFloat_String_1__Float_1_", (List<ValueSpecification> ps) -> ps.size() == 1 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(0)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::string::parseInteger_String_1__Integer_1_", (List<ValueSpecification> ps) -> ps.size() == 1 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_String").contains(ps.get(0)._genericType()._rawType()._name()));
         map.put("meta::pure::functions::string::plus_String_MANY__String_1_", (List<ValueSpecification> ps) -> ps.size() == 1 && taxoMap.get("cov_String").contains(ps.get(0)._genericType()._rawType()._name()));
@@ -3428,7 +3675,6 @@ public class Handlers
         map.put("meta::pure::tds::project_K_MANY__Function_MANY__String_MANY__TabularDataSet_1_", (List<ValueSpecification> ps) -> ps.size() == 3 && ("Nil".equals(ps.get(1)._genericType()._rawType()._name()) || check(funcType(ps.get(1)._genericType()), (FunctionType ft) -> check(ft._parameters().toList(), (List<? extends VariableExpression> nps) -> nps.size() == 1 && isOne(nps.get(0)._multiplicity())))) && taxoMap.get("cov_String").contains(ps.get(2)._genericType()._rawType()._name()));
         map.put("meta::pure::tds::project_T_MANY__ColumnSpecification_MANY__TabularDataSet_1_", (List<ValueSpecification> ps) -> ps.size() == 2 && taxoMap.get("cov_tds_ColumnSpecification").contains(ps.get(1)._genericType()._rawType()._name()));
         map.put("meta::pure::tds::project_T_MANY__Path_MANY__TabularDataSet_1_", (List<ValueSpecification> ps) -> ps.size() == 2 && taxoMap.get("cov_path_Path").contains(ps.get(1)._genericType()._rawType()._name()));
-        map.put("meta::pure::tds::project_TableTDS_1__ColumnSpecification_MANY__TabularDataSet_1_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_mapping_TableTDS").contains(ps.get(0)._genericType()._rawType()._name()) && taxoMap.get("cov_tds_ColumnSpecification").contains(ps.get(1)._genericType()._rawType()._name()));
         map.put("meta::pure::tds::project_TabularDataSet_1__ColumnSpecification_MANY__TabularDataSet_1_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_tds_TabularDataSet").contains(ps.get(0)._genericType()._rawType()._name()) && taxoMap.get("cov_tds_ColumnSpecification").contains(ps.get(1)._genericType()._rawType()._name()));
         map.put("meta::pure::tds::renameColumns_TabularDataSet_1__Pair_MANY__TabularDataSet_1_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_tds_TabularDataSet").contains(ps.get(0)._genericType()._rawType()._name()) && taxoMap.get("cov_collection_Pair").contains(ps.get(1)._genericType()._rawType()._name()));
         map.put("meta::pure::tds::restrictDistinct_TabularDataSet_1__String_MANY__TabularDataSet_1_", (List<ValueSpecification> ps) -> ps.size() == 2 && isOne(ps.get(0)._multiplicity()) && taxoMap.get("cov_tds_TabularDataSet").contains(ps.get(0)._genericType()._rawType()._name()) && taxoMap.get("cov_String").contains(ps.get(1)._genericType()._rawType()._name()));

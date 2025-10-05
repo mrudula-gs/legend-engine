@@ -1,3 +1,4 @@
+import meta::relational::functions::pureToSqlQuery::metamodel::*;
 import meta::relational::metamodel::join::*;
 import meta::relational::functions::sqlQueryToString::duckDB::*;
 import meta::relational::functions::sqlQueryToString::default::*;
@@ -32,7 +33,10 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::duckD
       literalProcessor = $literalProcessor,
       joinProcessor = meta::relational::functions::sqlQueryToString::duckDB::processJoinForDuckDB_JoinTreeNode_1__DbConfig_1__Format_1__Extension_MANY__String_1_,
       semiStructuredElementProcessor = processSemiStructuredElementForDuckDB_RelationalOperationElement_1__SqlGenerationContext_1__String_1_,
+      tableFunctionParamProcessor = processTableFunctionParamPlaceHolder_RelationalOperationElement_1__SqlGenerationContext_1__String_1_,
+      tabularFunctionProcessor = meta::relational::functions::sqlQueryToString::duckDB::tabularFunctionProcessor_String_1__String_1__FunctionParameter_MANY__String_1_,
       selectSQLQueryProcessor = processSelectSQLQueryForDuckDB_SelectSQLQuery_1__SqlGenerationContext_1__Boolean_1__String_1_,
+      lateralJoinProcessor = processJoinTreeNodeWithLateralJoinForDuckDB_JoinTreeNode_1__DbConfig_1__Format_1__Extension_MANY__String_1_,
       commonTableExpressionsProcessor = processCommonTableExpressionsProcessorDefault_CommonTableExpression_MANY__SqlGenerationContext_1__Boolean_1__String_1_,
       columnNameToIdentifier = columnNameToIdentifierForDuckDB_String_1__DbConfig_1__String_1_,
       identifierProcessor = processIdentifierWithDoubleQuotes_String_1__DbConfig_1__String_1_,
@@ -50,6 +54,11 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::duckD
 function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::processCommitQueryForDuckDB(b:CommitQuery[1], s: SqlGenerationContext[1]):String[1]
 {
   'COMMIT;';
+}
+
+function meta::relational::functions::sqlQueryToString::duckDB::tabularFunctionProcessor(schema:String[1], functionName: String[1], params: FunctionParameter[*]):String[1]
+{
+   if($schema=='', | $functionName,| $schema+'.'+$functionName) + '('+ $params->map(p|$p.name)->joinStrings(', ')+ ')';
 }
 
 function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::processJoinForDuckDB(j:JoinTreeNode[1], dbConfig : DbConfig[1], format:Format[1], extensions:Extension[*]):String[1]
@@ -76,7 +85,9 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::duckD
                 createTable = translateCreateTableStatementDuckDB_CreateTableSQL_1__DbConfig_1__String_1_,
                 dropTable = translateDropTableStatementDefault_DropTableSQL_1__DbConfig_1__String_1_,
                 loadTable = loadValuesToDbTableDefault_LoadTableSQL_1__DbConfig_1__String_MANY_,
-                createView = createView_CreateViewSQL_1__DbConfig_1__Extension_MANY__String_1_
+                createView = createView_CreateViewSQL_1__DbConfig_1__Extension_MANY__String_1_,
+                createFunction = createFunction_CreateFunctionSQL_1__DbConfig_1__Extension_MANY__String_1_              
+
               );
 }
 
@@ -124,27 +135,30 @@ function meta::relational::functions::sqlQueryToString::duckDB::translateCreateT
       +');';
 }
 
-function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::getDynaFunctionVariantTransformer(vars: String[*]): String[1]
-{
-  $vars->match([
-    zero:String[0] | 'null',
-    one:String[1]  | $one,
-    many:String[*] | $many->joinStrings('array_value(', ',', ')')
-  ]);
-}
-
 function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::getDynaFunctionToSqlForDuckDB(): DynaFunctionToSql[*]
 {
   let allStates = allGenerationStates();
 
   [
-    dynaFnToSql('array_max',              $allStates,            ^ToSql(format='array_aggregate(%s, \'max\')', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_min',              $allStates,            ^ToSql(format='array_aggregate(%s, \'min\')', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_sum',              $allStates,            ^ToSql(format='array_aggregate(%s, \'sum\')', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_sort',             $allStates,            ^ToSql(format='array_sort(%s)', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_reverse',          $allStates,            ^ToSql(format='array_reverse(%s)', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_size',             $allStates,            ^ToSql(format='ifnull(len(%s), 0)', transform=getDynaFunctionVariantTransformer_String_MANY__String_1_)),
-    dynaFnToSql('array_append',           $allStates,            ^ToSql(format='array_append(%s, %s)', transform= {vals:String[*] | $vals->init()->getDynaFunctionVariantTransformer()->concatenate($vals->last())})),
+    dynaFnToSql('array_max',              $allStates,            ^ToSql(format='array_aggregate(%s, \'max\')')),
+    dynaFnToSql('array_min',              $allStates,            ^ToSql(format='array_aggregate(%s, \'min\')')),
+    dynaFnToSql('array_sum',              $allStates,            ^ToSql(format='array_aggregate(%s, \'sum\')')),
+    dynaFnToSql('array_sort',             $allStates,            ^ToSql(format='array_sort(%s)')),
+    dynaFnToSql('array_reverse',          $allStates,            ^ToSql(format='array_reverse(%s)')),
+    dynaFnToSql('array_size',             $allStates,            ^ToSql(format='ifnull(len(%s), 0)')),
+    dynaFnToSql('array_append',           $allStates,            ^ToSql(format='array_append(%s, %s)')),
+    dynaFnToSql('array_position',         $allStates,            ^ToSql(format='(ifnull(array_position(%s, %s), 0)-1)')),
+    dynaFnToSql('array_slice',            $allStates,            ^ToSql(format='(%s[greatest(%s + 1, 1) : greatest(%s, 0)])')),
+    dynaFnToSql('array_drop',             $allStates,            ^ToSql(format='(%s[greatest(%s + 1, 1) : ])')),
+    dynaFnToSql('array_take',             $allStates,            ^ToSql(format='(%s[ : greatest(%s, 0)])')),
+    dynaFnToSql('array_first',            $allStates,            ^ToSql(format='(%s[1])')),
+    dynaFnToSql('array_last',             $allStates,            ^ToSql(format='(%s[-1])')),
+    dynaFnToSql('array_init',             $allStates,            ^ToSql(format='array_pop_back(%s)')),
+    dynaFnToSql('array_tail',             $allStates,            ^ToSql(format='array_pop_front(%s)')),    
+    dynaFnToSql('array_concatenate',      $allStates,            ^ToSql(format='array_cat(%s, %s)')),
+    dynaFnToSql('range',                  $allStates,            ^ToSql(format='range(%s, %s, %s)')),
+    dynaFnToSql('array_contains',         $allStates,            ^ToSql(format='ifnull(array_contains(%s, %s), false)')),
+    dynaFnToSql('array_distinct',         $allStates,            ^ToSql(format='array_distinct(%s)')),
     dynaFnToSql('adjust',                 $allStates,            ^ToSql(format='date_add(%s)', transform={p:String[3] | $p->at(0) + ',' + constructIntervalFunction($p->at(2), $p->at(1)) })),
     dynaFnToSql('bitAnd',                 $allStates,            ^ToSql(format='(cast(%s as BIGINT) & cast(%s as BIGINT))')),
     dynaFnToSql('bitNot',                 $allStates,            ^ToSql(format='(~ cast(%s as BIGINT))')),
@@ -169,7 +183,7 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::duckD
     dynaFnToSql('dayOfYear',              $allStates,            ^ToSql(format='day(%s)')),
     dynaFnToSql('decodeBase64',           $allStates,            ^ToSql(format='decode(from_base64(%s))')),
     dynaFnToSql('encodeBase64',           $allStates,            ^ToSql(format='base64(encode(%s))')),
-    // dynaFnToSql('extractFromSemiStructured', $allStates,         ^ToSql(format='%s', transform={p:String[3]|$p->processExtractFromSemiStructuredParamsForH2()})),
+    dynaFnToSql('extractFromSemiStructured', $allStates,         ^ToSql(format='%s', transform={p:String[3]|$p->processExtractFromSemiStructuredParamsFoDuckDb()})),
     dynaFnToSql('first',                  $allStates,            ^ToSql(format='first(%s)')),
     dynaFnToSql('firstDayOfMonth',        $allStates,            ^ToSql(format='date_trunc(\'month\', %s)', transform={p:String[1] | $p->repeat(1)})),
     dynaFnToSql('firstDayOfQuarter',      $allStates,            ^ToSql(format='date_trunc(\'quarter\', %s)', transform={p:String[1] | $p->repeat(1)})),
@@ -204,7 +218,7 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::duckD
     // dynaFnToSql('mostRecentDayOfWeek',    $allStates,            ^ToSql(format='date_add(DAY, case when %s - DAY_OF_WEEK(%s) > 0 then %s - DAY_OF_WEEK(%s) - 7 else %s - DAY_OF_WEEK(%s) end, %s)', transform={p:String[1..2] | $p->formatMostRecentH2('current_date()')}, parametersWithinWhenClause = [false, false])),
     dynaFnToSql('now',                    $allStates,            ^ToSql(format='cast(now() as timestamp)')),
     // dynaFnToSql('parseDate',              $allStates,            ^ToSql(format='parsedatetime(%s,%s)')),
-    dynaFnToSql('parseDecimal',           $allStates,            ^ToSql(format='cast(%s as decimal)')),
+    dynaFnToSql('parseDecimal',           $allStates,            ^ToSql(format='%s', transform={p:String[*] |$p->transformParseDecimal()})),
     dynaFnToSql('parseFloat',             $allStates,            ^ToSql(format='cast(%s as float)')),
     dynaFnToSql('parseInteger',           $allStates,            ^ToSql(format='cast(%s as BIGINT)')),
     dynaFnToSql('parseJson',              $allStates,            ^ToSql(format='%s::JSON')),
@@ -228,9 +242,12 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::duckD
     dynaFnToSql('toFloat',                $allStates,            ^ToSql(format='cast(%s as double)')),
     dynaFnToSql('toString',               $allStates,            ^ToSql(format='cast(%s as varchar)')),
     dynaFnToSql('toJson',                 $allStates,            ^ToSql(format='(json(%s)::STRING)')),
-    dynaFnToSql('toVariant',              $allStates,            ^ToSql(format='%s', transform=toVariantForDuckDb_String_MANY__String_1_)),
-    dynaFnToSql('toVariantList',          $allStates,            ^ToSql(format='json_array(%s)', transform={p:String[*] | $p->joinStrings(',')})),
-    dynaFnToSql('toVariantObject',        $allStates,            ^ToSql(format='json_object(%s)', transform={p:String[*] | $p->joinStrings(',')})),
+    dynaFnToSql('toVariant',              $allStates,            ^ToSql(format='ifnull(to_json(%s), \'null\'::json)')),
+    dynaFnToSql('toVariantList',          $allStates,            ^ToSql(format='[%s]', transform={p:String[*] | $p->joinStrings(',')})),
+    dynaFnToSql('toVariantObject',        $allStates,            ^ToSql(format='MAP {%s}', transform={p:String[*] | range(0, $p->size(), 2)->map(i | $p->at($i) + ': ' + $p->at($i + 1))->joinStrings(', ')})),
+    dynaFnToSql('keys',                   $allStates,            ^ToSql(format='map_keys(%s)')),
+    dynaFnToSql('values',                 $allStates,            ^ToSql(format='map_values(%s)')),    
+    dynaFnToSql('mapConcatenate',          $allStates,           ^ToSql(format='map_concat(%s, %s)')),    
     // dynaFnToSql('toTimestamp',            $allStates,            ^ToSql(format='%s', transform={p:String[2] | $p->transformToTimestampH2()})),
     dynaFnToSql('weekOfYear',             $allStates,            ^ToSql(format='week(%s)')),
     dynaFnToSql('year',                   $allStates,            ^ToSql(format='year(%s)')),
@@ -242,15 +259,41 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::duckD
   ];
 }
 
-function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::toVariantForDuckDb(params: String[*]):String[1]
+function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::processExtractFromSemiStructuredParamsFoDuckDb(params:String[3]):String[1]
 {
-  if($params->size() == 1,
-    |
-      'ifnull(to_json(%s), \'null\'::json)'->format($params->toOne()); // when single parameter, and is sql null, we need json null
-    ,
-    |
-      'to_json(%s)'->format($params->joinStrings('[', ',', ']'));
-  );
+  let baseRelationalOp = $params->at(0);
+  let pathNavigation = $params->at(1);
+  let returnType = $params->at(2);
+
+  let elementAccess = format('json_extract(%s, \'$.%s\')', [$baseRelationalOp, $pathNavigation]);
+
+  if ($returnType->in(['CHAR', 'VARCHAR', 'STRING']), | 'cast(' + $elementAccess + ' as VARCHAR)', |
+  if ($returnType->in(['DATE','DATETIME', 'TIMESTAMP']), | 'cast(' + $elementAccess + ' as TIMESTAMP)', |
+  if ($returnType == 'BOOLEAN', | 'cast(' + $elementAccess + ' as BOOLEAN)', |
+  if ($returnType == 'FLOAT', | 'cast(' + $elementAccess + ' as DOUBLE)', |
+  if ($returnType == 'INTEGER', | 'cast(' + $elementAccess + 'as INTEGER)', |
+  $elementAccess)))));
+}
+
+function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::processTableFunctionParamPlaceHolder(r:RelationalOperationElement[1], sgc: SqlGenerationContext[1]): String[1]
+{
+  $r->match([
+    t: TableFunctionParamPlaceHolder[1] | $t.var->replaceVarPlaceHolderForAppGeneration($sgc),
+    t: ProcedureVariablePlaceHolder[1] | $t.var->replaceProcedurevariable($sgc),
+    r: RelationalOperationElement[1] | 'sqlQueryToString for relational element ' + $r->type().name->toOne() + ' has not been implemented yet for snowflake'
+   ]);
+}
+
+function <<access.private>>  meta::relational::functions::sqlQueryToString::duckDB::replaceVarPlaceHolderForAppGeneration(v:VarPlaceHolder[1], sgc:SqlGenerationContext[1]): String[1]
+{
+  assertEmpty($v.propertyPath, 'processing for variable with propertyPath access is not implemented');
+  $v.name;
+}
+
+function <<access.private>>  meta::relational::functions::sqlQueryToString::duckDB::replaceProcedurevariable(v:VarPlaceHolder[1], sgc:SqlGenerationContext[1]): String[1]
+{
+  assertEmpty($v.propertyPath, 'processing for variable with propertyPath access is not implemented');
+  ':'+$v.name;
 }
 
 function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::dayOfWeekNumberForDuckDB(dayOfWeek: String[1..2]):String[1]
@@ -443,8 +486,17 @@ function meta::relational::functions::sqlQueryToString::duckDB::processJoinStrin
 function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::processSemiStructuredElementForDuckDB(s:RelationalOperationElement[1], sgc:SqlGenerationContext[1]): String[1]
 {
    $s->match([
-      o:SemiStructuredObjectNavigation[1] | $o->processSemiStructuredObjectNavigationForDuckDB($sgc)
+      o:SemiStructuredObjectNavigation[1]     | $o->processSemiStructuredObjectNavigationForDuckDB($sgc),
+      f:SemiStructuredArrayFlatten[1]         | $f->processSemiStructuredArrayFlattenForDuckDB($sgc),
+      f:SemiStructuredArrayFlattenRelation[1] | ^SemiStructuredArrayFlatten(navigation = $f.navigation)->processSemiStructuredArrayFlattenForDuckDB($sgc)
    ])
+}
+
+function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::processSemiStructuredArrayFlattenForDuckDB(s:SemiStructuredArrayFlatten[1], sgc:SqlGenerationContext[1]): String[1]
+{
+   // https://duckdb.org/docs/stable/sql/query_syntax/unnest.html
+   let processedNavigation = $s.navigation->processOperation($sgc);
+   '(select unnest(' + $processedNavigation + ', recursive := false) as VALUE)';
 }
 
 function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::processSemiStructuredObjectNavigationForDuckDB(s:SemiStructuredObjectNavigation[1], sgc:SqlGenerationContext[1]): String[1]
@@ -478,7 +530,7 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::duckD
 
 function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::buildFoldLambda(lambda: FoldRelationalLambda[1], sgc: SqlGenerationContext[1]): String[1]
 {
-  'reduce(%s, lambda "%s", "%s" : %s, %s)::%s'->format([
+  'cast(reduce(%s, lambda "%s", "%s" : %s, %s) as %s)'->format([
     $lambda.parameters->at(0).value->processOperation($sgc),
     $lambda.parameters->at(1).name,
     $lambda.parameters->at(0).name,
@@ -504,4 +556,12 @@ function <<access.private>> meta::relational::functions::sqlQueryToString::duckD
       $lambda.parameters->at(0).name,
       $lambda.body->processOperation($sgc)
    ]);
+}
+
+function <<access.private>> meta::relational::functions::sqlQueryToString::duckDB::processJoinTreeNodeWithLateralJoinForDuckDB(j:JoinTreeNode[1], dbConfig : DbConfig[1], format:Format[1], extensions:Extension[*]):String[1]
+{
+   ', lateral '
+   + $j.alias
+         ->map(a|^$a(name = '"' + $a.name + '"'))
+         ->toOne()->processOperation($dbConfig, ^$format(newLine = '')->indent(), $extensions) + $format.separator();
 }

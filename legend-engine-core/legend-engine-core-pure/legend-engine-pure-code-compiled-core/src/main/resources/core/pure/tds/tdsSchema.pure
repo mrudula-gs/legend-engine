@@ -186,7 +186,12 @@ function meta::pure::tds::schema::resolveSchemaImpl(f : FunctionDefinition<Any>[
 
 function meta::pure::tds::schema::resolveSchemaImpl(f : FunctionDefinition<Any>[1], extensions:meta::pure::extension::Extension[*]) : SchemaState[1]
 {
-  resolveSchemaImpl($f, ^Map<String, List<Any>>(), $extensions);
+   let vars = $f.expressionSequence->evaluateAndDeactivate()->init()->map(e | $e->match([
+      s:SimpleFunctionExpression[1] | if ($s.func == letFunction_String_1__T_m__T_m_, | pair($s.parametersValues->at(0)->cast(@InstanceValue).values->toOne()->cast(@String), list($s.parametersValues->at(1))), | []),
+      v:ValueSpecification[*] | [] 
+   ]))->newMap();
+
+  resolveSchemaImpl($f, $vars, $extensions);
 }
 
 function <<access.private>> meta::pure::tds::schema::resolveSchemaImpl(fe : FunctionExpression[1], openVars : Map<String, List<Any>>[1], extensions:meta::pure::extension::Extension[*]) : SchemaState[1]
@@ -202,7 +207,11 @@ function <<access.private>> meta::pure::tds::schema::resolveSchemaImpl(fe : Func
          sort_TabularDataSet_1__String_1__SortDirection_1__TabularDataSet_1_,
          concatenate_TabularDataSet_1__TabularDataSet_1__TabularDataSet_1_,
          meta::pure::mapping::from_TabularDataSet_1__Mapping_1__Runtime_1__TabularDataSet_1_,
-         meta::pure::mapping::from_TabularDataSet_1__Mapping_1__Runtime_1__ExecutionContext_1__TabularDataSet_1_
+         meta::pure::mapping::from_TabularDataSet_1__Mapping_1__Runtime_1__ExecutionContext_1__TabularDataSet_1_,
+         meta::pure::mapping::from_FunctionDefinition_1__PackageableRuntime_1__T_m_,
+         meta::pure::mapping::from_FunctionDefinition_1__Runtime_1__T_m_,
+         meta::pure::mapping::from_FunctionDefinition_1__Mapping_1__PackageableRuntime_1__T_m_,
+         meta::pure::mapping::from_FunctionDefinition_1__Mapping_1__Runtime_1__T_m_
       ]->map(x| pair($x->cast(@Function<Any>), {|
          resolveSchemaImpl($fe.parametersValues->at(0), $openVars, $extensions)
          }))

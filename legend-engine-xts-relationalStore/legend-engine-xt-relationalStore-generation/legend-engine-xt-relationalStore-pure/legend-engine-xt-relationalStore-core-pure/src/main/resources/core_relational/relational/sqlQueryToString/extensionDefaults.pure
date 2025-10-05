@@ -9,6 +9,7 @@ import meta::external::store::relational::runtime::*;
 import meta::relational::runtime::*;
 import meta::pure::extension::*;
 import meta::relational::extension::*;
+import meta::pure::metamodel::test::*;
 
 function meta::relational::functions::sqlQueryToString::default::defaultReservedWords():String[*]
 {
@@ -192,6 +193,7 @@ function meta::relational::functions::sqlQueryToString::default::getDynaFunction
     dynaFnToSql('average',                $allStates,            ^ToSql(format='avg(1.0 * %s)')),
     dynaFnToSql('averageRank',            $allStates,            ^ToSql(format='average_rank()')),
     dynaFnToSql('cast',                   $allStates,            ^ToSql(format='cast(%s as %s)')),
+    dynaFnToSql('variantTo',              $allStates,            ^ToSql(format='cast(%s as %s)')),
     dynaFnToSql('cbrt',                   $allStates,            ^ToSql(format='cbrt(%s)')),
     dynaFnToSql('ceiling',                $allStates,            ^ToSql(format='ceiling(%s)')),
     dynaFnToSql('char',                   $allStates,            ^ToSql(format='chr(%s)')),
@@ -244,7 +246,7 @@ function meta::relational::functions::sqlQueryToString::default::getDynaFunction
     dynaFnToSql('median',                 $allStates,            ^ToSql(format='median(%s)')),
     dynaFnToSql('min',                    $allStates,            ^ToSql(format='min(%s)')),
     dynaFnToSql('minus',                  $allStates,            ^ToSql(format='%s', transform={p:String[*]|if($p->size() == 1, | '-' + $p->toOne(), | $p->joinStrings('(', ' - ', ')'))})),
-    dynaFnToSql('mod',                    $allStates,            ^ToSql(format='mod(%s,%s)')),
+    dynaFnToSql('mod',                    $allStates,            ^ToSql(format='mod(mod(%s, %s) + %s, %s)', transform={p:String[*] | assert($p->size() == 2, |'mod only expect two arguments, but got ' + $p->size()->toString()); $p->at(0)->concatenate($p->at(1))->concatenate($p->at(1))->concatenate($p->at(1));})),
     dynaFnToSql('mode',                   $allStates,            ^ToSql(format='mode(%s)')),
     dynaFnToSql('notEqual',               $allStates,            ^ToSql(format='%s != %s')),
     dynaFnToSql('notEqualAnsi',           $allStates,            ^ToSql(format='%s <> %s')),
@@ -321,7 +323,7 @@ function meta::relational::functions::sqlQueryToString::default::processWindowCo
         |'Partition By ' + $w.window.partition->map(f|$f->processOperation($sgc))->joinStrings(','),
         |'');
    let orderByTranslation = if($w.window.sortBy->isNotEmpty(),
-        |'Order By '+ $w.window.sortBy->map(s|$s.sortByElement->toOne()->processOperation($sgc) + if($s.sortDirection->isNotEmpty(), | ' ' +$s.sortDirection->toOne().name + if($s.sortDirection == meta::relational::metamodel::SortDirection.ASC, | ' NULLS LAST', | ' NULLS FIRST') , | ''))->joinStrings(', '),
+        |'Order By '+ $w.window.sortBy->map(s|$s.sortByElement->toOne()->processOperation($sgc) + if($s.sortDirection->isNotEmpty(), | ' ' +$s.sortDirection->toOne().name, | ''))->joinStrings(', '),
         |'');
    let windowFrameTranslation = if($w.window.frame->isNotEmpty(),
         |$w.window.frame->toOne()->processWindowFrame($sgc),
@@ -443,15 +445,6 @@ function meta::relational::functions::sqlQueryToString::default::processJoinType
     )
 }    
 
-function meta::relational::functions::sqlQueryToString::default::processJoinTreeNodeWithLateralJoinDefault(j:JoinTreeNode[1], dbConfig : DbConfig[1], format:Format[1], extensions:Extension[*]):String[1]
-{
-   $j.joinType->map(jt|$jt->processJoinType($dbConfig, $format, $extensions))->orElse('') + 'lateral '
-   + $j.alias
-       ->map(a|^$a(name = '"' + $a.name + '"')) //Not sure why this is necessary, but it's retained to keep the generated SQL the same as previously (and does no real harm)
-       ->toOne()->processOperation($dbConfig, $format->indent(), $extensions) + $format.separator()
-   + ' ' + 'on (' + processOperation($j.join.operation, $dbConfig, $format->indent(), ^Config(), $extensions) + ')';
-}
-
 function meta::relational::functions::sqlQueryToString::default::processJoin(j:JoinTreeNode[1], dbConfig : DbConfig[1], format:Format[1], extensions:Extension[*]):String[1]
 {
     assert(!$j.join->instanceOf(AsOfJoin), |'AsOfJoins are not supported in the generic generator!');
@@ -511,30 +504,27 @@ function meta::relational::functions::sqlQueryToString::default::processLimit(s:
               takeProcessor:meta::pure::metamodel::function::Function<{SelectSQLQuery[1], Format[1], DbConfig[1], Extension[*] -> String[1]}>[0..1],
               sliceOrDropProcessor:meta::pure::metamodel::function::Function<{SelectSQLQuery[1], Format[1], DbConfig[1], Extension[*], Any[1] -> String[1]}>[1]):String[1]
 {
-   if ($s.fromRow == [] && $s.toRow == [],
-      |
-         // No limit or offset required
-         '';
-      , |let size = if ($s.toRow == [] || $s.fromRow == [],
-                      | -1,
-                      |$s.toRow.value->match([
-                          i:Integer[1]| $s.toRow->toOne().value->cast(@Integer) - $s.fromRow->toOne().value->cast(@Integer) ,
-                          v:VarPlaceHolder[1]|[$s.toRow->toOne().value->cast(@VarPlaceHolder).name, $s.fromRow->toOne().value->cast(@VarPlaceHolder).name]->joinStrings('${','?number - ', '?number}'),
-                          fmoh:FreeMarkerOperationHolder[1]|$fmoh->processOperation($dbConfig,$format,$extensions)
-                          ])
-                      );
-         if ($s.fromRow == [],
-            |
-               // We have a "take"
-               assert($s.toRow->isNotEmpty());
-               if($takeProcessor->isNotEmpty(), |$takeProcessor->toOne()->eval($s, $format, $dbConfig, $extensions), |'');
-            ,
-            |
-               //We have a "slice" or a "drop"
-               assert($s.fromRow->isNotEmpty());
-               $sliceOrDropProcessor->eval($s, $format, $dbConfig, $extensions, $size);
-            );
+  if ($s.fromRow == [] && $s.toRow == [],
+    | // No limit or offset required
+      '',
+    | let size = if ($s.toRow == [] || $s.fromRow == [],
+        | -1,
+        | let toRow = $s.toRow->toOne();
+          let fromRow = $s.fromRow->toOne();
+          if($toRow.value->instanceOf(Integer) && $fromRow.value->instanceOf(Integer),
+            | ($toRow.value->cast(@Integer) - $fromRow.value->cast(@Integer))->toString(), 
+            | // The subtraction is evaluated during freemarker processing of SQL. This is because some databases don't support operations (for ex. 3 - 2) in limit/offset expresisons.
+              ^FreeMarkerOperationHolder(name = 'numberSubtract', parameters = [$toRow, $fromRow])->processOperation($dbConfig, $format, $extensions)
+          );
       );
+      if ($s.fromRow == [],
+        | // We have a "take"
+          assert($s.toRow->isNotEmpty());
+          if($takeProcessor->isNotEmpty(), |$takeProcessor->toOne()->eval($s, $format, $dbConfig, $extensions), |'');,
+        | // We have a "slice" or a "drop"
+          $sliceOrDropProcessor->eval($s, $format, $dbConfig, $extensions, $size)
+      );
+  );
 }
 
 function meta::relational::functions::sqlQueryToString::default::processSliceOrDropDefault(s:SelectSQLQuery[1], format:Format[1], dbConfig: DbConfig[1], extensions:Extension[*], size:Any[1]):String[1]
@@ -563,10 +553,24 @@ function meta::relational::functions::sqlQueryToString::default::processIdentifi
 
 function meta::relational::functions::sqlQueryToString::default::processIdentifierWithQuoteChar(identifier:String[1], quoteChar: String[1], dbConfig : DbConfig[1]):String[1]
 {
-  if($dbConfig.quoteIdentifiers || $identifier->startsWith('"') || $dbConfig.isDbReservedIdentifier($identifier),
+  if($dbConfig.quoteIdentifiers || $identifier->startsWith('"') || $dbConfig.isDbReservedIdentifier($identifier) || ($identifier->contains(' ') && !isFreeMarkerIdentifier($identifier)),
     | '%s%s%s'->format([$quoteChar, $identifier->replace('"', ''), $quoteChar]),
     | $identifier
   );
+}
+
+function <<test.Test>> meta::relational::functions::sqlQueryToString::default::testProcessIdentifierWithQuoteChar():Boolean[1]
+{
+  let dbConfig = ^DbConfig(dbType=DatabaseType.H2, dbTimeZone=[], quoteIdentifiers=false, dbExtension=meta::relational::functions::sqlQueryToString::h2::v2_1_214::createDbExtensionForH2());
+
+  assertEquals('${table(id, "table.val")}', '${table(id, "table.val")}'->processIdentifierWithBackTicks($dbConfig));
+  assertEquals('${table(id, "table.val")}', '${table(id, "table.val")}'->processIdentifierWithDoubleQuotes($dbConfig));
+
+  assertEquals('`table with space`', 'table with space'->processIdentifierWithBackTicks($dbConfig));
+  assertEquals('"table with space"', 'table with space'->processIdentifierWithDoubleQuotes($dbConfig));
+
+  assertEquals('tableNoSpace', 'tableNoSpace'->processIdentifierWithBackTicks($dbConfig));
+  assertEquals('tableNoSpace', 'tableNoSpace'->processIdentifierWithDoubleQuotes($dbConfig));
 }
 
 function meta::relational::functions::sqlQueryToString::default::getDDLCommandsTranslatorDefault(): RelationalDDLCommandsTranslator[1]
@@ -618,20 +622,23 @@ function meta::relational::functions::sqlQueryToString::default::translateCreate
     function meta::relational::functions::sqlQueryToString::default::getColumnTypeSqlTextDefault(columnType:meta::relational::metamodel::datatype::DataType[1]):String[1]
 {
    $columnType->match([
-      s : meta::relational::metamodel::datatype::SemiStructured[1] | 'VARCHAR(4000)',
+      s : meta::relational::metamodel::datatype::SemiStructured[1] | 'VARCHAR(4000)', // todo this is wrong and mislead user of variant support!
       a : Any[*] | meta::relational::metamodel::datatype::dataTypeToSqlText($columnType)
    ])
 }
 
 function meta::relational::functions::sqlQueryToString::default::loadValuesToDbTableDefault(loadTableSQL:LoadTableSQL[1] , dbConfig: DbConfig[1]) : String[*]
 {
-
-    $loadTableSQL.parsedData.values->map(row |  let sql = 'insert into ' + if($loadTableSQL.table.schema.name=='default', |'' ,|$loadTableSQL.table.schema.name + '.') + $loadTableSQL.table.name + ' ('
+   if ($loadTableSQL.parsedData.values->isEmpty(),
+    | [], 
+    | 
+      let sql = 'insert into ' + if($loadTableSQL.table.schema.name=='default', |'' ,|$loadTableSQL.table.schema.name + '.') + $loadTableSQL.table.name + ' ('
             + $loadTableSQL.columnsToLoad.name->map(colName | $colName->processColumnName($dbConfig))->joinStrings(',')
             +') '
-            + 'values ('
-            + $row.values->meta::relational::functions::database::testDataSQLgeneration::convertValuesToCsv($loadTableSQL.columnsToLoad.type)
-            + ');';
+            + 'values';
+
+      $loadTableSQL.parsedData.values->map(row |  '(' + $row.values->meta::relational::functions::database::testDataSQLgeneration::convertValuesToCsv($loadTableSQL.columnsToLoad.type) + ')')
+        ->joinStrings($sql, ', ', ';');
    );
 }
 
@@ -679,6 +686,14 @@ function meta::relational::functions::sqlQueryToString::default::transformRound(
    if ($p->size() == 2,
        | [$p->at(0), $p->at(1)],
        | [$p->at(0), '0']);
+}
+
+function meta::relational::functions::sqlQueryToString::default::transformParseDecimal(params:String[*]):String[1]
+{
+  if ($params->size() == 1,
+        |format('cast(%s as decimal)', [$params->at(0)]);,
+        |format('cast(%s as DECIMAL(%s,%s))', [$params->at(0),$params->at(1),$params->at(2)]);
+      );
 }
 
 function meta::relational::functions::sqlQueryToString::default::processJoinStringsOperation(js:JoinStrings[1], sgc:SqlGenerationContext[1],

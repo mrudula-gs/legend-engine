@@ -1,3 +1,4 @@
+import meta::pure::metamodel::serialization::grammar::*;
 import meta::pure::store::*;
 import meta::external::store::relational::runtime::*;
 import meta::relational::metamodel::relation::*;
@@ -84,27 +85,6 @@ function meta::relational::grammar::serialization::printRelationalDatabaseConnec
   ')'
 }
 
-function meta::relational::grammar::serialization::printNew(a:Any[1]):String[1]
-{  
-  $a->match(
-    [
-       i:Integer[1] | $i->toString(),
-       x:String[1] | '\''+$x+'\'',
-       a:Any[1] |
-         let _type = $a->type()->cast(@Class<Any>);
-         let properties = $_type->meta::pure::functions::meta::hierarchicalProperties();
-         '^'+$a->type()->elementToPath()+'('+
-          $properties->map(p| let value = $p->eval($a);
-                              if ($value->isEmpty(),
-                                |'',
-                                |$p.name->toOne() + '=' + $value->map(w|$w->printNew())->joinStrings(',')
-                              );
-                       )->filter(v|$v != '')->joinStrings(',')+
-        ')';
-    ]
-  );
-}
-
 function meta::relational::grammar::serialization::relationGrammarConfiguration():meta::pure::metamodel::serialization::grammar::Configuration[1]
 {
   ^meta::pure::metamodel::serialization::grammar::Configuration
@@ -131,6 +111,10 @@ function meta::relational::grammar::serialization::relationGrammarExtension():me
               '#>{' + $x.store->elementToPath() + '.' + $schemaName + $table.name->toOne() + '}#';
               ,
             t:meta::pure::metamodel::relation::TDS<Any>[1]|'#TDS{\n'+$t.csv->replace(' ','')+'}#';
+          ],
+        extraPackageableElementHandlers =
+          [
+            x:Database[1]|'###Relational\n'+$x->printDatabase()
           ]
     );
 }

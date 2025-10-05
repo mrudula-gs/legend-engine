@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import meta::pure::functions::relation::variant::*;
 import meta::pure::metamodel::relation::*;
 import meta::pure::graphFetch::routing::*;
 import meta::pure::graphFetch::*;
@@ -155,7 +156,8 @@ function meta::pure::router::routing::routeValueSpecification(state:RoutingState
                                                                   );
                                                            $state.routingStrategy.processClass($c, $i, $state, $executionContext, $extensions, $debug);
                                                           )
-                                                      ],
+                                                      ]
+                                                      ->concatenate($extensions.routerExtensions().instanceProcessors->map(x|$x->eval($i, $state, $executionContext, $vars, $inScopeVars, $extensions, $debug))),
                                                       | if($i.values->isEmpty(),
                                                             |$state,
                                                             |let processedValues = processCollection($state, $i.values->evaluateAndDeactivate(), $executionContext, $vars, $inScopeVars, v:Any[1]|true, $extensions, $debug);
@@ -190,12 +192,47 @@ function meta::pure::router::routing::routeValueSpecification(state:RoutingState
    );
 }
 
-function meta::pure::router::routing::prevalFunctionExpressionIfRequired(fe:FunctionExpression[1], inScopeVars:Map<String, List<Any>>[1], extensions:meta::pure::extension::Extension[*], debug:DebugContext[1]) : ValueSpecification[1]
+function meta::pure::router::routing::prevalFunctionExpressionIfRequired(fe:FunctionExpression[1], state:RoutingState[1], executionContext:meta::pure::runtime::ExecutionContext[1], vars:Map<VariableExpression, ValueSpecification>[1], inScopeVars:Map<String, List<Any>>[1], extensions:meta::pure::extension::Extension[*], debug:DebugContext[1]) : ValueSpecification[1]
 {
     $fe.func->match(
       [
         f : FunctionDefinition<Any>[1] | if($f->hasStereotype('NormalizeRequiredFunction', functionType),
-                                            | $fe->meta::pure::router::preeval::preval($inScopeVars->putAll($f->openVariableValues()), $extensions, $debug),
+                                            | 
+                                                if(!$debug.debug, | '', | println('Performing preval of function expression for ' + $fe.func->elementToPath()));
+
+                                                let tmpFe = if ($fe.parametersValues->isEmpty() || $fe.parametersValues->forAll(pv|!$pv->instanceOf(VariableExpression)),  
+                                                  | $fe, 
+                                                  | $fe
+                                                    ->map(theFe|
+                                                        let processedParamValues = $theFe.parametersValues->map(p|
+                                                          $p->match([
+                                                            v:VariableExpression[1]|
+                                                              // Resolve any variables where possible to get the "resolved" / actual generic type for them
+                                                              let vValue = meta::pure::functions::meta::resolve($v, $vars, $inScopeVars);
+                                                              if ($vValue->isEmpty() || !$vValue->toOne().genericType->isConcrete(), 
+                                                                | pair(false, $v), 
+                                                                | pair(true, ^$v(genericType = $vValue->toOne().genericType))
+                                                                );
+                                                              ,
+                                                            vs:ValueSpecification[1]| pair(false, $vs);
+                                                            ])
+                                                          );
+
+                                                        // If any of the parameters were resolved/modified, then update theFe, otherwise don't change it (so that we don't change 
+                                                        // the sourceInformation unecessarily)
+                                                        if ($processedParamValues.first->contains(true), 
+                                                          | ^$theFe(parametersValues = $processedParamValues.second), 
+                                                          | $theFe; 
+                                                          );
+                                                        )
+                                                    ->map(theFe|
+                                                        // TODO: Consider if this should be moved to happen inside the preval for FunctionExpressions
+                                                        ^$theFe(resolvedTypeParameters = meta::pure::functions::meta::resolveResolvedTypeParameters($theFe))
+                                                        );
+                                                  );
+
+                                                $tmpFe->meta::pure::router::preeval::preval($inScopeVars->putAll($f->openVariableValues()), $extensions, $debug);
+                                                ,
                                             | $fe
                                          ),
         a:Any[*] | $fe;
@@ -205,7 +242,7 @@ function meta::pure::router::routing::prevalFunctionExpressionIfRequired(fe:Func
 
 function meta::pure::router::routing::routeFunctionExpression(fe:FunctionExpression[1], state:RoutingState[1], executionContext:meta::pure::runtime::ExecutionContext[1], vars:Map<VariableExpression, ValueSpecification>[1], inScopeVars:Map<String, List<Any>>[1], extensions:meta::pure::extension::Extension[*], debug:DebugContext[1]):RoutingState[1]
 {
-   let newFe = prevalFunctionExpressionIfRequired($fe,$inScopeVars, $extensions, $debug)->evaluateAndDeactivate();
+   let newFe = prevalFunctionExpressionIfRequired($fe,$state, $executionContext, $vars, $inScopeVars, $extensions, $debug)->evaluateAndDeactivate();
 
    $newFe->match([
                   nfe : FunctionExpression[1]|
@@ -773,6 +810,7 @@ function meta::pure::router::routing::shouldStopFunctions(extensions:meta::pure:
     firstMinuteOfHour_Date_1__DateTime_1_,
     firstSecondOfMinute_Date_1__DateTime_1_,
     firstMillisecondOfSecond_Date_1__DateTime_1_,
+    if_Pair_MANY__Function_1__T_m_,
     sort_TabularDataSet_1__String_MANY__TabularDataSet_1_,
     sort_TabularDataSet_1__SortInformation_MANY__TabularDataSet_1_,
     sort_TabularDataSet_1__String_1__SortDirection_1__TabularDataSet_1_,
@@ -861,6 +899,7 @@ function meta::pure::router::routing::shouldStopFunctions(extensions:meta::pure:
     groupByWithWindowSubset_K_MANY__Function_MANY__AggregateValue_MANY__String_MANY__String_MANY__String_MANY__TabularDataSet_1_,
     concatenate_TabularDataSet_1__TabularDataSet_1__TabularDataSet_1_,
     concatenate_TabularDataSet_1__TabularDataSet_MANY__TabularDataSet_1_,
+    union_T_MANY__T_MANY__T_MANY_,
     renameColumns_TabularDataSet_1__Pair_MANY__TabularDataSet_1_,
     olapGroupBy_TabularDataSet_1__String_MANY__SortInformation_$0_1$__OlapOperation_1__String_1__TabularDataSet_1_,
     olapGroupBy_TabularDataSet_1__String_MANY__OlapOperation_1__String_1__TabularDataSet_1_,
@@ -955,7 +994,9 @@ function meta::pure::router::routing::shouldStopFunctions(extensions:meta::pure:
     meta::pure::functions::flow::coalesce_T_$0_1$__T_$0_1$__T_$0_1$__T_1__T_1_,
     meta::pure::functions::flow::coalesce_T_$0_1$__T_$0_1$__T_$0_1$_,
     meta::pure::functions::flow::coalesce_T_$0_1$__T_$0_1$__T_$0_1$__T_$0_1$_,
-    meta::pure::functions::flow::coalesce_T_$0_1$__T_$0_1$__T_$0_1$__T_$0_1$__T_$0_1$_
+    meta::pure::functions::flow::coalesce_T_$0_1$__T_$0_1$__T_$0_1$__T_$0_1$__T_$0_1$_,
+    flatten_T_MANY__ColSpec_1__Relation_1_,
+    lateral_Relation_1__Function_1__Relation_1_
   ]->concatenate($extensions.routerExtensions().shouldStopRouting)
 }
 

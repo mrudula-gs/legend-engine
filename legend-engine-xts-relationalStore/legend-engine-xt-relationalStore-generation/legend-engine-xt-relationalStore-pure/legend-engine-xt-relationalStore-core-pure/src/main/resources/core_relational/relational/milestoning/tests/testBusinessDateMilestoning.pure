@@ -138,16 +138,51 @@ function <<test.Test>> meta::relational::tests::milestoning::businessdate::testM
    );
 }
 
+function <<test.Test>> meta::relational::tests::milestoning::businessdate::testMilestonedThisBusinessDateInPosition1InQualfiedPropertySequence2():Boolean[1]
+{
+   let busDate = %2015-10-16;
+   let result = execute({|Product.all($busDate)->project([p|$p.name, p|$p.classification($p.businessDate).exchange(%2019-1-1).name],['name','classificationType'])}->meta::pure::router::preeval::preval(meta::relational::extension::relationalExtensions()), milestoningmap, meta::external::store::relational::tests::testRuntime(), meta::relational::extension::relationalExtensions());
+   let tds = $result.values->at(0);
+   assertEqualsH2Compatible(
+    'select "root".name as "name", "productexchangetable_0".name as "classificationType" from ProductTable as "root" left outer join ProductClassificationTable as "productclassificationtable_0" on ("root".type = "productclassificationtable_0".type and "productclassificationtable_0".from_z <= \'2015-10-16\' and "productclassificationtable_0".thru_z > \'2015-10-16\') left outer join (select "productexchangetable_1".name as name from ProductExchangeTable as "productexchangetable_1" where "productexchangetable_1".from_z <= \'2019-01-01\' and "productexchangetable_1".thru_z > \'2019-01-01\') as "productexchangetable_0" on ("productclassificationtable_0".exchange = "productexchangetable_0".name) where "root".from_z <= \'2015-10-16\' and "root".thru_z > \'2015-10-16\'',
+    'select "root".name as "name", "productexchangetable_0".name as "classificationType" from ProductTable as "root" left outer join ProductClassificationTable as "productclassificationtable_0" on ("root".type = "productclassificationtable_0".type and "productclassificationtable_0".from_z <= DATE\'2015-10-16\' and "productclassificationtable_0".thru_z > DATE\'2015-10-16\') left outer join (select "productexchangetable_1".name as name from ProductExchangeTable as "productexchangetable_1" where "productexchangetable_1".from_z <= DATE\'2019-01-01\' and "productexchangetable_1".thru_z > DATE\'2019-01-01\') as "productexchangetable_0" on ("productclassificationtable_0".exchange = "productexchangetable_0".name) where "root".from_z <= DATE\'2015-10-16\' and "root".thru_z > DATE\'2015-10-16\'',
+    $result->sqlRemoveFormatting()
+   );
+}
+
 function <<test.Test>> meta::relational::tests::milestoning::businessdate::testMilestonedThisBusinessDateWithNestedDerivedProperty():Boolean[1]
 {
    let busDate = %2015-10-16;
-
-   let result = execute({|Product.all($busDate)->project([p|$p.classification.exchangeName1],['classificationExchangeName1'])}->meta::pure::router::preeval::preval(meta::relational::extension::relationalExtensions()), milestoningmap, meta::external::store::relational::tests::testRuntime(), meta::relational::extension::relationalExtensions());
+   let result = execute({|Product.all($busDate)->project([x|$x.classification.exchangeName1],['classificationExchangeName1'])}->meta::pure::router::preeval::preval(meta::relational::extension::relationalExtensions()), milestoningmap, meta::external::store::relational::tests::testRuntime(), meta::relational::extension::relationalExtensions());
    let tds = $result.values->at(0);
    assertEquals(['LNSE', 'TDSNull'],$tds.rows->map(r|$r.values->makeString(',')));
    assertEqualsH2Compatible(
     'select "productexchangetable_0".name as "classificationExchangeName1" from ProductTable as "root" left outer join ProductClassificationTable as "productclassificationtable_0" on ("root".type = "productclassificationtable_0".type and "productclassificationtable_0".from_z <= \'2015-10-16\' and "productclassificationtable_0".thru_z > \'2015-10-16\') left outer join (select "productexchangetable_1".name as name from ProductExchangeTable as "productexchangetable_1" where "productexchangetable_1".from_z <= \'2015-10-16\' and "productexchangetable_1".thru_z > \'2015-10-16\') as "productexchangetable_0" on ("productclassificationtable_0".exchange = "productexchangetable_0".name) where "root".from_z <= \'2015-10-16\' and "root".thru_z > \'2015-10-16\'',
     'select "productexchangetable_0".name as "classificationExchangeName1" from ProductTable as "root" left outer join ProductClassificationTable as "productclassificationtable_0" on ("root".type = "productclassificationtable_0".type and "productclassificationtable_0".from_z <= DATE\'2015-10-16\' and "productclassificationtable_0".thru_z > DATE\'2015-10-16\') left outer join (select "productexchangetable_1".name as name from ProductExchangeTable as "productexchangetable_1" where "productexchangetable_1".from_z <= DATE\'2015-10-16\' and "productexchangetable_1".thru_z > DATE\'2015-10-16\') as "productexchangetable_0" on ("productclassificationtable_0".exchange = "productexchangetable_0".name) where "root".from_z <= DATE\'2015-10-16\' and "root".thru_z > DATE\'2015-10-16\'',
+    $result->sqlRemoveFormatting()
+   );
+}
+
+function <<test.Test>> meta::relational::tests::milestoning::businessdate::testMilestonedThisBusinessDateWithNonThisAccessParameter():Boolean[1]
+{
+   let busDate = %2015-10-16;
+   let result = execute({|Product.all($busDate)->project([x|$x.classification($x.businessDate).type],['classificationType'])}, milestoningmap, meta::external::store::relational::tests::testRuntime(), meta::relational::extension::relationalExtensions());
+   let tds = $result.values->at(0);
+   assertEquals(['STOCK', 'TDSNull'],$tds.rows->map(r|$r.values->makeString(',')));
+   assertEqualsH2Compatible(
+    'select "productclassificationtable_0".type as "classificationType" from ProductTable as "root" left outer join ProductClassificationTable as "productclassificationtable_0" on ("root".type = "productclassificationtable_0".type and "productclassificationtable_0".from_z <= \'2015-10-16\' and "productclassificationtable_0".thru_z > \'2015-10-16\') where "root".from_z <= \'2015-10-16\' and "root".thru_z > \'2015-10-16\'',
+    'select "productclassificationtable_0".type as "classificationType" from ProductTable as "root" left outer join ProductClassificationTable as "productclassificationtable_0" on ("root".type = "productclassificationtable_0".type and "productclassificationtable_0".from_z <= DATE\'2015-10-16\' and "productclassificationtable_0".thru_z > DATE\'2015-10-16\') where "root".from_z <= DATE\'2015-10-16\' and "root".thru_z > DATE\'2015-10-16\'',
+    $result->sqlRemoveFormatting()
+   );
+}
+
+function <<test.Test>> meta::relational::tests::milestoning::businessdate::testProcessedMilestonedExchangeNameConstraint():Boolean[1]
+{
+   let businessDate = %9999-12-31;
+   let result = validate(|ProductClassificationWithProcessedMilestonedExchangeNameConstraint.all($businessDate),meta::relational::tests::milestoning::milestoningmap, meta::external::store::relational::tests::testRuntime(), meta::relational::extension::relationalExtensions());
+  assertEqualsH2Compatible(
+    'select \'processedMilestonedExchangeNameMustBeValid\' as "CONSTRAINT_ID", \'Error\' as "ENFORCEMENT_LEVEL", \'Name must not be empty\' as "MESSAGE", "root".type as "type" from ProductClassificationTable as "root" left outer join ProcessedMilestonedProductExchangeTable as "processedmilestonedproductexchangetable_0" on ("root".exchange = "processedmilestonedproductexchangetable_0".name and "processedmilestonedproductexchangetable_0".in_z <= \'9999-12-31\' and "processedmilestonedproductexchangetable_0".out_z > \'9999-12-31\') where (not "processedmilestonedproductexchangetable_0".name in (\'LNSE\', \'ISE\') or "processedmilestonedproductexchangetable_0".name is null) and "root".from_z <= \'9999-12-31\' and "root".thru_z > \'9999-12-31\'',
+    'select \'processedMilestonedExchangeNameMustBeValid\' as "CONSTRAINT_ID", \'Error\' as "ENFORCEMENT_LEVEL", \'Name must not be empty\' as "MESSAGE", "root".type as "type" from ProductClassificationTable as "root" left outer join ProcessedMilestonedProductExchangeTable as "processedmilestonedproductexchangetable_0" on ("root".exchange = "processedmilestonedproductexchangetable_0".name and "processedmilestonedproductexchangetable_0".in_z <= DATE\'9999-12-31\' and "processedmilestonedproductexchangetable_0".out_z > DATE\'9999-12-31\') where (not "processedmilestonedproductexchangetable_0".name in (\'LNSE\', \'ISE\') or "processedmilestonedproductexchangetable_0".name is null) and "root".from_z <= DATE\'9999-12-31\' and "root".thru_z > DATE\'9999-12-31\'',
     $result->sqlRemoveFormatting()
    );
 }
@@ -877,6 +912,14 @@ function <<test.Test>> meta::relational::tests::milestoning::businessdate::testM
    );
 }
 
+function <<test.Test>> meta::relational::tests::milestoning::businessdate::testMilestoningContextPropagatedThruPropertyToViewWithNonMilestonedRoot():Boolean[1]
+{
+  let businessDate = %2013-7-22;
+  let result = execute(|Trade.all($businessDate)->project([o|$o.id, o|$o.tradePnl.supportContactName],['id', 'supportContactName']), milestoningmap3, meta::external::store::relational::tests::testRuntime(), meta::relational::extension::relationalExtensions());
+  let tds = $result.values->at(0);
+  assertEquals(['1,Joe Martinez', '1,Joe Martinez', '2,TDSNull'],$tds.rows->map(r|$r.values->makeString(',')));
+}
+
 function <<test.Test>> meta::relational::tests::milestoning::businessdate::testMilestoningContextPropagatedFromParentViewToViewsReferencedInItsColumns():Boolean[1]
 {
    let businessDate = %2016-7-22;
@@ -987,6 +1030,13 @@ function <<test.Test>> meta::relational::tests::milestoning::qualifier::testProj
    );
 }
 
+function <<test.Test>> meta::relational::tests::milestoning::businessdate::testMilestonedChainedJoinsWithAlias(): Boolean[1]
+{
+  let businessDate = %2025-01-01;
+  let result = execute(|meta::relational::tests::milestoning::inheritance::Car.all($businessDate)->project([x|$x.id, x|$x.bicycle.id, x|$x.description, x|$x.bicycle.description],['Car Id','Bicycle/Id', 'Car Description', 'Bicycle/Description']);, milestoningmapWithVehicles, meta::external::store::relational::tests::testRuntime(), meta::relational::extension::relationalExtensions());
+  assertSameElements(['1 | 1 | Sedan | Folding Bike', '2 | 2 | SUV | Electric Bike', '3 | 3 | Hatchback | Hybrid Bike', '4 | 4 | Convertible | Road Bike', '5 | 5 | Truck | Mountain Bike'], $result.values.rows->map(r | $r.values->makeString(' | ')));
+  assertEquals('select "root".id as "Car Id", "person_0".id_1 as "Bicycle/Id", "root".description as "Car Description", "person_0".description as "Bicycle/Description" from Cars as "root" left outer join (select "person_1".id as id, "bicycles_0".id as id_1, "bicycles_0".description as description from Person as "person_1" inner join Bicycles as "bicycles_0" on ("person_1".id = "bicycles_0".id) where "bicycles_0".in_z <= DATE\'2025-01-01\' and "bicycles_0".out_z > DATE\'2025-01-01\') as "person_0" on ("person_0".id = "root".id) where "root".in_z <= DATE\'2025-01-01\' and "root".out_z > DATE\'2025-01-01\'', $result->sqlRemoveFormatting());
+}
 
 function <<test.Test>> meta::relational::tests::milestoning::businessdate::testMilestoningCriteriaOriginatingFromQualifiedPropertyAppliedToSimplePropertyMultiOperationalJoinFromTemporalClass():Boolean[1]
 {

@@ -159,7 +159,7 @@ public class HelperRelationalBuilder
 
     public static Column getColumn(Relation tb, final String _column, SourceInformation sourceInformation)
     {
-        Column column = (Column) tb._columns().detect(col -> _column.equals(col.getName()));
+        Column column = (Column) tb._columns().detect(col -> _column.equals(((Column)col)._name()));
         Assert.assertTrue(column != null, () -> "Can't find column '" + _column + "'", sourceInformation, EngineErrorType.COMPILATION);
         return column;
     }
@@ -263,10 +263,33 @@ public class HelperRelationalBuilder
 
     public static Relation getRelation(Database db, final String _schema, final String _table, SourceInformation sourceInformation)
     {
-        validateSchemaExists(db, _schema, sourceInformation);
+        return getRelation(db, _schema, _table, null, null, sourceInformation);
+    }
+
+    public static Relation getRelation(TablePtr tableptr, CompileContext context)
+    {
+        return getRelation(resolveDatabase(tableptr.database, tableptr.sourceInformation, context), tableptr.schema, tableptr.table, tableptr, context, SourceInformation.getUnknownSourceInformation());
+    }
+
+    public static Relation getRelation(Database db, final String _schema, final String _table, TablePtr tableptr, CompileContext context, SourceInformation sourceInformation)
+    {
+        validateSchemaExists(db, _schema, tableptr, context, sourceInformation);
         Relation table = findRelation(db, _schema, _table, sourceInformation);
         if (table == null)
         {
+            if (tableptr != null && context != null && context.pureModel != null && context.pureModel.tableTransformationMap != null)
+            {
+                TablePtr mappedTablePtr = context.pureModel.tableTransformationMap.getTableMappings().get(tableptr);
+                if (mappedTablePtr != null)
+                {
+                    table = findRelation(db, mappedTablePtr.schema, mappedTablePtr.table, sourceInformation);
+                    if (table != null)
+                    {
+                        return table;
+                    }
+                    throw new EngineException("Can't find table '" + mappedTablePtr.table + "' in schema '" + mappedTablePtr.schema + "' and database '" + db.getName() + "'", sourceInformation, EngineErrorType.COMPILATION);
+                }
+            }
             throw new EngineException("Can't find table '" + _table + "' in schema '" + _schema + "' and database '" + db.getName() + "'", sourceInformation, EngineErrorType.COMPILATION);
         }
         return table;
@@ -328,10 +351,30 @@ public class HelperRelationalBuilder
 
     private static void validateSchemaExists(Database db, String _schema, SourceInformation sourceInformation)
     {
-        if (!schemaExists(db, _schema))
+        validateSchemaExists(db, _schema, null, null, sourceInformation);
+    }
+
+    private static void validateSchemaExists(Database db, String _schema, TablePtr tableptr, CompileContext context, SourceInformation sourceInformation)
+    {
+        if (schemaExists(db, _schema))
         {
-            throw new EngineException("Can't find schema '" + _schema + "' in database '" + db + "'", sourceInformation, EngineErrorType.COMPILATION);
+            return;
         }
+        String schemaToReportInError = _schema;
+        if (tableptr != null && context != null && context.pureModel != null && context.pureModel.tableTransformationMap != null)
+        {
+            TablePtr ptr = context.pureModel.tableTransformationMap.getTableMappings().get(tableptr);
+            if (ptr != null && ptr.schema != null)
+            {
+                String generatedSchemaName = ptr.schema;
+                if (schemaExists(db, generatedSchemaName))
+                {
+                    return;
+                }
+                schemaToReportInError = generatedSchemaName;
+            }
+        }
+        throw new EngineException("Can't find schema '" + schemaToReportInError + "' in database '" + db + "'", sourceInformation, EngineErrorType.COMPILATION);
     }
 
     private static SetIterable<Table> getAllTables(Database db, Predicate<Schema> schemaPredicate)
@@ -423,7 +466,8 @@ public class HelperRelationalBuilder
 
         if (!duplicateColumns.isEmpty())
         {
-            context.pureModel.addWarnings(org.eclipse.collections.impl.factory.Lists.mutable.with(new Warning(databaseTable.sourceInformation, "Duplicate column definitions " + duplicateColumns + " in table: " + table._name())));
+            MutableList<String> duplicateList = duplicateColumns.toSortedList();
+            context.pureModel.addWarnings(org.eclipse.collections.impl.factory.Lists.mutable.with(new Warning(databaseTable.sourceInformation, "Duplicate column definitions " + duplicateList + " in table: " + table._name())));
         }
         RichIterable<Column> pk = ListIterate.collect(databaseTable.primaryKey, s -> columns.select(column -> s.equals(column._name())).getFirst());
         RichIterable<org.finos.legend.pure.m3.coreinstance.meta.relational.metamodel.relation.Milestoning> milestoning = ListIterate.collect(databaseTable.milestoning, m -> processMilestoning(m, context, columns.groupBy(ColumnAccessor::_name)));
@@ -442,7 +486,34 @@ public class HelperRelationalBuilder
         View view = new Root_meta_relational_metamodel_relation_View_Impl(srcView.name, SourceInformationHelper.toM3SourceInformation(srcView.sourceInformation), context.pureModel.getClass("meta::relational::metamodel::relation::View"))._name(srcView.name);
         view._stereotypes(srcView.stereotypes == null ? Lists.fixedSize.empty() : ListIterate.collect(srcView.stereotypes, stereotypePointer -> context.resolveStereotype(stereotypePointer.profile, stereotypePointer.value, stereotypePointer.profileSourceInformation, stereotypePointer.sourceInformation)));
         view._taggedValues(srcView.taggedValues == null ? Lists.fixedSize.empty() : ListIterate.collect(srcView.taggedValues, taggedValue -> new Root_meta_pure_metamodel_extension_TaggedValue_Impl("", null, context.pureModel.getClass("meta::pure::metamodel::extension::TaggedValue"))._tag(context.resolveTag(taggedValue.tag.profile, taggedValue.tag.value, taggedValue.tag.profileSourceInformation, taggedValue.tag.sourceInformation))._value(taggedValue.value)));
-        MutableList<Column> columns = ListIterate.collect(srcView.columnMappings, columnMapping -> new Root_meta_relational_metamodel_Column_Impl(columnMapping.name, SourceInformationHelper.toM3SourceInformation(columnMapping.sourceInformation), context.pureModel.getClass("meta::relational::metamodel::Column"))._name(columnMapping.name)._type(new Root_meta_relational_metamodel_datatype_Varchar_Impl("", null, context.pureModel.getClass("meta::relational::metamodel::datatype::Varchar")))._owner(view));
+        MutableList<Column> columns = Lists.mutable.empty();
+        MutableSet<String> validColumnNames = Sets.mutable.empty();
+        MutableSet<String> duplicateColumns = Sets.mutable.empty();
+
+        for (org.finos.legend.engine.protocol.pure.v1.model.packageableElement.store.relational.model.ColumnMapping columnMapping : srcView.columnMappings)
+        {
+            if (validColumnNames.contains(columnMapping.name))
+            {
+                duplicateColumns.add(columnMapping.name);
+            }
+            else
+            {
+                validColumnNames.add(columnMapping.name);
+                Column col = new Root_meta_relational_metamodel_Column_Impl(columnMapping.name, SourceInformationHelper.toM3SourceInformation(columnMapping.sourceInformation), context.pureModel.getClass("meta::relational::metamodel::Column"))
+                        ._name(columnMapping.name)
+                        ._type(new Root_meta_relational_metamodel_datatype_Varchar_Impl("", null, context.pureModel.getClass("meta::relational::metamodel::datatype::Varchar")))
+                        ._owner(view);
+                columns.add(col);
+            }
+        }
+        if (!duplicateColumns.isEmpty())
+        {
+            MutableList<String> duplicateList = duplicateColumns.toList().sortThis();
+            context.pureModel.addWarnings(Lists.mutable.with(new Warning(
+                    srcView.sourceInformation,
+                    "Duplicate column mapping definitions " + duplicateList + " in view: " + view._name()
+            )));
+        }
         RichIterable<Column> pk = ListIterate.collect(srcView.primaryKey, s -> columns.select(column -> s.equals(column._name())).getFirst());
         return view._columns(columns)._primaryKey(pk)._schema(schema);
     }
@@ -783,7 +854,7 @@ public class HelperRelationalBuilder
                 selfJoinTargets.add(selfJoin);
                 return selfJoin;
             }
-            Relation relation = getRelation((Database) context.resolveStore(tableAliasColumn.table.database, tableAliasColumn.table.sourceInformation), tableAliasColumn.table.schema, tableAliasColumn.table.table, tableAliasColumn.table.sourceInformation);
+            Relation relation = getRelation((Database) context.resolveStore(tableAliasColumn.table.database, tableAliasColumn.table.sourceInformation), tableAliasColumn.table.schema, tableAliasColumn.table.table, tableAliasColumn.table, context, tableAliasColumn.table.sourceInformation);
             Column col = getColumn(relation, tableAliasColumn.column, tableAliasColumn.sourceInformation);
             TableAlias alias = aliasMap.getIfAbsentPut(tableAliasColumn.table.schema + "." + tableAliasColumn.tableAlias, () -> new Root_meta_relational_metamodel_TableAlias_Impl("", null, context.pureModel.getClass("meta::relational::metamodel::TableAlias"))
                     ._name(tableAliasColumn.tableAlias)
@@ -1187,11 +1258,6 @@ public class HelperRelationalBuilder
         }
     }
 
-    public static Relation getRelation(TablePtr tableptr, CompileContext context)
-    {
-        return getRelation(resolveDatabase(tableptr.database, tableptr.sourceInformation, context), tableptr.schema, tableptr.table);
-    }
-
     private static org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class<?> getPropertyOwnerForRelationalPropertyMapping(CompileContext context, RelationalPropertyMapping propertyMapping, PropertyMappingsImplementation immediateParent)
     {
         if (propertyMapping.property._class != null)
@@ -1534,7 +1600,7 @@ public class HelperRelationalBuilder
         Pair<? extends TableAlias, ? extends TableAlias> tableAliasPair = join._aliases().detect(aliasPair -> aliasPair._first() != null && startTable == aliasPair._first()._relationalElement());
         if (tableAliasPair == null)
         {
-            throw new EngineException("Mapping error: the join " + join._name() + " does not contain the source table " + startTable.getName(), sourceInformation, EngineErrorType.COMPILATION);
+            throw new EngineException("Mapping error: the join " + join._name() + " does not contain the source table " + ((Table)startTable)._name(), sourceInformation, EngineErrorType.COMPILATION);
         }
         return tableAliasPair._second();
     }

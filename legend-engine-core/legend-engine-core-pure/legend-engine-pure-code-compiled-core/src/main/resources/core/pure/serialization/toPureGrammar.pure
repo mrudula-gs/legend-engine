@@ -28,6 +28,7 @@ Class meta::pure::metamodel::serialization::grammar::GrammarExtension
 {
   extraConnectionHandlers : Function<{Nil[0..1]->String[1]}>[*];
   extraInstanceValueHandlers : Function<{Nil[0..1]->String[1]}>[*];
+  extraPackageableElementHandlers : Function<{Nil[1]->String[1]}>[*];
 }
 
 Class meta::pure::metamodel::serialization::grammar::GContext
@@ -160,7 +161,15 @@ function meta::pure::metamodel::serialization::grammar::printInstanceValue(i:Ins
                                     r:Runtime[1]|'^meta::core::runtime::Runtime('+
                                                   'connectionStores='+$r.connectionStores->map(s|'^meta::core::runtime::ConnectionStore(connection='+$s.connection->printConnection($configuration)+', element='+$s.element->match([x:String[1]|$x,x:Store[1]|$x->elementToPath()])+')')->makeString(',')+
                                                   ')',
-                                    s:RelationElementAccessor<Any>[1]|'RelationElementAccessor('+$s->genericType().rawType.name->toOne()+')';,
+                                    s:RelationElementAccessor<Any>[1]|'RelationElementAccessor('+$s->genericType().rawType.name->toOne()+')',
+                                    s:BasicColumnSpecification<Any>[1]|'^BasicColumnSpecification<%s>(name = \'%s\', func = %s)'->format([$s->genericType().typeArguments->toOne()->genericTypeClass()->elementToPath(), $s.name, $s.func->cast(@FunctionDefinition<Any>)->printFunctionDefinition(^GContext(space=''))]),
+                                    s:meta::pure::functions::collection::AggregateValue<Any, Any, Any>[1]| '^meta::pure::functions::collection::AggregateValue<%s,%s,%s>(mapFn = %s, aggregateFn = %s)'->format([
+                                              $s->genericType().typeArguments->at(0).rawType->toOne()->elementToPath(),
+                                              $s->genericType().typeArguments->at(1).rawType->toOne()->elementToPath(),
+                                              $s->genericType().typeArguments->at(2).rawType->toOne()->elementToPath(),
+                                              $s.mapFn->cast(@FunctionDefinition<Any>)->printFunctionDefinition(^GContext(space='')),
+                                              $s.aggregateFn->cast(@FunctionDefinition<Any>)->printFunctionDefinition(^GContext(space=''))
+                                              ]);, 
                                     a:Any[1] | $a->toRepresentation()
                                   ])->toOneMany()
                             )
@@ -215,7 +224,7 @@ function meta::pure::metamodel::serialization::grammar::printColSpec(functionExp
 
 function meta::pure::metamodel::serialization::grammar::printColName(name:String[1]):String[1]
 {
-  if($name->contains(' ') || $name->contains('('),|'\''+$name+'\'',|$name);
+  $name->convertIdentifier();
 }
 
 function meta::pure::metamodel::serialization::grammar::printFunctionExpression(functionExpression:FunctionExpression[1], configuration:Configuration[0..1], _context:GContext[1]):String[1]
@@ -232,7 +241,7 @@ function meta::pure::metamodel::serialization::grammar::printFunctionExpression(
                                                    |$genericType.typeArguments->at(0).rawType->toOne()->cast(@Class<Any>),
                                                    |$main
                                                 );
-                                   $val->elementToPath() + '.all()';),
+                                   $val->elementToPath() + '.all' + $functionExpression.parametersValues->drop(1)->map(vs | printValueSpecification($vs, $configuration, $context))->joinStrings('(', ', ', ')');),
           pair(|$name == 'new',| '^'+$functionExpression.parametersValues->at(0)->cast(@InstanceValue).genericType.typeArguments->at(0)->printGenericType() +
                                     '(' + if ($functionExpression.parametersValues->size() > 2,
                                               | $functionExpression.parametersValues->at(2)->cast(@InstanceValue).values->cast(@KeyExpression)->map(x|$x.key.values->toOne()->toString() + '=' + $x.expression->printValueSpecification(^GContext(space='')))->joinStrings(', '),
@@ -495,9 +504,14 @@ function meta::pure::metamodel::serialization::grammar::printFunctionType(functi
     +printGenericType($functionType.returnType)+'['+printMultiplicity($functionType.returnMultiplicity)+']}';
 }
 
+function <<access.private>> meta::pure::metamodel::serialization::grammar::convertIdentifier(unescapeIdentifier:String[1]):String[1]
+{
+  if ($unescapeIdentifier->matches('[A-Za-z_][A-Za-z0-9_$~]*'), | $unescapeIdentifier, | '\'' + $unescapeIdentifier->replace('\'', '\\\'') + '\''); // TODO: Should do this similar to how Engine composer does this 
+}
+
 function meta::pure::metamodel::serialization::grammar::printRelationType(rType:meta::pure::metamodel::relation::RelationType<Any>[1]):String[1]
 {
-    '('+$rType.columns->map(x|if($x.nameWildCard,|'?',|$x.name->toOne())+':'+$x.classifierGenericType.typeArguments->at(1)->printGenericType())->joinStrings(', ')+')';
+    '('+$rType.columns->map(x|if($x.nameWildCard,|'?',|$x.name->toOne()->convertIdentifier())+':'+$x.classifierGenericType.typeArguments->at(1)->printGenericType())->joinStrings(', ')+')';
 }
 
 function meta::pure::metamodel::serialization::grammar::printFunctionSignature(func:Function<Any>[1]):String[1]
@@ -569,6 +583,11 @@ function meta::pure::metamodel::serialization::grammar::printType(type : meta::p
 
 function meta::pure::metamodel::serialization::grammar::printPackageableElements(packageableElements:PackageableElement[*]): String[1]
 {
+  printPackageableElements($packageableElements, []);
+}
+
+function meta::pure::metamodel::serialization::grammar::printPackageableElements(packageableElements:PackageableElement[*], configuration:Configuration[0..1]): String[1]
+{
    $packageableElements->map(pe| $pe->match([
             t:Type[1]                    | $t->printType(),
             a:Association[1]             | $a->printAssociation(),
@@ -576,7 +595,9 @@ function meta::pure::metamodel::serialization::grammar::printPackageableElements
             f:FunctionDefinition<Any>[1] | 'function ' + printStereotypes($f->cast(@ElementWithStereotypes)) + printTaggedValues($f->cast(@ElementWithTaggedValues)) + $f->printFunctionDefinition(^GContext(space='')),
             x:NativeFunction<Any>[1]     | '',
             p:Package[1]                 | ''
-   ]))->filter(x|$x!='')->joinStrings('\n\n');
+        ]->concatenate($configuration.extensions.extraPackageableElementHandlers)->toOneMany()
+      )
+   )->filter(x|$x!='')->joinStrings('\n\n');
 }
 
 function meta::pure::metamodel::serialization::grammar::printAllElementsFromPackageStr(_package:String[1]): String[1]
@@ -584,6 +605,30 @@ function meta::pure::metamodel::serialization::grammar::printAllElementsFromPack
    $_package->pathToElement()->cast(@Package)->getAllPackageElements(true)->sortBy(x|$x->elementToPath())->meta::pure::metamodel::serialization::grammar::printPackageableElements()+'\n';
 }
 
-
+function meta::pure::metamodel::serialization::grammar::printNew(a:Any[1]):String[1]
+{  
+  $a->match(
+    [
+       i:Integer[1] | $i->toRepresentation(),
+       x:String[1] | $x->toRepresentation(),
+       b:Boolean[1] | $b->toRepresentation(),
+       f:Float[1] | $f->toRepresentation(),
+       d:Date[1] | $d->toRepresentation(),
+       e:Enum[1] | $e->type()->elementToPath()+'.'+$e.name,
+       d:Decimal[1] | $d->toRepresentation(),
+       a:Any[1] |
+         let _type = $a->type()->cast(@Class<Any>);
+         let properties = $_type->meta::pure::functions::meta::hierarchicalProperties();
+         '^'+$a->type()->elementToPath()+'('+
+          $properties->map(p| let value = $p->eval($a);
+                              if ($value->isEmpty(),
+                                |'',
+                                |$p.name->toOne() + '=' + $value->map(w|$w->printNew())->joinStrings(',')
+                              );
+                       )->filter(v|$v != '')->joinStrings(',')+
+        ')';
+    ]
+  );
+}
 
 

@@ -19,13 +19,13 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.eclipse.collections.api.tuple.Pair;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
-import org.finos.legend.engine.postgres.auth.AnonymousIdentityProvider;
-import org.finos.legend.engine.postgres.auth.NoPasswordAuthenticationMethod;
-import org.finos.legend.engine.postgres.config.OpenTelemetryConfig;
+import org.finos.legend.engine.postgres.protocol.wire.auth.identity.AnonymousIdentityProvider;
+import org.finos.legend.engine.postgres.protocol.wire.auth.method.NoPasswordAuthenticationMethod;
 import org.finos.legend.engine.postgres.config.ServerConfig;
-import org.finos.legend.engine.postgres.handler.legend.LegendExecutionService;
-import org.finos.legend.engine.postgres.handler.legend.LegendSessionFactory;
+import org.finos.legend.engine.postgres.protocol.sql.SQLManager;
+import org.finos.legend.engine.postgres.protocol.sql.handler.legend.LegendExecutionService;
 import org.finos.legend.engine.postgres.handler.legend.LegendTdsTestClient;
+import org.finos.legend.engine.postgres.protocol.wire.serialization.Messages;
 import org.finos.legend.engine.query.sql.api.execute.SqlExecuteTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -64,13 +64,14 @@ public class PostgresServerTest
     @BeforeClass
     public static void setUp()
     {
-        LegendTdsTestClient client = new LegendTdsTestClient(resources);
-        LegendSessionFactory legendSessionFactory = new LegendSessionFactory(new LegendExecutionService(client));
+//        LegendTdsTestClient client = new LegendTdsTestClient(resources);
+//        LegendSessionFactory legendSessionFactory = new LegendSessionFactory(new LegendExecutionService(client));
 
         ServerConfig serverConfig = new ServerConfig();
         serverConfig.setPort(0);
 
-        testPostgresServer = new TestPostgresServer(serverConfig, legendSessionFactory,
+        testPostgresServer = new TestPostgresServer(serverConfig,
+                new SQLManager(new LegendExecutionService(new LegendTdsTestClient(resources))),
                 (user, connectionProperties) -> new NoPasswordAuthenticationMethod(new AnonymousIdentityProvider()),
                 new Messages(Throwable::getMessage));
         testPostgresServer.startUp();
@@ -113,32 +114,6 @@ public class PostgresServerTest
             Assert.assertEquals(0, parameterMetaData.getParameterCount());
         }
     }
-
-    /**
-     * Verify that schema created as part of the metadata H2 DB creation exits
-     *
-     * @throws SQLException on errors
-     */
-    @Test
-    public void testInitSchemaCreation() throws SQLException
-    {
-        try (
-                Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:" + testPostgresServer.getLocalAddress().getPort() + "/postgres",
-                        "dummy", "dummy");
-                PreparedStatement statement = connection.prepareStatement("select nspname,relname from pg_catalog.pg_namespace n " +
-                        "inner join pg_catalog.pg_class c on n.oid = c.relnamespace where nspname = 'service' and c.relname= 'emptytable'");
-                ResultSet resultSet = statement.executeQuery()
-        )
-        {
-            int rows = 0;
-            while (resultSet.next())
-            {
-                rows++;
-            }
-            Assert.assertEquals(1, rows);
-        }
-    }
-
 
     @Test
     public void testNumberOfRows() throws SQLException
@@ -450,7 +425,7 @@ public class PostgresServerTest
             {
                 rows++;
             }
-            Assert.assertEquals(4, rows);
+            Assert.assertEquals(6, rows);
         }
     }
 
@@ -469,7 +444,7 @@ public class PostgresServerTest
             {
                 rows++;
             }
-            Assert.assertEquals(1, rows);
+            Assert.assertEquals(2, rows);
         }
     }
 
@@ -488,7 +463,7 @@ public class PostgresServerTest
             {
                 rows++;
             }
-            Assert.assertEquals(24, rows);
+            Assert.assertEquals(375, rows);
         }
     }
 
@@ -549,7 +524,7 @@ public class PostgresServerTest
             ServerErrorMessage serverErrorMessage = exception.getServerErrorMessage();
             Assert.assertNotNull(serverErrorMessage);
             Assert.assertNotNull(serverErrorMessage.getMessage());
-            Assert.assertTrue(serverErrorMessage.getMessage().endsWith("\"no column found named some_random_column_name\""));
+            Assert.assertTrue(serverErrorMessage.getMessage().endsWith("\"no column found named: 'some_random_column_name'. Available columns: [Id, Name, Employee Type, Full Name, Derived Name]\""));
         }
     }
 
@@ -582,7 +557,7 @@ public class PostgresServerTest
             ServerErrorMessage serverErrorMessage = exception.getServerErrorMessage();
             Assert.assertNotNull(serverErrorMessage);
             Assert.assertNotNull(serverErrorMessage.getMessage());
-            Assert.assertTrue(serverErrorMessage.getMessage().endsWith("\"no column found named some_random_column_name\""));
+            Assert.assertTrue(serverErrorMessage.getMessage().endsWith("\"no column found named: 'some_random_column_name'. Available columns: [Id, Name, Employee Type, Full Name, Derived Name]\""));
         }
     }
 

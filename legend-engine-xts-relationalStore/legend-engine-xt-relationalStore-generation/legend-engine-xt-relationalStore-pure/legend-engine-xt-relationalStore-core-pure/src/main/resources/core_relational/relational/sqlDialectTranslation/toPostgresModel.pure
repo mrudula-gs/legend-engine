@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import meta::external::store::relational::sqlDialectTranslation::utils::*;
+import meta::external::store::relational::sqlDialectTranslation::*;
 import meta::relational::extension::*;
 import meta::relational::functions::pureToSqlQuery::union::*;
 import meta::external::query::sql::metamodel::extension::*;
-import meta::external::store::relational::sqlDialectTranslation::utils::*;
-import meta::external::store::relational::sqlDialectTranslation::*;
 import meta::external::store::relational::sqlPlanning::*;
 import meta::pure::extension::*;
 import meta::relational::runtime::*;
@@ -47,14 +47,26 @@ function meta::relational::functions::toPostgresModel::newState(extensions: Exte
   ^ModelConversionState(isRootSelect = true, processingSelect = false, processingFilter = false, extensions = $extensions, dynaFunctionConverterMap = getDynaFunctionConverterMap());
 }
 
-function meta::relational::functions::toPostgresModel::convertSqlQuery(select:SelectSQLQuery[1], state:ModelConversionState[1]):meta::external::query::sql::metamodel::Query[1]
+function meta::relational::functions::toPostgresModel::convertRelationalOperationElement(r:RelationalOperationElement[1], extensions:Extension[*]):Node[1]
 {
-  convertSqlQuery($select, $state, [])
+  let state = newState($extensions);
+  $r->match(
+    [
+      s:SelectSQLQuery[1]| $s->convertSelectSqlQuery($state),
+      r:RelationalOperationElement[1]| $r->convertElement($state)
+    ]
+  );
 }
 
-function meta::relational::functions::toPostgresModel::convertSqlQuery(select:SelectSQLQuery[1], state:ModelConversionState[1], extensions: Extension[*]):meta::external::query::sql::metamodel::Query[1]
+function meta::relational::functions::toPostgresModel::convertSqlQuery(s:SQLQuery[1], extensions:Extension[*]):meta::external::query::sql::metamodel::Query[1]
 {
-  let withQueries = $select.commonTableExpressions->map(e| ^WithQuery(name = $e.name->toIdentifier(), query = $e.sqlQuery->convertSqlQuery(newState($extensions))));
+  assert($s->instanceOf(SelectSQLQuery), format('Postgres Model Conversion not supported for %s yet!', $s->type().name));
+  $s->cast(@SelectSQLQuery)->convertSelectSqlQuery(newState($extensions));
+}
+
+function meta::relational::functions::toPostgresModel::convertSelectSqlQuery(select:SelectSQLQuery[1], state:ModelConversionState[1]):meta::external::query::sql::metamodel::Query[1]
+{
+  let withQueries = $select.commonTableExpressions->map(e| ^WithQuery(name = $e.name->toIdentifier(), query = $e.sqlQuery->convertSelectSqlQuery(newState($state.extensions))));
   let with = if($withQueries->isNotEmpty(), | ^With(withQueries = $withQueries), | []);
   ^Query(with = $with, queryBody = $select->convertElement($state)->cast(@QuerySpecification));
 }
@@ -136,16 +148,17 @@ function <<access.private>> meta::relational::functions::toPostgresModel::conver
 
 function <<access.private>> meta::relational::functions::toPostgresModel::convertLimit(s:SelectSQLQuery[*], state:ModelConversionState[1]):meta::external::query::sql::metamodel::Expression[0..1]
 {
-  let fromRow = $s.fromRow->convertOptionalElementToExpression($state);
-  let toRow = $s.toRow->convertOptionalElementToExpression($state);
-  if($toRow->isEmpty(),
+  if($s.toRow->isEmpty(),
     | [],
-    | if($fromRow->isEmpty(),
-        | $toRow->toOne(),
-        | if($fromRow->toOne()->instanceOf(IntegerLiteral) && $toRow->toOne()->instanceOf(IntegerLiteral),
-          | ^IntegerLiteral(value = $toRow->toOne()->cast(@IntegerLiteral).value - $fromRow->toOne()->cast(@IntegerLiteral).value),
-          | ^ArithmeticExpression(type = ArithmeticType.SUBTRACT, left = $toRow->toOne(), right = $fromRow->toOne())
-        )
+    | if($s.fromRow->isEmpty(), 
+        | $s.toRow->toOne()->convertElementToExpression($state),
+        | let fromRow = $s.fromRow->toOne();
+          let toRow = $s.toRow->toOne(); 
+          if($fromRow.value->instanceOf(Integer) && $toRow.value->toOne()->instanceOf(Integer),
+            | ^IntegerLiteral(value = $toRow.value->cast(@Integer) - $fromRow.value->cast(@Integer)),
+            | // The subtraction is evaluated during freemarker processing of SQL. This is because some databases don't support operations (for ex. 3 - 2) in limit/offset expresisons.
+              ^FreeMarkerOperationHolder(name = 'numberSubtract', parameters = [$toRow, $fromRow])->convertElementToExpression($state)
+          );
       )
   );
 }
@@ -369,7 +382,7 @@ function <<access.private>> meta::relational::functions::toPostgresModel::getDyn
     pair('sqlNull',                   {p:meta::external::query::sql::metamodel::Expression[*]| ^NullLiteral()}),
     pair('isDistinct',                {p:meta::external::query::sql::metamodel::Expression[*]| let count = functionCall('count', $p); ^ComparisonExpression(left = ^$count(distinct = true), operator = ComparisonOperator.EQUAL, right = $count);}),
     pair('count',                     {p:meta::external::query::sql::metamodel::Expression[*]| if($p->isNotEmpty(), | functionCall('count', $p), | functionCall('count', ^AllColumnsReference()))}),
-    pair('size',                      functionCall('count')),
+    pair('size',                      {p:meta::external::query::sql::metamodel::Expression[*]| if($p->isNotEmpty(), | functionCall('count', $p), | functionCall('count', ^AllColumnsReference()))}),
     pair('max',                       functionCall('max')),
     pair('min',                       functionCall('min')),
     pair('stdDevSample',              functionCall('stddev_samp')),
@@ -856,6 +869,7 @@ function <<access.private>> meta::relational::functions::toPostgresModel::conver
       f:FreeMarkerOperationHolder[1] |            $f->convertFreeMarkerOperationHolder($state);,
       l:meta::relational::metamodel::Literal[1] | $l.value->match([
                                                     v:VarPlaceHolder[1] | ^StringLiteral(value = if($v->isOptionalPlaceHolder(), |$v.name + '![]', |$v.name));,
+                                                    f:FreeMarkerOperationHolder[1] | $f->convertFreeMarkerOperationHolder($state);,
                                                     a:Any[1]            | $l->convertElement($state);
                                                   ]),
       r:RelationalOperationElement[1]|            $r->convertElement($state);

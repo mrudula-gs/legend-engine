@@ -250,6 +250,11 @@ function meta::relational::tests::milestoning::initDatabase():Runtime[1]
    executeInDb('insert into ProductExchangeTable values(\'LNSE\',\'London\',\'2015-8-15 00:00:00\',\'9999-12-31 00:00:00\');',$connection);
    executeInDb('insert into ProductExchangeTable values(\'LNSE\',\'London\',\'2014-1-15 00:00:00\',\'2014-1-16 00:00:00\');',$connection);
 
+   executeInDb('drop table if exists ProcessedMilestonedProductExchangeTable;',$connection);
+   executeInDb('create table ProcessedMilestonedProductExchangeTable (name VARCHAR(200), city VARCHAR(200), in_z TIMESTAMP, out_z TIMESTAMP);',$connection);
+   executeInDb('insert into ProcessedMilestonedProductExchangeTable values(\'ISE\',\'Dublin\',\'2015-1-15 00:00:00\',\'2015-8-15 00:00:00\');',$connection);
+   executeInDb('insert into ProcessedMilestonedProductExchangeTable values(\'LNSE\',\'London\',\'2015-8-15 00:00:00\',\'9999-12-31 00:00:00\');',$connection);
+
    executeInDb('drop table if exists ProductExchangeTableNoMilestoning;',$connection);
    executeInDb('create table ProductExchangeTableNoMilestoning (name VARCHAR(200));',$connection);
    executeInDb('insert into ProductExchangeTableNoMilestoning values(\'ISE\');',$connection);
@@ -300,6 +305,12 @@ function meta::relational::tests::milestoning::initDatabase():Runtime[1]
    executeInDb('insert into tradePnlTable (TRADE_ID, pnl, from_z, thru_z) values (1, 100,\'2016-1-1 00:00:00\',\'2016-6-1 00:00:00\');', $connection);
    executeInDb('insert into tradePnlTable (TRADE_ID, pnl, from_z, thru_z) values (1, 101,\'2016-6-1 00:00:00\',\'9999-12-31 00:00:00\');', $connection);
    executeInDb('insert into tradePnlTable (TRADE_ID, pnl, from_z, thru_z) values (2, 200,\'2016-1-1 00:00:00\',\'9999-12-31 00:00:00\');', $connection);
+
+   executeInDb('Drop table if exists tradePnlTableNoMilestoning;', $connection);
+   executeInDb('Create Table tradePnlTableNoMilestoning(TRADE_ID INT, pnl FLOAT);', $connection);
+   executeInDb('insert into tradePnlTableNoMilestoning (TRADE_ID, pnl) values (1, 100);', $connection);
+   executeInDb('insert into tradePnlTableNoMilestoning (TRADE_ID, pnl) values (1, 101);', $connection);
+   executeInDb('insert into tradePnlTableNoMilestoning (TRADE_ID, pnl) values (2, 200);', $connection);
 
    executeInDb('Drop table if exists salesPersonTable;', $connection);
    executeInDb('Create Table salesPersonTable(ACCOUNT_ID INT, NAME VARCHAR(200),from_z TIMESTAMP, thru_z TIMESTAMP);', $connection);
@@ -360,6 +371,19 @@ function meta::relational::tests::milestoning::initDatabase():Runtime[1]
    executeInDb('Create Table intermediate(joinId INT NOT NULL,attribute INT NULL, PRIMARY KEY(joinId))', $connection);
    executeInDb('drop table if exists intermediateTwo;', $connection);
    executeInDb('Create Table intermediateTwo(joinId INT NOT NULL,linkToProduct INT NULL,type VARCHAR(200) NULL, PRIMARY KEY(joinId));', $connection);
+
+   executeInDb('DROP TABLE IF EXISTS Person;', $connection);
+   executeInDb('DROP TABLE IF EXISTS Cars;', $connection);
+   executeInDb('DROP TABLE IF EXISTS Bicycles;', $connection);
+   executeInDb('DROP TABLE IF EXISTS Jets;', $connection);
+   executeInDb('CREATE TABLE Person (name VARCHAR(100),id INTEGER, PRIMARY KEY(id));', $connection);
+   executeInDb('CREATE TABLE Cars (in_z TIMESTAMP,  out_z TIMESTAMP, id INTEGER PRIMARY KEY,  description VARCHAR(200));', $connection);
+   executeInDb('CREATE TABLE Bicycles (in_z TIMESTAMP, out_z TIMESTAMP,  id INTEGER PRIMARY KEY,  description VARCHAR(200));', $connection);
+   executeInDb('CREATE TABLE Jets (in_z TIMESTAMP,  out_z TIMESTAMP,  id INTEGER PRIMARY KEY,  description VARCHAR(200));', $connection);
+   executeInDb('INSERT INTO Person (name, id) VALUES (\'Alice\', 1), (\'Bob\', 2), (\'Charlie\', 3), (\'Diana\', 4), (\'Eve\', 5);', $connection);
+   executeInDb('INSERT INTO Cars (in_z, out_z, id, description) VALUES\n(\'2020-01-01\', \'2050-01-01\', 1, \'Sedan\'),\n(\'2020-01-01\', \'2050-01-01\', 2, \'SUV\'),\n(\'2020-01-01\', \'2050-01-01\', 3, \'Hatchback\'),\n(\'2020-01-01\', \'2050-01-01\', 4, \'Convertible\'),\n(\'2020-01-01\', \'2050-01-01\', 5, \'Truck\');', $connection);
+   executeInDb('INSERT INTO Bicycles (in_z, out_z, id, description) VALUES\n(\'2020-01-01\', \'2050-01-01\', 5, \'Mountain Bike\'),\n(\'2020-01-01\', \'2050-01-01\', 4, \'Road Bike\'),\n(\'2020-01-01\', \'2050-01-01\', 3, \'Hybrid Bike\'),\n(\'2020-01-01\', \'2050-01-01\', 2, \'Electric Bike\'),\n(\'2020-01-01\', \'2050-01-01\', 1, \'Folding Bike\');', $connection);
+   executeInDb('INSERT INTO Jets (in_z, out_z, id, description) VALUES\n(\'2020-01-01\', \'2050-01-01\', 3, \'Fighter Jet\'),\n(\'2020-01-01\', \'2050-01-01\', 8, \'Water Jet\'),\n(\'2020-01-01\', \'2050-01-01\', 6, \'Hybrid Jet\'),\n(\'2020-01-01\', \'2050-01-01\', 4, \'Supersonic Jet\'),\n(\'2020-01-01\', \'2050-01-01\', 2, \'Transformer Jet\');', $connection);
 
    ^Runtime(connectionStores=$connectionStore);
 }
@@ -426,6 +450,19 @@ Mapping meta::relational::tests::milestoning::milestoningmap2
    meta::relational::tests::milestoning::Product : Relational{
       id : [db]ProductTable.id,
       isBrexitClassificationTypeExchange : [db]@Product_Classification > [db]@Classification_Exchange| case(equal([db]ProductExchangeTable.city,'London'), 'true', 'false')
+   }
+)
+
+Mapping meta::relational::tests::milestoning::milestoningmap3
+(
+  Trade : Relational{
+      id : [db]tradeTable.ID,
+      tradePnl : [db]@TradeTable_TradePnlViewNoRootMilestoning
+   }
+
+   TradePnl : Relational{
+      pnl : [db]tradePnlViewNoRootMilestoning.pnl,
+      supportContactName : [db]tradePnlViewNoRootMilestoning.supportContact
    }
 )
 
@@ -531,6 +568,11 @@ Mapping meta::relational::tests::milestoning::milestoningmap
       product : [db]@Product_Classification
    }
 
+   meta::relational::tests::milestoning::ProductClassificationWithProcessedMilestonedExchangeNameConstraint : Relational{
+    type : [db]ProductClassificationTable.type,
+    processedMilestonedExchange : [db]@Classification_ProcessedMilestonedExchange
+   }
+
    meta::relational::tests::milestoning::BiTemporalProductClassification : Relational{
       type : [db]BiTemporalProductClassificationTable.type
    }
@@ -544,6 +586,10 @@ Mapping meta::relational::tests::milestoning::milestoningmap
       name : [db]ProductExchangeTable.name
    }
 
+   meta::relational::tests::milestoning::ProcessedMilestonedExchange : Relational{
+      name : [db]ProcessedMilestonedProductExchangeTable.name
+   }
+
    meta::relational::tests::milestoning::System : Relational{
       name : [db]SystemTable.name,
       systemDescription : [db]@System_SystemDescrption
@@ -555,8 +601,7 @@ Mapping meta::relational::tests::milestoning::milestoningmap
 
    TradePnl : Relational{
       pnl : [db]tradePnlView.pnl,
-      supportContactName : [db]tradePnlView.supportContact//,
-      //trade: [db]@TradePnlView_Trade
+      supportContactName : [db]tradePnlView.supportContact
    }
 
    meta::relational::tests::milestoning::Trader : Relational {
@@ -1442,6 +1487,45 @@ Mapping meta::relational::tests::milestoning::milestoningmapWithMappingExtension
 
 )
 
+###Mapping
+import meta::relational::tests::milestoning::*;
+import meta::relational::tests::milestoning::inheritance::*;
+
+Mapping meta::relational::tests::milestoning::milestoningmapWithVehicles
+(
+  *Car[c]: Relational
+  {
+    ~primaryKey (
+      [db]Cars.id
+    )
+    ~mainTable [db]Cars
+    id: [db]Cars.id,
+    description: [db]Cars.description,
+    wheelCount: 4
+  }
+
+  *Bicycle[b]: Relational
+  {
+    ~primaryKey (
+      [db]Bicycles.id
+    )
+    ~mainTable [db]Bicycles
+    id: [db]Bicycles.id,
+    description: [db]Bicycles.description,
+    wheelCount: 2
+  }
+
+  CarBicycle: Relational
+  {
+    AssociationMapping
+    (
+      car[b, c]: [db]@PersonBicycle > [db]@PersonCar,
+      bicycle[c, b]: [db]@PersonCar > (INNER) [db]@PersonBicycle
+    )
+  }
+
+)
+
 ###Relational
 Database meta::relational::tests::milestoning::dbWithInclusion(
   include  meta::relational::tests::milestoning::dbInclusion
@@ -1937,6 +2021,15 @@ Database meta::relational::tests::milestoning::db(
             from_z DATE,
             thru_z DATE)
 
+        Table ProcessedMilestonedProductExchangeTable(
+            milestoning(
+               processing(PROCESSING_IN=in_z, PROCESSING_OUT=out_z, INFINITY_DATE=%9999-12-31T00:00:00.0000)
+            )
+            city VARCHAR(200),
+            name VARCHAR(200),
+            in_z DATE,
+            out_z DATE)
+
     Table ProductExchangeTableNoMilestoning(
             name VARCHAR(200),
             from_z DATE,
@@ -1995,6 +2088,8 @@ Database meta::relational::tests::milestoning::db(
 
     Table tradeTable(ID INT PRIMARY KEY, accountID INT)
 
+    Table tradePnlTableNoMilestoning(TRADE_ID INT PRIMARY KEY, pnl FLOAT)
+
     Table tradePnlTable(
             milestoning(business(BUS_FROM=from_z, BUS_THRU=thru_z))
             TRADE_ID INT PRIMARY KEY, pnl FLOAT,from_z DATE,thru_z DATE)
@@ -2036,9 +2131,17 @@ Database meta::relational::tests::milestoning::db(
     View tradePnlView
     (
        ~distinct
-        TRADE_ID: tradePnlTable.TRADE_ID PRIMARY KEY,
-        pnl: tradePnlTable.pnl,
-        supportContact : @TradePnlTable_Trade > @Trade_SalesPerson | salesPersonTable.NAME
+       TRADE_ID: tradePnlTable.TRADE_ID PRIMARY KEY,
+       pnl: tradePnlTable.pnl,
+       supportContact : @TradePnlTable_Trade > @Trade_SalesPerson | salesPersonTable.NAME
+    )
+
+    View tradePnlViewNoRootMilestoning
+    (
+       ~distinct
+       TRADE_ID: tradePnlTableNoMilestoning.TRADE_ID PRIMARY KEY,
+       pnl: tradePnlTableNoMilestoning.pnl,
+       supportContact : @TradePnlTableNoMilestoning_Trade > @Trade_SalesPerson | salesPersonTable.NAME
     )
 
     View salesPersonView
@@ -2096,6 +2199,38 @@ Database meta::relational::tests::milestoning::db(
       from_z DATE,
       thru_z DATE
    )
+
+   Table Person
+    (
+      name VARCHAR(100),
+      id INTEGER PRIMARY KEY
+    )
+
+    Table Cars
+    (
+      milestoning
+      (
+        business(BUS_FROM = in_z, BUS_THRU = out_z, INFINITY_DATE = %9999-12-31T00:00:00.000+0000)
+      )
+
+      in_z INTEGER,
+      out_z INTEGER,
+      id INTEGER PRIMARY KEY,
+      description VARCHAR(200) 
+    )
+
+    Table Bicycles
+    (
+      milestoning
+      (
+        business(BUS_FROM = in_z, BUS_THRU = out_z, INFINITY_DATE = %9999-12-31T00:00:00.000+0000)
+      )
+
+      in_z INTEGER,
+      out_z INTEGER,
+      id INTEGER PRIMARY KEY,
+      description VARCHAR(200) 
+    )
 
 
    Join Order_Product(OrderTable.prodFk=ProductTable.id)
@@ -2158,6 +2293,7 @@ Database meta::relational::tests::milestoning::db(
    Join ClassificationSystem_System(ProductClassificationSystemTable.name=SystemTable.name)
    Join Classification_System(ProductClassificationTable.system=SystemTable.name)
    Join Classification_Exchange(ProductClassificationTable.exchange=ProductExchangeTable.name)
+   Join Classification_ProcessedMilestonedExchange(ProductClassificationTable.exchange=ProcessedMilestonedProductExchangeTable.name)
    Join Classification_ExchangeNoMilestoning(ProductClassificationTable.exchange=ProductExchangeTableNoMilestoning.name)
    Join Classification2_Exchange(ProductClassificationTable2.exchange=ProductExchangeTable.name)
    Join Classification2_ExchangeNoMilestoning(ProductClassificationTable2.exchange=ProductExchangeTableNoMilestoning.name)
@@ -2165,6 +2301,8 @@ Database meta::relational::tests::milestoning::db(
    Join ProductClassificationTableNoMilestoning_ExchangeNoMilestoning(ProductClassificationTableNoMilestoning.exchange=ProductExchangeTableNoMilestoning.name)
    Join System_SystemDescrption(SystemTable.name=SystemDescriptionTable.systemName)
    Join TradePnlTable_Trade(tradePnlTable.TRADE_ID = tradeTable.ID)
+   Join TradePnlTableNoMilestoning_Trade(tradePnlTableNoMilestoning.TRADE_ID = tradeTable.ID)
+   Join TradeTable_TradePnlViewNoRootMilestoning(tradeTable.ID=tradePnlViewNoRootMilestoning.TRADE_ID)
    Join Trade_SalesPerson(tradeTable.accountID = salesPersonTable.ACCOUNT_ID)
    Join Trader_Certifications(TraderTable.kerberos = CertificationTable.kerberos)
    Join Trader_BiTemporalLocation(TraderTable.kerberos = BiTemporalLocationTable.kerberos)
@@ -2183,6 +2321,8 @@ Database meta::relational::tests::milestoning::db(
    Join SalesPersonTable_SalesPersonView(salesPersonTable.ACCOUNT_ID = salesPersonView.ACCOUNT_ID)
    Join tradePnlIntermediateView_TradePnlTable(tradePnlIntermediateView.TRADE_ID = tradePnlTable.TRADE_ID)
    Join stockProductView_ProductTable(stockProductView.id = ProductTable.id)
+   Join PersonCar(Person.id = Cars.id)
+   Join PersonBicycle(Person.id = Bicycles.id)
 
    Filter IsStockType(ProductTable.type='STOCK')
    Filter LNSEProducts(ProductExchangeTable.name='STOCK')

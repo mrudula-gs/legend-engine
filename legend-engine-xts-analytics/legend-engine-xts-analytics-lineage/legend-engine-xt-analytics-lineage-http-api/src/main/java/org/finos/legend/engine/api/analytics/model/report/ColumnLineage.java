@@ -17,6 +17,7 @@
 package org.finos.legend.engine.api.analytics.model.report;
 
 import org.finos.legend.engine.api.analytics.model.tree.PropertyPathTreeNode;
+import org.finos.legend.engine.api.analytics.model.propertyLineage.LineageProperty;
 
 import java.util.List;
 
@@ -25,4 +26,6 @@ public class ColumnLineage
     public String name;
     public PropertyPathTreeNode propertyTree;
     public List<Column> columns;
+    public List<LineageProperty> lineageProperty;
+    public List<LineageProperty> leafProperty;
 }

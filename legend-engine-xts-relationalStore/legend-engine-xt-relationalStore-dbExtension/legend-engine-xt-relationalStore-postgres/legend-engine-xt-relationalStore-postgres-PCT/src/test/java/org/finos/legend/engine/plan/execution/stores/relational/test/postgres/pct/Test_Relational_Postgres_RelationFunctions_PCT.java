@@ -15,7 +15,6 @@
 package org.finos.legend.engine.plan.execution.stores.relational.test.postgres.pct;
 
 import junit.framework.Test;
-import org.checkerframework.checker.units.qual.A;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.plan.execution.stores.relational.connection.tests.api.TestConnectionIntegrationLoader;
@@ -46,34 +45,9 @@ public class Test_Relational_Postgres_RelationFunctions_PCT extends PCTReportCon
             one("meta::pure::functions::relation::tests::composition::test_Extend_Filter_Select_Pivot_GroupBy_Extend_Sort_Function_1__Boolean_1_", "\"pivot is not supported\"", AdapterQualifier.unsupportedFeature),
             one("meta::pure::functions::relation::tests::composition::test_Extend_Filter_Select_GroupBy_Pivot_Extend_Sort_Limit_Function_1__Boolean_1_", "\"pivot is not supported\"", AdapterQualifier.unsupportedFeature),
 
-            // BUG: Column name with special characters is not properly escaped
-            one("meta::pure::functions::relation::tests::select::testSingleSelectWithQuotedColumn_Function_1__Boolean_1_", "Error while executing: Create Table leSchema.", AdapterQualifier.needsInvestigation),
-            one("meta::pure::functions::relation::tests::select::testSingleSelectWithQuotedColumn_MultipleExpressions_Function_1__Boolean_1_", "Error while executing: Create Table leSchema.", AdapterQualifier.needsInvestigation),
-
             // Postgres doesn't support asOf Join (May want to compensate with an OLAP equivalent if required
             pack("meta::pure::functions::relation::tests::asOfJoin", "\"AsOfJoins are not supported in the generic generator!\"", AdapterQualifier.unsupportedFeature),
 
-            // Postgres does not support range frame with explicit offsets on either side
-            one("meta::pure::functions::relation::tests::over::testRange_NFollowing_NFollowing_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE FOLLOWING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_NFollowing_NFollowing_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE FOLLOWING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_NFollowing_UnboundedFollowing_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE FOLLOWING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_NFollowing_UnboundedFollowing_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE FOLLOWING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_NPreceding_NFollowing_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_NPreceding_NFollowing_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_NPreceding_NPreceding_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_NPreceding_NPreceding_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_NPreceding_UnboundedFollowing_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_NPreceding_UnboundedFollowing_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_UnboundedPreceding_NFollowing_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE FOLLOWING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_UnboundedPreceding_NFollowing_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE FOLLOWING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_UnboundedPreceding_NPreceding_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_UnboundedPreceding_NPreceding_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_WithNumbers_CurrentRow_NFollowing_WithoutPartition_WithSingleOrderBy_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE FOLLOWING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_WithNumbers_NFollowing_NFollowing_WithoutPartition_WithSingleOrderBy_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE FOLLOWING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_ExplicitOffsets_WithNullValues_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_ExplicitOffsets_WithNullValues_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_NPreceding_UnboundedFollowing_WithNullValues_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE PRECEDING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::over::testRange_UnboundedPreceding_NFollowing_WithNullValues_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "org.postgresql.util.PSQLException: ERROR: RANGE FOLLOWING is only supported with UNBOUNDED", AdapterQualifier.unsupportedFeature),
             one("meta::pure::functions::relation::tests::over::testRangeInterval_CurrentRow_NFollowing_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "\"Window function with range frame using interval is not supported for this database type: Postgres\"", AdapterQualifier.unsupportedFeature),
             one("meta::pure::functions::relation::tests::over::testRangeInterval_CurrentRow_NFollowing_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "\"Window function with range frame using interval is not supported for this database type: Postgres\"", AdapterQualifier.unsupportedFeature),
             one("meta::pure::functions::relation::tests::over::testRangeInterval_NFollowing_NFollowing_WithDifferentDurationUnits_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "\"Window function with range frame using interval is not supported for this database type: Postgres\"", AdapterQualifier.unsupportedFeature),
@@ -95,23 +69,36 @@ public class Test_Relational_Postgres_RelationFunctions_PCT extends PCTReportCon
             one("meta::pure::functions::relation::tests::over::testRangeInterval_UnboundedPreceding_NPreceding_WithSinglePartition_WithOrderByASC_Function_1__Boolean_1_", "\"Window function with range frame using interval is not supported for this database type: Postgres\"", AdapterQualifier.unsupportedFeature),
             one("meta::pure::functions::relation::tests::over::testRangeInterval_UnboundedPreceding_NPreceding_WithSinglePartition_WithOrderByDESC_Function_1__Boolean_1_", "\"Window function with range frame using interval is not supported for this database type: Postgres\"", AdapterQualifier.unsupportedFeature),
 
-            one("meta::pure::functions::relation::tests::composition::testVariantArrayColumn_reverse_Function_1__Boolean_1_", "\"[unsupported-api] The function 'toVariant' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::composition::testVariantArrayColumn_sort_Function_1__Boolean_1_", "\"[unsupported-api] The function 'toVariant' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::composition::testVariantColumn_extend_indexExtraction_filter_Function_1__Boolean_1_", "\"[unsupported-api] Semi structured array element processing not supported for Database Type: Postgres\"", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::tests::composition::testVariantArrayColumn_reverse_Function_1__Boolean_1_", "\"[unsupported-api] The function 'array_reverse' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::tests::composition::testVariantArrayColumn_sort_Function_1__Boolean_1_", "\"[unsupported-api] The function 'array_sort' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
+
             one("meta::pure::functions::relation::tests::composition::testVariantColumn_functionComposition_Function_1__Boolean_1_", "\"[unsupported-api] The function 'array_size' (state: [Where, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
             one("meta::pure::functions::relation::tests::composition::testGroupByFilterExtendFilter_Function_1__Boolean_1_", "\"QUALIFY grammar is not supported\"", AdapterQualifier.unsupportedFeature),
             one("meta::pure::functions::relation::tests::composition::testExtendWindowFilter_Function_1__Boolean_1_", "\"QUALIFY grammar is not supported\"", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::tests::composition::testVariantColumn_isEmpty_Function_1__Boolean_1_", "\"[unsupported-api] The function 'array_size' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::tests::composition::testVariantColumn_isNotEmpty_Function_1__Boolean_1_", "\"[unsupported-api] The function 'array_size' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::tests::composition::testVariantColumn_indexOf_Function_1__Boolean_1_", "\"[unsupported-api] The function 'array_position' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::tests::composition::testVariantColumn_slice_Function_1__Boolean_1_", "\"[unsupported-api] The function 'array_slice' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::tests::composition::testVariantColumn_contains_Function_1__Boolean_1_", "\"[unsupported-api] The function 'array_contains' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::tests::composition::testVariantColumn_distinct_removeDuplicates_Function_1__Boolean_1_", "\"[unsupported-api] The function 'array_sort' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
 
-            one("meta::pure::functions::relation::tests::filter::testVariantColumn_filterOnIndexExtractionValue_Function_1__Boolean_1_", "\"[unsupported-api] Semi structured array element processing not supported for Database Type: Postgres\"", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::filter::testVariantColumn_filterOnKeyExtractionValue_Function_1__Boolean_1_", "\"[unsupported-api] Semi structured array element processing not supported for Database Type: Postgres\"", AdapterQualifier.unsupportedFeature),
             one("meta::pure::functions::relation::tests::filter::testVariantColumn_filterOutputFromLambda_Function_1__Boolean_1_", "\"[unsupported-api] The function 'array_size' (state: [Where, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
 
 
-            one("meta::pure::functions::relation::tests::extend::testVariantColumn_filter_Function_1__Boolean_1_", "\"[unsupported-api] The function 'toVariant' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::tests::extend::testVariantColumn_filter_Function_1__Boolean_1_", "\"[unsupported-api] relational lambda processing not supported for Database Type: Postgres\"", AdapterQualifier.unsupportedFeature),
             one("meta::pure::functions::relation::tests::extend::testVariantColumn_fold_Function_1__Boolean_1_", "\"[unsupported-api] relational lambda processing not supported for Database Type: Postgres\"", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::extend::testVariantColumn_map_Function_1__Boolean_1_", "\"[unsupported-api] The function 'toVariant' (state: [Select, false]) is not supported yet\"", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::extend::testVariantColumn_indexExtraction_Function_1__Boolean_1_", "[unsupported-api] Semi structured array element processing not supported for Database Type: Postgres", AdapterQualifier.unsupportedFeature),
-            one("meta::pure::functions::relation::tests::extend::testVariantColumn_keyExtraction_Function_1__Boolean_1_", "[unsupported-api] Semi structured array element processing not supported for Database Type: Postgres", AdapterQualifier.unsupportedFeature)
+            one("meta::pure::functions::relation::tests::extend::testVariantColumn_map_Function_1__Boolean_1_", "\"[unsupported-api] relational lambda processing not supported for Database Type: Postgres\"", AdapterQualifier.unsupportedFeature),
+
+            // lateral
+            pack("meta::pure::functions::relation::tests::lateral", "[unsupported-api] Lateral operation not supported for Database Type: Postgres", AdapterQualifier.unsupportedFeature),
+
+            // flatten
+            pack("meta::pure::functions::relation::variant::tests::flatten", "[unsupported-api] Lateral operation not supported for Database Type: Postgres", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::variant::tests::flatten::testFlatten_LateralJoin_Nested_Extend_Function_1__Boolean_1_", "[unsupported-api] relational lambda processing not supported for Database Type: Postgres", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::variant::tests::flatten::testFlatten_Scalar_Function_1__Boolean_1_", "Flatten is not supported in Postgres", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::variant::tests::flatten::testFlatten_Variant_Array_Function_1__Boolean_1_", "Flatten is not supported in Postgres", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::variant::tests::flatten::testFlatten_Variant_Map_Function_1__Boolean_1_", "Flatten is not supported in Postgres", AdapterQualifier.unsupportedFeature),
+            one("meta::pure::functions::relation::variant::tests::flatten::testFlatten_Variant_Navigation_Function_1__Boolean_1_", "Flatten is not supported in Postgres", AdapterQualifier.unsupportedFeature)
         );
 
     public static Test suite()
