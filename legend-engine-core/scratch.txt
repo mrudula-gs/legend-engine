@@ -15,3 +15,121 @@ Ingest store::lakehouse::PersonIngest BatchMilestoned Snapshot<CSV> deploymentId
    DP10
    pk=[id];
 ]
+
+
+
+
+
+
+###Relational
+Database my::relational::db
+(
+  include Ingest my::lakehouse::FirmIngest
+  include DataProduct my::lakehouse::PersonDataProduct
+
+  Join FirmPersonLakehouse([my::lakehouse::FirmIngest]ALLOY_FIRM_GROUP.Firm.id = [my::lakehouse::PersonDataProduct]ap1_PersonLatest.firm_id)
+)
+
+
+###Lakehouse
+Ingest my::lakehouse::FirmIngest AppendOnly Undefined<CSV> owner=AppDir(prodParallel='1') group=ALLOY_FIRM_GROUP
+[
+   Firm(
+      id: Int[1],
+      legal_name: Varchar(200)
+   )
+   DP10;
+]
+
+
+Ingest my::lakehouse::PersonIngest BatchMilestoned Snapshot<CSV> owner=AppDir(prodParallel='1') group=ALLOY_PERSON_GROUP
+[
+   Person(
+      id: Int[1],
+      last_name: Varchar(200)[1],
+      firm_id: Int[1]
+   )
+   DP10
+   pk=[id];
+]
+
+
+
+###DataProduct
+DataProduct my::lakehouse::PersonDataProduct
+{
+   type: Internal
+   accessPoints: [
+       OrgGroup
+       [
+           ap1_PersonLatest: LH(Snowflake, |#I{my::lakehouse::PersonIngest.Person}#->filter(p|$p.LAKE_OUT_ID == 99999999))
+           DP00
+       ]
+   ]
+}
+
+
+
+###LakehouseRuntime
+LakehouseRuntime runtime::SimpleRuntime
+{
+  environment: 'dataeng-pp';
+  warehouse: 'LAKEHOUSE_PRODUCER_287440_QUERY_WH';
+}
+
+
+###Pure
+Class model::lakehouse::Firm
+{
+  id: Integer[1];
+  legalName: String[1];
+  employees: model::lakehouse::Person[*];
+}
+
+Class model::lakehouse::Person
+{
+  id: Integer[1];
+  firmId: Integer[1];
+  lastName: String[1];
+}
+
+function query::modelQuery(): meta::pure::metamodel::relation::Relation<meta::pure::metamodel::type::Any>[1]
+{
+  model::lakehouse::Firm.all()->project(
+    ~[
+       ID: p|$p.id,
+       legalName: p|$p.legalName,
+       lastName: p|$p.employees.lastName
+     ]
+  )->from(
+    model::mapping::LakehouseElementsMapping,
+    runtime::SimpleRuntime
+  )
+}
+
+
+###Mapping
+Mapping model::mapping::LakehouseElementsMapping
+(
+  model::lakehouse::Person: Relational
+  {
+    ~primaryKey
+    (
+      [my::relational::db]PersonDataProduct.ap1_PersonLatest.id
+    )
+    ~mainTable [my::relational::db]PersonDataProduct.ap1_PersonLatest
+    lastName: toUpper([my::relational::db]PersonDataProduct.ap1_PersonLatest.last_name),
+    id: [my::relational::db]PersonDataProduct.ap1_PersonLatest.id
+  }
+  model::lakehouse::Firm: Relational
+  {
+    ~primaryKey
+    (
+      [my::relational::db]ALLOY_FIRM_GROUP.Firm.id
+    )
+    ~mainTable [my::relational::db]ALLOY_FIRM_GROUP.Firm
+    id: [my::relational::db]ALLOY_FIRM_GROUP.Firm.id,
+    legalName: [my::relational::db]ALLOY_FIRM_GROUP.Firm.legal_name,
+    employees: [my::relational::db]@FirmPersonLakehouse
+  }
+)
