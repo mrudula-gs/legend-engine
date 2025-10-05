@@ -1,3 +1,16 @@
+WebConsole.js:33 [1759701863286] graph-manager.graph-builder.failure : Assertion Error: Can't find column 'firm_id' in the table
+    at a (AssertionUtils.js:26:15)
+    at V1_DatabaseBuilderHelper.js:410:13
+    at Array.forEach (<anonymous>)
+    at Q (V1_DatabaseBuilderHelper.js:398:25)
+    at V1_ElementFourthPassBuilder.js:90:54
+    at Array.map (<anonymous>)
+    at Di.visit_Database (V1_ElementFourthPassBuilder.js:90:40)
+    at o.accept_PackageableElementVisitor (V1_Database.js:40:24)
+    at V1_PureGraphManager.js:764:44
+    at CommonUtils.js:173:17
+
+
 ###Relational
 Database store::relational::db
 (
