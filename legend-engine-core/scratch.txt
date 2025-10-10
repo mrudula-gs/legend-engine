@@ -1,148 +1,43 @@
-WebConsole.js:33 [1759701863286] graph-manager.graph-builder.failure : Assertion Error: Can't find column 'firm_id' in the table
-    at a (AssertionUtils.js:26:15)
-    at V1_DatabaseBuilderHelper.js:410:13
-    at Array.forEach (<anonymous>)
-    at Q (V1_DatabaseBuilderHelper.js:398:25)
-    at V1_ElementFourthPassBuilder.js:90:54
-    at Array.map (<anonymous>)
-    at Di.visit_Database (V1_ElementFourthPassBuilder.js:90:40)
-    at o.accept_PackageableElementVisitor (V1_Database.js:40:24)
-    at V1_PureGraphManager.js:764:44
-    at CommonUtils.js:173:17
-
-
-###Relational
-Database store::relational::db
-(
-  include Ingest store::lakehouse::PersonIngest
-  Join SelfPerson([store::lakehouse::PersonIngest]ALLOY_PERSON_GROUP.Person.id = {target}.firm_id)
-)
-
 ###Lakehouse
-Ingest store::lakehouse::PersonIngest BatchMilestoned Snapshot<CSV> deploymentId=1 group=ALLOY_PERSON_GROUP
-[
-   Person(
-      id: Int[1],
-      firm_id: Int[1]
-   )
-   DP10
-   pk=[id];
-]
-
-
-
-
-
-
-###Relational
-Database my::relational::db
-(
-  include Ingest my::lakehouse::FirmIngest
-  include DataProduct my::lakehouse::PersonDataProduct
-
-  Join FirmPersonLakehouse([my::lakehouse::FirmIngest]ALLOY_FIRM_GROUP.Firm.id = [my::lakehouse::PersonDataProduct]ap1_PersonLatest.firm_id)
-)
-
-
-###Lakehouse
-Ingest my::lakehouse::FirmIngest AppendOnly Undefined<CSV> owner=AppDir(prodParallel='1') group=ALLOY_FIRM_GROUP
+Ingest store::lakehouse::FirmIngest AppendOnly Undefined<CSV> deploymentId=1 group=ALLOY_FIRM_GROUP
 [
    Firm(
-      id: Int[1],
-      legal_name: Varchar(200)
+      id: Int[1]
+   )
+   DP10;
+
+   Firm1(
+      id: Int[1]
    )
    DP10;
 ]
 
 
-Ingest my::lakehouse::PersonIngest BatchMilestoned Snapshot<CSV> owner=AppDir(prodParallel='1') group=ALLOY_PERSON_GROUP
-[
-   Person(
-      id: Int[1],
-      last_name: Varchar(200)[1],
-      firm_id: Int[1]
-   )
-   DP10
-   pk=[id];
-]
 
-
-
-###DataProduct
-DataProduct my::lakehouse::PersonDataProduct
-{
-   type: Internal
-   accessPoints: [
-       OrgGroup
-       [
-           ap1_PersonLatest: LH(Snowflake, |#I{my::lakehouse::PersonIngest.Person}#->filter(p|$p.LAKE_OUT_ID == 99999999))
-           DP00
-       ]
-   ]
-}
-
-
-
-###LakehouseRuntime
-LakehouseRuntime runtime::SimpleRuntime
-{
-  environment: 'dataeng-pp';
-  warehouse: 'LAKEHOUSE_PRODUCER_287440_QUERY_WH';
-}
-
-
-###Pure
-Class model::lakehouse::Firm
-{
-  id: Integer[1];
-  legalName: String[1];
-  employees: model::lakehouse::Person[*];
-}
-
-Class model::lakehouse::Person
-{
-  id: Integer[1];
-  firmId: Integer[1];
-  lastName: String[1];
-}
-
-function query::modelQuery(): meta::pure::metamodel::relation::Relation<meta::pure::metamodel::type::Any>[1]
-{
-  model::lakehouse::Firm.all()->project(
-    ~[
-       ID: p|$p.id,
-       legalName: p|$p.legalName,
-       lastName: p|$p.employees.lastName
-     ]
-  )->from(
-    model::mapping::LakehouseElementsMapping,
-    runtime::SimpleRuntime
-  )
-}
-
-
-###Mapping
-Mapping model::mapping::LakehouseElementsMapping
+###Relational
+Database store::relational::db
 (
-  model::lakehouse::Person: Relational
-  {
-    ~primaryKey
-    (
-      [my::relational::db]PersonDataProduct.ap1_PersonLatest.id
-    )
-    ~mainTable [my::relational::db]PersonDataProduct.ap1_PersonLatest
-    lastName: toUpper([my::relational::db]PersonDataProduct.ap1_PersonLatest.last_name),
-    id: [my::relational::db]PersonDataProduct.ap1_PersonLatest.id
-  }
-  model::lakehouse::Firm: Relational
-  {
-    ~primaryKey
-    (
-      [my::relational::db]ALLOY_FIRM_GROUP.Firm.id
-    )
-    ~mainTable [my::relational::db]ALLOY_FIRM_GROUP.Firm
-    id: [my::relational::db]ALLOY_FIRM_GROUP.Firm.id,
-    legalName: [my::relational::db]ALLOY_FIRM_GROUP.Firm.legal_name,
-    employees: [my::relational::db]@FirmPersonLakehouse
-  }
+  include Ingest store::lakehouse::FirmIngest
 )
+
+Database store::relational::db2
+(
+  include store::relational::db
+
+  Join FirmPersonLakehouse([store::relational::db]ALLOY_FIRM_GROUP.Firm.id = [store::relational::db]ALLOY_FIRM_GROUP.Firm1.id)
+)
+
+
+index.js:1187940 [1760106663332] graph-manager.graph-builder.failure : Graph Builder Error: Can't find schema 'ALLOY_FIRM_GROUP' in database '[object Object]'
+    at V1_PureGraphManager.buildGraph (https://9000--main--anumam-lakehouse--anumam.laia-prod.workspaces.gs/static/index.js:1044671:19)
+Caused by: Assertion Error: Can't find schema 'ALLOY_FIRM_GROUP' in database '[object Object]'
+    at V1_findSchema (https://9000--main--anumam-lakehouse--anumam.laia-prod.workspaces.gs/static/index.js:1088772:11)
+    at V1_getRelation (https://9000--main--anumam-lakehouse--anumam.laia-prod.workspaces.gs/static/index.js:1088810:5)
+    at V1_GraphBuilderContext.resolveRelation (https://9000--main--anumam-lakehouse--anumam.laia-prod.workspaces.gs/static/index.js:1086725:112)
+    at V1_buildRelationalOperationElement (https://9000--main--anumam-lakehouse--anumam.laia-prod.workspaces.gs/static/index.js:1088840:34)
+    at https://9000--main--anumam-lakehouse--anumam.laia-prod.workspaces.gs/static/index.js:1088866:79
+    at Array.map (<anonymous>)
+    at V1_buildRelationalOperationElement (https://9000--main--anumam-lakehouse--anumam.laia-prod.workspaces.gs/static/index.js:1088866:60)
+    at V1_buildDatabaseJoin (https://9000--main--anumam-lakehouse--anumam.laia-prod.workspaces.gs/static/index.js:1089070:143)
+    at https://9000--main--anumam-lakehouse--anumam.laia-prod.workspaces.gs/static/index.js:1084760:144
+    at Array.map (<anonymous>)
